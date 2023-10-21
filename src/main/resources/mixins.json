@@ -1,7 +1,0 @@
-{
-  "required": true,
-  "package": "com.myname.mymodid",
-  "mixins": [
-    "MixinItemStack"
-  ]
-}
