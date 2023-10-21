@@ -1,4 +1,4 @@
-package com.myname.mymodid;
+package com.myname.mymodid.mixins.early;
 
 
 import net.minecraft.item.Item;
@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ItemStack.class)
 public abstract class MixinItemStack{
 
-    @Inject(method = "<init>(Lnet/minecraft/item/Item;II)V", at = @At("HEAD"))
+    @Inject(method = "<init>(Lnet/minecraft/item/Item;II)V", at = @At("RETURN"))
     private void onConstructorHead(Item item, int stackSize, int metadata, CallbackInfo ci) {
         System.out.println(item.getUnlocalizedName() + " " + metadata + " " + stackSize);
     }
