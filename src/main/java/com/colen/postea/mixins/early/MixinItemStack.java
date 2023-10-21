@@ -1,4 +1,4 @@
-package com.myname.mymodid.mixins.early;
+package com.colen.postea.mixins.early;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -11,8 +11,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.myname.mymodid.API.ItemStackKey;
-import com.myname.mymodid.API.ReplacementManager;
+import com.colen.postea.API.ItemStackKey;
+import com.colen.postea.API.ReplacementManager;
 
 @Mixin(ItemStack.class)
 public abstract class MixinItemStack {

@@ -1,4 +1,4 @@
-package com.myname.mymodid.API;
+package com.colen.postea.API;
 
 import java.util.HashMap;
 import java.util.Map;

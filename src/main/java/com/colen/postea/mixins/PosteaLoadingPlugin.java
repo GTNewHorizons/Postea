@@ -1,4 +1,4 @@
-package com.myname.mymodid.mixins;
+package com.colen.postea.mixins;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +37,7 @@ public final class PosteaLoadingPlugin implements IEarlyMixinLoader, IFMLLoading
 
     @Override
     public String getMixinConfig() {
-        return "mixins.mymodid.early.json";
+        return "mixins.postea.early.json";
     }
 
     @Override

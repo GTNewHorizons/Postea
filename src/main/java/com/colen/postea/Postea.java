@@ -1,4 +1,4 @@
-package com.myname.mymodid;
+package com.colen.postea;
 
 import cpw.mods.fml.common.Mod;
 

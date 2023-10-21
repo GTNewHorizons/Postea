@@ -1,10 +1,13 @@
 {
   "required": true,
   "minVersion": "0.8.5-GTNH",
-  "refmap": "mixins.mymodid.refmap.json",
+  "package": "com.colen.postea.mixins.early",
+  "refmap": "mixins.postea.refmap.json",
   "target": "@env(DEFAULT)",
   "compatibilityLevel": "JAVA_8",
-  "mixins": [],
+  "mixins": [
+    "MixinItemStack"
+  ],
   "client": [],
   "server": []
 }
