@@ -1,7 +1,6 @@
 package com.myname.mymodid.mixins;
 
 import com.gtnewhorizon.gtnhmixins.IEarlyMixinLoader;
-import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 
 import java.util.ArrayList;
@@ -44,11 +43,7 @@ public final class PosteaLoadingPlugin implements IEarlyMixinLoader, IFMLLoading
     public List<String> getMixins(Set<String> loadedCoreMods) {
         final List<String> mixins = new ArrayList<>();
         mixins.add("MixinItemStack");
-        if (FMLLaunchHandler.side().isClient()) {
-            // register client only mixins here,
-            // that is mixins that target client classes
-            // such as net.minecraft.client.Minecraft class
-        }
+
         return mixins;
     }
 }
