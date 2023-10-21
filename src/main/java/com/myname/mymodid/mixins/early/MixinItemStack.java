@@ -8,6 +8,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -18,26 +19,29 @@ public abstract class MixinItemStack {
     @Shadow
     private int itemDamage; // Metadata
     @Shadow
-    private cpw.mods.fml.common.registry.RegistryDelegate<Item> delegate;
+    private Item field_151002_e;
 
     @Inject(method = "<init>(Lnet/minecraft/item/Item;II)V", at = @At("RETURN"))
     private void onConstructorReturn(Item item, int size, int metadata, CallbackInfo ci) {
         ItemStackKey replacement = ReplacementManager.getReplacement(item, metadata);
 
+        if (replacement == null) return;
+
         // Edit private variables here.
         itemDamage = replacement.getDamage();
-        delegate = replacement.getItem().delegate;
+        func_150996_a(replacement.getItem());
     }
 
-
-/*    @Shadow
-    private Item field_151002_e;*/
     @Inject(method = "readFromNBT(Lnet/minecraft/nbt/NBTTagCompound;)V", at = @At("RETURN"))
     private void onReadFromNBTReturn(NBTTagCompound p_77963_1_, CallbackInfo ci) {
-        ItemStackKey replacement = ReplacementManager.getReplacement(delegate.get(), itemDamage);
+        ItemStackKey replacement = ReplacementManager.getReplacement(field_151002_e, itemDamage);
 
-        delegate = replacement.getItem().delegate;
+        if (replacement == null) return;
+
+        func_150996_a(replacement.getItem());
         itemDamage = replacement.getDamage();
     }
 
+    @Unique
+    public native void func_150996_a(Item p_150996_1_);
 }

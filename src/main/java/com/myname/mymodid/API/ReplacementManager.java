@@ -14,8 +14,7 @@ public class ReplacementManager {
     }
 
     public static ItemStackKey getReplacement(Item itemIn, int metaIn) {
-        ItemStackKey stackKey = new ItemStackKey(itemIn, metaIn);
-        return replacementMap.getOrDefault(stackKey, stackKey);
+        return replacementMap.getOrDefault(new ItemStackKey(itemIn, metaIn), null);
     }
 }
 
