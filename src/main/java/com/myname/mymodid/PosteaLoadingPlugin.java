@@ -1,6 +1,7 @@
 package com.myname.mymodid;
 
-import com.falsepattern.gasstation.IEarlyMixinLoader;
+
+import com.gtnewhorizon.gtnhmixins.IEarlyMixinLoader;
 import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 import jdk.jfr.Name;
@@ -48,10 +49,12 @@ public final class PosteaLoadingPlugin implements IEarlyMixinLoader, IFMLLoading
     }
 
     @Override
-    public List<String> getMixinConfigs() {
-        List<String> list = new ArrayList<>();
-        list.add("mixins.json" );
-        return list;
+    public String getMixinConfig() {
+        return "mixins.json";
     }
 
+    @Override
+    public List<String> getMixins(Set<String> loadedCoreMods) {
+        return null;
+    }
 }
