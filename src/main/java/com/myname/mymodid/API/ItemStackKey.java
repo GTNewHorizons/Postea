@@ -17,9 +17,10 @@ public class ItemStackKey {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        ItemStackKey that = (ItemStackKey) o;
-        return (this.meta == that.meta) && Objects.equals(this.item, that.item);
+        if (o == null) return false;
+        if (o instanceof ItemStackKey that) {
+            return (this.meta == that.meta) && (this.item == that.item);
+        } else return false;
     }
 
     @Override

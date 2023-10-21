@@ -21,7 +21,7 @@ public class MyMod {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        ReplacementManager.addReplacement(Items.apple, 0, Items.bow, 10);
+        ReplacementManager.addReplacement(Items.iron_ingot, 0, Items.bow, 10);
         proxy.preInit(event);
     }
 

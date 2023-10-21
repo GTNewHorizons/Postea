@@ -17,6 +17,8 @@ public abstract class MixinItemStack {
 
     @Shadow
     private int itemDamage; // Metadata
+    @Shadow
+    private cpw.mods.fml.common.registry.RegistryDelegate<Item> delegate;
 
     @Inject(method = "<init>(Lnet/minecraft/item/Item;II)V", at = @At("RETURN"))
     private void onConstructorReturn(Item item, int size, int metadata, CallbackInfo ci) {
@@ -24,17 +26,17 @@ public abstract class MixinItemStack {
 
         // Edit private variables here.
         itemDamage = replacement.getDamage();
-        field_151002_e = replacement.getItem();
+        delegate = replacement.getItem().delegate;
     }
 
 
-    @Shadow
-    private Item field_151002_e;
+/*    @Shadow
+    private Item field_151002_e;*/
     @Inject(method = "readFromNBT(Lnet/minecraft/nbt/NBTTagCompound;)V", at = @At("RETURN"))
     private void onReadFromNBTReturn(NBTTagCompound p_77963_1_, CallbackInfo ci) {
-        ItemStackKey replacement = ReplacementManager.getReplacement(field_151002_e, itemDamage);
+        ItemStackKey replacement = ReplacementManager.getReplacement(delegate.get(), itemDamage);
 
-        field_151002_e = replacement.getItem();
+        delegate = replacement.getItem().delegate;
         itemDamage = replacement.getDamage();
     }
 
