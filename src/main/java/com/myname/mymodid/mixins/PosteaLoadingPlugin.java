@@ -1,12 +1,13 @@
 package com.myname.mymodid.mixins;
 
-import com.gtnewhorizon.gtnhmixins.IEarlyMixinLoader;
-import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.gtnewhorizon.gtnhmixins.IEarlyMixinLoader;
+
+import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 
 @IFMLLoadingPlugin.MCVersion("1.7.10")
 public final class PosteaLoadingPlugin implements IEarlyMixinLoader, IFMLLoadingPlugin {

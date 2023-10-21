@@ -1,12 +1,11 @@
 package com.myname.mymodid.API;
 
-
-import cpw.mods.fml.common.registry.RegistryDelegate;
-import net.minecraft.item.Item;
-
 import java.util.Objects;
 
+import net.minecraft.item.Item;
+
 public class ItemStackKey {
+
     private final Item item;
     private final int meta;
 
@@ -36,4 +35,3 @@ public class ItemStackKey {
         return item;
     }
 }
-

@@ -1,12 +1,12 @@
 package com.myname.mymodid.API;
 
-
-import net.minecraft.item.Item;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import net.minecraft.item.Item;
+
 public class ReplacementManager {
+
     private static final Map<ItemStackKey, ItemStackKey> replacementMap = new HashMap<>();
 
     // Public API for adding replacements.
@@ -21,4 +21,3 @@ public class ReplacementManager {
         return replacementMap.getOrDefault(new ItemStackKey(itemIn, metaIn), null);
     }
 }
-
