@@ -1,4 +1,4 @@
-package com.myname.mymodid;
+package com.myname.mymodid.API;
 
 
 import net.minecraft.item.Item;

@@ -1,5 +1,6 @@
 package com.myname.mymodid;
 
+import com.myname.mymodid.API.ReplacementManager;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;

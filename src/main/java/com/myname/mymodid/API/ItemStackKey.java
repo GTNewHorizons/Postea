@@ -1,10 +1,8 @@
-package com.myname.mymodid;
+package com.myname.mymodid.API;
 
 
-import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.RegistryDelegate;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 
 import java.util.Objects;
 
@@ -33,8 +31,8 @@ public class ItemStackKey {
         return meta;
     }
 
-    public RegistryDelegate<Item> getItem() {
-        return item.delegate;
+    public Item getItem() {
+        return item;
     }
 }
 
