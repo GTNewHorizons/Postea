@@ -6,6 +6,7 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import net.minecraft.init.Items;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,6 +20,7 @@ public class MyMod {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        ReplacementManager.addReplacement(Items.apple, 0, Items.bow, 10);
         proxy.preInit(event);
     }
 

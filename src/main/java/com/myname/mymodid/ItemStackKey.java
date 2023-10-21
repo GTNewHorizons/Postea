@@ -2,40 +2,39 @@ package com.myname.mymodid;
 
 
 import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.common.registry.RegistryDelegate;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 import java.util.Objects;
 
 public class ItemStackKey {
-    private final String modId;
-    private final String itemName;
+    private final Item item;
     private final int meta;
 
-    public ItemStackKey(String modId, String itemName, int meta) {
-        this.modId = modId;
-        this.itemName = itemName;
+    public ItemStackKey(Item item, int meta) {
+        this.item = item;
         this.meta = meta;
-    }
-
-    public ItemStackKey(ItemStack stack) {
-        this(stack.getItem().getUnlocalizedName().substring(4),
-            GameRegistry.findUniqueIdentifierFor(stack.getItem()).modId,
-            stack.getItemDamage());
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ItemStackKey that = (ItemStackKey) o;
-        return meta == that.meta &&
-            Objects.equals(modId, that.modId) &&
-            Objects.equals(itemName, that.itemName);
+        return (this.meta == that.meta) && Objects.equals(this.item, that.item);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(modId, itemName, meta);
+        return Objects.hash(item, meta);
+    }
+
+    public int getDamage() {
+        return meta;
+    }
+
+    public RegistryDelegate<Item> getItem() {
+        return item.delegate;
     }
 }
 
