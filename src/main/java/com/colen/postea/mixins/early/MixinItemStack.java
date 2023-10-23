@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.colen.postea.API.ItemStackKey;
-import com.colen.postea.API.ReplacementManager;
+import com.colen.postea.API.ItemStackReplacementManager;
 
 @Mixin(ItemStack.class)
 public abstract class MixinItemStack {
@@ -24,7 +24,7 @@ public abstract class MixinItemStack {
 
     @Inject(method = "<init>(Lnet/minecraft/item/Item;II)V", at = @At("RETURN"))
     private void onConstructorReturn(Item item, int size, int metadata, CallbackInfo ci) {
-        ItemStackKey replacement = ReplacementManager.getReplacement(item, metadata);
+        ItemStackKey replacement = ItemStackReplacementManager.getItemReplacement(item, metadata);
 
         if (replacement == null) return;
 
@@ -35,7 +35,7 @@ public abstract class MixinItemStack {
 
     @Inject(method = "readFromNBT(Lnet/minecraft/nbt/NBTTagCompound;)V", at = @At("RETURN"))
     private void onReadFromNBTReturn(NBTTagCompound p_77963_1_, CallbackInfo ci) {
-        ItemStackKey replacement = ReplacementManager.getReplacement(field_151002_e, itemDamage);
+        ItemStackKey replacement = ItemStackReplacementManager.getItemReplacement(field_151002_e, itemDamage);
 
         if (replacement == null) return;
 
