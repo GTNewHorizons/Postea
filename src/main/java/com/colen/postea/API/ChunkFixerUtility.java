@@ -1,30 +1,11 @@
-package com.colen.postea.mixins.early;
+package com.colen.postea.API;
 
-import com.colen.postea.API.BlockKey;
-import com.colen.postea.API.BlockReplacementManager;
 import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(AnvilChunkLoader.class)
-public abstract class MixinChunk {
-
-    @Inject(
-        method = "readChunkFromNBT(Lnet/minecraft/world/World;Lnet/minecraft/nbt/NBTTagCompound;)Lnet/minecraft/world/chunk/Chunk;",
-        at = @At("RETURN"),
-        cancellable = true
-    )
-    private void modifyChunkData(World world, NBTTagCompound compound, CallbackInfoReturnable<Chunk> cir) {
-        Chunk chunk = cir.getReturnValue();
-
+public class ChunkFixerUtility {
+    public static Chunk fixChunk(Chunk chunk) {
         // Iterate over each ExtendedBlockStorage. Kinda ugly but does the job...
         for (ExtendedBlockStorage storage : chunk.getBlockStorageArray()) {
             if (storage != null) { // Always check if storage isn't null before using it
@@ -49,9 +30,6 @@ public abstract class MixinChunk {
                 }
             }
         }
-
-        cir.setReturnValue(chunk);
+        return chunk;
     }
-
-
 }
