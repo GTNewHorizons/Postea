@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AnvilChunkLoader.class)
+@SuppressWarnings("unused")
 public abstract class MixinAnvilChunkLoader {
 
     @Inject(
@@ -18,6 +19,7 @@ public abstract class MixinAnvilChunkLoader {
         at = @At("RETURN"),
         cancellable = true
     )
+    @SuppressWarnings("unused")
     private void onChunkReloadFromWorldSaveData(World world, NBTTagCompound compound, CallbackInfoReturnable<Chunk> cir) {
         Chunk chunk = cir.getReturnValue();
 

@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ChunkProviderServer.class)
+@SuppressWarnings("unused")
 public class MixinChunkProviderServer {
 
     @Inject(
@@ -17,6 +18,7 @@ public class MixinChunkProviderServer {
         remap=false,
         cancellable = true
     )
+    @SuppressWarnings("unused")
     public void onChunkCreation(int chunkX, int chunkZ, CallbackInfoReturnable<Chunk> cir) {
         Chunk chunk = cir.getReturnValue();
 
