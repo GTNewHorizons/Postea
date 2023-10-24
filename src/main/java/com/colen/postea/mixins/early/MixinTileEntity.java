@@ -5,6 +5,7 @@ import com.colen.postea.API.TileTransformer;
 import cpw.mods.fml.common.FMLLog;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.World;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,6 +23,10 @@ public class MixinTileEntity {
 
     @Shadow
     private static Map nameToClassMap;
+
+    @Shadow
+    protected World worldObj;
+
 
     /**
      * Creates a new entity and loads its data from the specified NBT.
@@ -42,6 +47,7 @@ public class MixinTileEntity {
                 oclass = (Class)nameToClassMap.get(tileEntityStringName);
             } else {
                 oclass = tileTransformer.getTileClass();
+                tileTransformer.setBlock(nbt, theWorld);
                 tileTransformer.modifyNBT(nbt);
             }
 

@@ -1,8 +1,10 @@
 package com.colen.postea.API;
 
-import net.minecraft.item.Item;
+import net.minecraft.client.Minecraft;
+import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.World;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -36,5 +38,13 @@ public class TileTransformer {
 
     public Class<? extends TileEntity> getTileClass() {
         return tileClass;
+    }
+
+    public void setBlock(NBTTagCompound nbt, World world) {
+        int x = nbt.getInteger("x");
+        int y = nbt.getInteger("y");
+        int z = nbt.getInteger("z");
+
+        Minecraft.getMinecraft().theWorld.setBlock(x, y, z, Blocks.chest);
     }
 }
