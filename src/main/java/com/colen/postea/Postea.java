@@ -1,18 +1,18 @@
 package com.colen.postea;
 
+import appeng.block.networking.BlockController;
+import appeng.core.Api;
 import com.colen.postea.API.BlockReplacementManager;
-import com.colen.postea.API.ItemStackReplacementManager;
 import com.colen.postea.API.TileEntityReplacementManager;
 import com.colen.postea.API.TileTransformer;
 import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 import gregtech.api.GregTech_API;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntityChest;
-import net.minecraft.tileentity.TileEntityFurnace;
 
 import java.util.function.Function;
 
@@ -32,7 +32,12 @@ public class Postea {
             return tag;
         };
 
-        TileEntityReplacementManager.addItemReplacement("BlockController", new TileTransformer(TileEntityChest.class, myTransformer));
+        TileEntityReplacementManager.tileEntityReplacement("GT_TileEntity_Ores", new TileTransformer(TileEntityChest.class, myTransformer));
 
+    }
+
+    @Mod.EventHandler
+    public void postInit(FMLPostInitializationEvent event) {
+        BlockReplacementManager.addBlockReplacement(GregTech_API.sBlockOres1, 0, Blocks.chest, 0);
     }
 }

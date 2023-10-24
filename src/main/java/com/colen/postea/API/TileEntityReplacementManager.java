@@ -8,7 +8,7 @@ public class TileEntityReplacementManager {
     private static final Map<String, TileTransformer> replacementMap = new HashMap<>();
 
     @SuppressWarnings("unused")
-    public static void addItemReplacement(String tileName , TileTransformer tileTransformer) {
+    public static void tileEntityReplacement(String tileName , TileTransformer tileTransformer) {
         replacementMap.put(tileName, tileTransformer);
     }
 

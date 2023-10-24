@@ -47,7 +47,6 @@ public class MixinTileEntity {
                 oclass = (Class)nameToClassMap.get(tileEntityStringName);
             } else {
                 oclass = tileTransformer.getTileClass();
-                tileTransformer.setBlock(nbt, theWorld);
                 tileTransformer.modifyNBT(nbt);
             }
 
