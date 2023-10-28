@@ -37,7 +37,7 @@ public final class PosteaLoadingPlugin implements IEarlyMixinLoader, IFMLLoading
 
     @Override
     public String getMixinConfig() {
-        return "mixins.postea.json";
+        return "mixins.postea.early.json";
     }
 
     @Override
@@ -47,7 +47,6 @@ public final class PosteaLoadingPlugin implements IEarlyMixinLoader, IFMLLoading
         mixins.add("MixinChunkProviderServer");
         mixins.add("MixinAnvilChunkLoader");
         mixins.add("MixinTileEntity");
-        mixins.add("MixinGameData");
 
         return mixins;
     }

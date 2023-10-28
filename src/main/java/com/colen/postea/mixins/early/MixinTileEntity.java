@@ -29,8 +29,7 @@ public class MixinTileEntity {
 
 
     /**
-     * @author Colen
-     * @reason Stuff
+     * Creates a new entity and loads its data from the specified NBT.
      */
     @Overwrite
     @SuppressWarnings("unused")
