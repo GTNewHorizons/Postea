@@ -4,42 +4,15 @@ import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagByteArray;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import scala.Int;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ChunkFixerUtility {
-    public static Chunk fixChunk(Chunk chunk) {
-        // Iterate over each ExtendedBlockStorage. Kinda ugly but does the job...
-        for (ExtendedBlockStorage storage : chunk.getBlockStorageArray()) {
-            if (storage != null) { // Always check if storage isn't null before using it
-                for (int x = 0; x < 16; x++) {
-                    for (int y = 0; y < 16; y++) { // This is not a mistake, we do this on purpose because of how minecraft stores stuff.
-                        for (int z = 0; z < 16; z++) {
-
-                            // Get the current block and metadata at the position
-                            Block currentBlock = storage.getBlockByExtId(x, y, z);
-                            int currentMeta = storage.getExtBlockMetadata(x, y, z);
-
-                            // Check if there's a replacement for this block+metadata combination
-                            BlockKey replacement = BlockReplacementManager.getBlockReplacement(currentBlock, currentMeta);
-
-                            // If there's a replacement, set the new block and metadata
-                            if (replacement != null) {
-                                storage.func_150818_a(x, y, z, replacement.getBlock());
-                                storage.setExtBlockMetadata(x, y, z, replacement.getDamage());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return chunk;
-    }
 
     public static void processCode(NBTTagCompound compound) {
         System.out.println(compound.toString());
@@ -98,8 +71,6 @@ public class ChunkFixerUtility {
         final List<ConversionInfo> conversionInfoList = removeTileEntities(level.getTagList("TileEntities", 10));
         NBTTagList sections = level.getTagList("Sections", 10);
 
-        List<ChunkBlockData> blockDataList = new ArrayList<>();
-
         int chunkXPos = level.getInteger("xPos") * 16;  // Assuming each chunk is 16 blocks along x-axis
         int chunkZPos = level.getInteger("zPos") * 16;  // Assuming each chunk is 16 blocks along z-axis
 
@@ -110,13 +81,12 @@ public class ChunkFixerUtility {
             byte y = section.getByte("Y");
 
             List<ConversionInfo> filteredList = conversionInfoList.stream()
-                .filter(info -> info.y >= y * 16 && info.y < (y + 1) * 16)
-                .collect(Collectors.toList());
+                .filter(info -> info.y >= y * 16 && info.y < (y + 1) * 16).collect(Collectors.toList());
 
             for (ConversionInfo info : filteredList) {
-                int tileX = info.x - chunkXPos;  // Convert global x-coordinate to local x-coordinate within the chunk
-                int tileY = info.y - y * 16;     // Convert global y-coordinate to local y-coordinate within the section
-                int tileZ = info.z - chunkZPos;  // Convert global z-coordinate to local z-coordinate within the chunk
+                int tileX = info.x - chunkXPos;  // Convert global x-coordinate to local x-coordinate within the chunk.
+                int tileY = info.y - y * 16;     // Convert global y-coordinate to local y-coordinate within the section.
+                int tileZ = info.z - chunkZPos;  // Convert global z-coordinate to local z-coordinate within the chunk.
 
                 int index = tileY * 256 + tileZ * 16 + tileX;
 
@@ -144,12 +114,11 @@ public class ChunkFixerUtility {
 
     }
 
-
-
     private static List<ConversionInfo> removeTileEntities(NBTTagList tileEntities) {
 
         List<ConversionInfo> conversionInfo = new ArrayList<>();
         String targetTileEntityId = "GT_TileEntity_Ores";
+        List<Integer> indicesToRemove = new ArrayList<>();  // List to store indices of tileEntities to be removed
 
         // Loop through each tile entity to check for matches
         for (int i = 0; i < tileEntities.tagCount(); i++) {
@@ -163,17 +132,22 @@ public class ChunkFixerUtility {
                 int z = tileEntity.getInteger("z");
 
                 Function<NBTTagCompound, BlockInfo> transformationFunction = TileEntityReplacementManager.getTileEntityToNormalBlockTransformerFunction(tileEntityId);
-
                 BlockInfo blockInfo = transformationFunction.apply(tileEntity);
 
                 conversionInfo.add(new ConversionInfo(x, y, z, blockInfo));
-
-                tileEntities.removeTag(i);
+                indicesToRemove.add(i);  // Add the index to the list for removal
             }
+        }
+
+        // Now remove the tile entities in reverse order to avoid index shifts
+        Collections.reverse(indicesToRemove);
+        for (int index : indicesToRemove) {
+            tileEntities.removeTag(index);
         }
 
         return conversionInfo;
     }
+
 
     private static void fixTileEntities(NBTTagCompound compound) {
         NBTTagList tileEntities = compound.getCompoundTag("Level").getTagList("TileEntities", 10);
@@ -193,7 +167,7 @@ public class ChunkFixerUtility {
         public final int x;
         public final int y;
         public final int z;
-        final BlockInfo blockInfo;
+        public final BlockInfo blockInfo;
 
         public ConversionInfo(int x, int y, int z, BlockInfo blockInfo) {
             this.x = x;
@@ -204,8 +178,8 @@ public class ChunkFixerUtility {
     }
 
     public static class BlockInfo {
-        final Block block;
-        final int metadata;
+        public final Block block;
+        public final int metadata;
 
         public BlockInfo(Block block, int metadata) {
             this.block = block;
@@ -213,29 +187,4 @@ public class ChunkFixerUtility {
         }
     }
 
-    public static class ChunkBlockData {
-        private int blockID;      // Block ID (2 bytes or 16 bits)
-        private byte metadata;    // Metadata (4 bits)
-
-        public ChunkBlockData(int blockID, byte metadata) {
-            this.blockID = blockID;
-            this.metadata = metadata;
-        }
-
-        public int getBlockID() {
-            return blockID;
-        }
-
-        public void setBlockID(int blockID) {
-            this.blockID = blockID;
-        }
-
-        public byte getMetadata() {
-            return metadata;
-        }
-
-        public void setMetadata(byte metadata) {
-            this.metadata = metadata;
-        }
-    }
 }

@@ -1,14 +1,11 @@
 package com.colen.postea;
 
-import com.colen.postea.API.BlockReplacementManager;
 import com.colen.postea.API.ChunkFixerUtility;
 import com.colen.postea.API.TileEntityReplacementManager;
-import com.colen.postea.API.TileTransformer;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import net.minecraft.init.Blocks;
-import gregtech.api.GregTech_API;
 import net.minecraft.nbt.NBTTagCompound;
 
 import java.util.function.Function;
@@ -36,15 +33,15 @@ public class Postea {
         //TileEntityReplacementManager.tileEntityFixer("GT_TileEntity_Ores", myTransformer);
         TileEntityReplacementManager.tileEntityToNormalBlockTransformer("GT_TileEntity_Ores", (tag) -> {
             if (tag.getInteger("m") == 86) {
-                return new ChunkFixerUtility.BlockInfo(Blocks.bedrock, 0);
+                return new ChunkFixerUtility.BlockInfo(Blocks.wool, 5);
             }
 
-            return new ChunkFixerUtility.BlockInfo(Blocks.brick_block, 0);
+            return new ChunkFixerUtility.BlockInfo(Blocks.wool, 1);
         });
     }
 
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event) {
-        BlockReplacementManager.addBlockReplacement(GregTech_API.sBlockOres1, 0, Blocks.chest, 0);
+        //BlockReplacementManager.addBlockReplacement(GregTech_API.sBlockOres1, 0, Blocks.chest, 0);
     }
 }
