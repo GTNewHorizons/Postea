@@ -4,7 +4,6 @@ import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagByteArray;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import scala.Int;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,49 +13,8 @@ import java.util.stream.Collectors;
 
 public class ChunkFixerUtility {
 
-    public static void processCode(NBTTagCompound compound) {
-        System.out.println(compound.toString());
-
-        //fixTileEntities(compound);
+    public static void processChunkNBT(NBTTagCompound compound) {
         replaceTileEntitiesWithNormalBlock(compound);
-        //setAllBlocksInNBTToID7(compound);
-    }
-
-    public static void setAllBlocksInNBTToID7(NBTTagCompound compound) {
-
-        int blockID = 469;  // The block ID to replace with
-
-        // Ensure that the "Level" tag compound exists
-        if (compound.hasKey("Level", 10)) {
-            NBTTagCompound levelTag = compound.getCompoundTag("Level");
-
-            // Ensure that the "Sections" tag list exists
-            if (levelTag.hasKey("Sections", 9)) {
-                NBTTagList sectionsList = levelTag.getTagList("Sections", 10);  // 10 is the NBT compound ID
-
-                for (int i = 0; i < sectionsList.tagCount(); i++) {
-                    NBTTagCompound section = sectionsList.getCompoundTagAt(i);
-
-                    if (section.hasKey("Blocks16", 7)) {
-                        byte[] blockArray = section.getByteArray("Blocks16");
-
-                        // Extract high and low bytes from the blockID
-                        byte highByte = (byte) ((blockID >> 8) & 0xFF);  // Get the most significant 8 bits
-                        byte lowByte = (byte) (blockID & 0xFF);          // Get the least significant 8 bits
-
-                        // Set all entries to the specified block ID
-                        for (int j = 0; j < blockArray.length; j += 2) {
-                            blockArray[j] = highByte;
-                            blockArray[j + 1] = lowByte;
-                        }
-
-                        // Replace the old array with the new one
-                        section.setTag("Blocks16", new NBTTagByteArray(blockArray));
-                    }
-
-                }
-            }
-        }
     }
 
     /**
@@ -88,8 +46,8 @@ public class ChunkFixerUtility {
         for (ConversionInfo info : filteredList) {
             int[] localCoords = convertToChunkLocalCoordinates(info, y, chunkXPos, chunkZPos);
             int index = computeBlockIndex(localCoords);
-            setBlockInfo(info, index, blockArray);
-            setMetadata(info, index, metadataArray);
+            setBlockInfo(info.blockInfo.block, index, blockArray);
+            setMetadata(info.blockInfo.metadata, index, metadataArray);
         }
     }
 
@@ -110,22 +68,22 @@ public class ChunkFixerUtility {
         return localCoords[1] * 256 + localCoords[2] * 16 + localCoords[0];
     }
 
-    private static void setBlockInfo(ConversionInfo info, int index, byte[] blockArray) {
-        int blockID = Block.getIdFromBlock(info.blockInfo.block);
+    private static void setBlockInfo(Block block, int index, byte[] blockArray) {
+        int blockID = Block.getIdFromBlock(block);
         blockArray[index * 2] = (byte) ((blockID >> 8) & 0xFF);
         blockArray[index * 2 + 1] = (byte) (blockID & 0xFF);
     }
 
-    private static void setMetadata(ConversionInfo info, int index, byte[] metadataArray) {
+    private static void setMetadata(int metadata, int index, byte[] metadataArray) {
         int metadataIndex = index / 2;
         byte currentMetadataByte = metadataArray[metadataIndex];
 
         if ((index & 1) == 0) { // Even
             currentMetadataByte &= 0xF0;
-            currentMetadataByte |= (info.blockInfo.metadata & 0x0F);
+            currentMetadataByte |= (metadata & 0x0F);
         } else { // Odd
             currentMetadataByte &= 0x0F;
-            currentMetadataByte |= ((info.blockInfo.metadata << 4) & 0xF0);
+            currentMetadataByte |= ((metadata << 4) & 0xF0);
         }
 
         metadataArray[metadataIndex] = currentMetadataByte;
