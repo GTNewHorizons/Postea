@@ -18,68 +18,68 @@ import java.util.Map;
 @SuppressWarnings("unused")
 public class MixinTileEntity {
 
-    @Shadow
-    private static Logger logger;
-
-    @Shadow
-    private static Map nameToClassMap;
-
-    @Shadow
-    protected World worldObj;
+//    @Shadow
+//    private static Logger logger;
+//
+//    @Shadow
+//    private static Map nameToClassMap;
+//
+//    @Shadow
+//    protected World worldObj;
 
 
     /**
      * Creates a new entity and loads its data from the specified NBT.
      */
-    @Overwrite
-    @SuppressWarnings("unused")
-    public static TileEntity createAndLoadEntity(NBTTagCompound nbt) {
-        TileEntity tileentity = null;
-
-        Class oclass = null;
-        try
-        {
-            String tileEntityStringName = nbt.getString("id");
-            TileTransformer tileTransformer = TileEntityReplacementManager.getTileReplacementTransformer(tileEntityStringName);
-
-
-            if (tileTransformer == null) {
-                oclass = (Class)nameToClassMap.get(tileEntityStringName);
-            } else {
-                oclass = tileTransformer.getTileClass();
-                tileTransformer.modifyNBT(nbt);
-            }
-
-            if (oclass != null)
-            {
-                tileentity = (TileEntity)oclass.newInstance();
-            }
-        }
-        catch (Exception exception)
-        {
-            exception.printStackTrace();
-        }
-
-        if (tileentity != null)
-        {
-            try
-            {
-                tileentity.readFromNBT(nbt);
-            }
-            catch (Exception ex)
-            {
-                FMLLog.log(Level.ERROR, ex,
-                    "A TileEntity %s(%s) has thrown an exception during loading, its state cannot be restored. Report this to the mod author",
-                    nbt.getString("id"), oclass.getName());
-                tileentity = null;
-            }
-        }
-        else
-        {
-            logger.warn("Skipping BlockEntity with id " + nbt.getString("id"));
-        }
-
-        return tileentity;
-    }
+//    @Overwrite
+//    @SuppressWarnings("unused")
+//    public static TileEntity createAndLoadEntity(NBTTagCompound nbt) {
+//        TileEntity tileentity = null;
+//
+//        Class oclass = null;
+//        try
+//        {
+//            String tileEntityStringName = nbt.getString("id");
+//            TileTransformer tileTransformer = TileEntityReplacementManager.getTileReplacementTransformer(tileEntityStringName);
+//
+//
+//            if (tileTransformer == null) {
+//                oclass = (Class)nameToClassMap.get(tileEntityStringName);
+//            } else {
+//                oclass = tileTransformer.getTileClass();
+//                tileTransformer.modifyNBT(nbt);
+//            }
+//
+//            if (oclass != null)
+//            {
+//                tileentity = (TileEntity)oclass.newInstance();
+//            }
+//        }
+//        catch (Exception exception)
+//        {
+//            exception.printStackTrace();
+//        }
+//
+//        if (tileentity != null)
+//        {
+//            try
+//            {
+//                tileentity.readFromNBT(nbt);
+//            }
+//            catch (Exception ex)
+//            {
+//                FMLLog.log(Level.ERROR, ex,
+//                    "A TileEntity %s(%s) has thrown an exception during loading, its state cannot be restored. Report this to the mod author",
+//                    nbt.getString("id"), oclass.getName());
+//                tileentity = null;
+//            }
+//        }
+//        else
+//        {
+//            logger.warn("Skipping BlockEntity with id " + nbt.getString("id"));
+//        }
+//
+//        return tileentity;
+//    }
 
 }

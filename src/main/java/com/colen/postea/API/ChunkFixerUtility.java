@@ -1,6 +1,8 @@
 package com.colen.postea.API;
 
 import net.minecraft.block.Block;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
@@ -31,5 +33,25 @@ public class ChunkFixerUtility {
             }
         }
         return chunk;
+    }
+
+    public static void processCode(NBTTagCompound compound) {
+        System.out.println(compound.toString());
+
+        swapTileEntities(compound);
+    }
+
+    private static void swapTileEntities(NBTTagCompound compound) {
+        NBTTagList tileEntities = compound.getCompoundTag("Level").getTagList("TileEntities", 10);
+        for (int i = 0; i < tileEntities.tagCount(); i++) {
+            NBTTagCompound tileEntity = tileEntities.getCompoundTagAt(i);
+            String tileEntityStringName = tileEntity.getString("id");
+            TileTransformer tileTransformer = TileEntityReplacementManager.getTileReplacementTransformer(tileEntityStringName);
+
+            if (tileTransformer != null) {
+                tileTransformer.modifyNBT(tileEntity);
+            }
+
+        }
     }
 }

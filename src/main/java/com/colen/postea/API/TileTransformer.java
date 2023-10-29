@@ -11,11 +11,12 @@ import java.util.function.Function;
 
 public class TileTransformer {
 
-    private final Class<? extends TileEntity> tileClass;
-    private final Function<NBTTagCompound, NBTTagCompound> NBTModifierFunction;
 
-    public TileTransformer(Class<? extends TileEntity> tileClass, Function<NBTTagCompound, NBTTagCompound> NBTModifierFunction) {
-        this.tileClass = tileClass;
+    private final Function<NBTTagCompound, NBTTagCompound> NBTModifierFunction;
+    private final String tileName;
+
+    public TileTransformer(String tileName, Function<NBTTagCompound, NBTTagCompound> NBTModifierFunction) {
+        this.tileName = tileName;
         this.NBTModifierFunction = NBTModifierFunction;
     }
 
@@ -23,28 +24,16 @@ public class TileTransformer {
     public boolean equals(Object o) {
         if (o == null) return false;
         if (o instanceof TileTransformer that) {
-            return (this.tileClass == that.tileClass);
+            return (this.tileName.equals(that.tileName));
         } else return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(tileClass);
     }
 
     public void modifyNBT(NBTTagCompound nbt) {
         NBTModifierFunction.apply(nbt);
     }
 
-    public Class<? extends TileEntity> getTileClass() {
-        return tileClass;
+    public String getTileName() {
+        return tileName;
     }
 
-    public void setBlock(NBTTagCompound nbt, World world) {
-        int x = nbt.getInteger("x");
-        int y = nbt.getInteger("y");
-        int z = nbt.getInteger("z");
-
-        Minecraft.getMinecraft().theWorld.setBlock(x, y, z, Blocks.chest);
-    }
 }

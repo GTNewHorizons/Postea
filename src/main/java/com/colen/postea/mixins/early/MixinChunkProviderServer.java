@@ -12,18 +12,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @SuppressWarnings("unused")
 public class MixinChunkProviderServer {
 
-    @Inject(
-        method = "originalLoadChunk(II)Lnet/minecraft/world/chunk/Chunk;",
-        at = @At("RETURN"),
-        remap=false,
-        cancellable = true
-    )
-    @SuppressWarnings("unused")
-    public void onChunkCreation(int chunkX, int chunkZ, CallbackInfoReturnable<Chunk> cir) {
-        Chunk chunk = cir.getReturnValue();
-
-        Chunk fixedChunk = ChunkFixerUtility.fixChunk(chunk);
-
-        cir.setReturnValue(fixedChunk);
-    }
+//    @Inject(
+//        method = "originalLoadChunk(II)Lnet/minecraft/world/chunk/Chunk;",
+//        at = @At("RETURN"),
+//        remap=false,
+//        cancellable = true
+//    )
+//    @SuppressWarnings("unused")
+//    public void onChunkCreation(int chunkX, int chunkZ, CallbackInfoReturnable<Chunk> cir) {
+//        Chunk chunk = cir.getReturnValue();
+//
+//        Chunk fixedChunk = ChunkFixerUtility.fixChunk(chunk);
+//
+//        cir.setReturnValue(fixedChunk);
+//    }
 }

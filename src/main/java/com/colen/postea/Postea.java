@@ -23,16 +23,20 @@ public class Postea {
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         //ItemStackReplacementManager.addItemReplacement(Item.getItemFromBlock(Blocks.grass), 0, Item.getItemFromBlock(Blocks.coal_ore), 10);
-        BlockReplacementManager.addBlockReplacement(GregTech_API.sBlockOres1, 6, Blocks.emerald_ore, 0);
-        BlockReplacementManager.addBlockReplacement(GregTech_API.sBlockOres1, 16022, Blocks.nether_brick, 0);
-        BlockReplacementManager.addBlockReplacement(GregTech_API.sBlockOres1, 1018, Blocks.end_stone, 0);
+//        BlockReplacementManager.addBlockReplacement(GregTech_API.sBlockOres1, 6, Blocks.emerald_ore, 0);
+//        BlockReplacementManager.addBlockReplacement(GregTech_API.sBlockOres1, 16022, Blocks.nether_brick, 0);
+//        BlockReplacementManager.addBlockReplacement(GregTech_API.sBlockOres1, 1018, Blocks.end_stone, 0);
 
         // Define the transformation function
         Function<NBTTagCompound, NBTTagCompound> myTransformer = (tag) -> {
+            if (tag.getInteger("m") == 86) {
+                tag.setInteger("m", 323);
+                return tag;
+            }
             return tag;
         };
 
-        TileEntityReplacementManager.tileEntityReplacement("GT_TileEntity_Ores", new TileTransformer(TileEntityChest.class, myTransformer));
+        TileEntityReplacementManager.tileEntityReplacement("GT_TileEntity_Ores", new TileTransformer("GT_TileEntity_Ores", myTransformer));
 
     }
 

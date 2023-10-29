@@ -8,8 +8,8 @@ public class TileEntityReplacementManager {
     private static final Map<String, TileTransformer> replacementMap = new HashMap<>();
 
     @SuppressWarnings("unused")
-    public static void tileEntityReplacement(String tileName , TileTransformer tileTransformer) {
-        replacementMap.put(tileName, tileTransformer);
+    public static void tileEntityReplacement(String tileName , TileTransformer tileReplacer) {
+        replacementMap.put(tileName, tileReplacer);
     }
 
     @SuppressWarnings("unused")
