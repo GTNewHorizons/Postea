@@ -20,7 +20,7 @@ public class TileEntityReplacementManager {
         return tileEntityFixMap.getOrDefault(tileName, null);
     }
 
-    public static void tileEntityToNormalBlockTransformer(String tileEntityId, Function<NBTTagCompound, ChunkFixerUtility.BlockInfo> transformerFunction) {
+    public static void tileEntityTransformer(String tileEntityId, Function<NBTTagCompound, ChunkFixerUtility.BlockInfo> transformerFunction) {
         tileEntityToNormalBlockTransformer.put(tileEntityId, transformerFunction);
     }
 

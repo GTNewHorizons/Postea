@@ -1,12 +1,11 @@
 package com.colen.postea.API;
 
+import akka.japi.Pair;
 import net.minecraft.block.Block;
-import net.minecraft.nbt.NBTTagByteArray;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -24,7 +23,14 @@ public class ChunkFixerUtility {
      */
     public static void replaceTileEntitiesWithNormalBlock(NBTTagCompound chunkNBT) {
         NBTTagCompound level = chunkNBT.getCompoundTag("Level");
-        List<ConversionInfo> conversionInfoList = removeTileEntities(level.getTagList("TileEntities", 10));
+
+        Pair<List<ConversionInfo>, NBTTagList> output = adjustTileEntities(level.getTagList("TileEntities", 10));
+        List<ConversionInfo> conversionInfoList = output.first();
+        NBTTagList tileEntities = output.second();
+
+        if (tileEntities.tagCount() > 0) {
+            level.setTag("TileEntities", tileEntities);
+        }
 
         int chunkXPos = level.getInteger("xPos") * 16;  // Assuming each chunk is 16 blocks along x-axis
         int chunkZPos = level.getInteger("zPos") * 16;  // Assuming each chunk is 16 blocks along z-axis
@@ -89,9 +95,10 @@ public class ChunkFixerUtility {
         metadataArray[metadataIndex] = currentMetadataByte;
     }
 
-    private static List<ConversionInfo> removeTileEntities(NBTTagList tileEntities) {
+    private static Pair<List<ConversionInfo>, NBTTagList> adjustTileEntities(NBTTagList tileEntities) {
         List<ConversionInfo> conversionInfo = new ArrayList<>();
-        List<Integer> indicesToRemove = new ArrayList<>();  // List to store indices of tileEntities to be removed
+
+        NBTTagList tileEntitiesCopy = new NBTTagList();
 
         for (int i = 0; i < tileEntities.tagCount(); i++) {
             NBTTagCompound tileEntity = tileEntities.getCompoundTagAt(i);
@@ -107,18 +114,16 @@ public class ChunkFixerUtility {
 
                 BlockInfo blockInfo = transformationFunction.apply(tileEntity);
 
+                if (blockInfo.tileTransformer != null) {
+                    tileEntitiesCopy.appendTag(blockInfo.tileTransformer.apply(tileEntity));
+                } // Otherwise they are removed, therefore not appended.
+
                 conversionInfo.add(new ConversionInfo(x, y, z, blockInfo));
-                indicesToRemove.add(i);  // Add the index to the list for removal
             }
         }
 
-        // Remove the tile entities in reverse order to avoid index shifts
-        Collections.reverse(indicesToRemove);
-        for (int index : indicesToRemove) {
-            tileEntities.removeTag(index);
-        }
 
-        return conversionInfo;
+        return new Pair<>(conversionInfo, tileEntitiesCopy);
     }
 
 
@@ -153,10 +158,18 @@ public class ChunkFixerUtility {
     public static class BlockInfo {
         public final Block block;
         public final int metadata;
+        public final Function<NBTTagCompound, NBTTagCompound> tileTransformer;
+
+        public BlockInfo(Block block, int metadata, Function<NBTTagCompound, NBTTagCompound> tileTransformer) {
+            this.block = block;
+            this.metadata = metadata;
+            this.tileTransformer = tileTransformer;
+        }
 
         public BlockInfo(Block block, int metadata) {
             this.block = block;
             this.metadata = metadata;
+            this.tileTransformer = null;
         }
     }
 
