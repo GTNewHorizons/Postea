@@ -22,13 +22,13 @@ public class Postea {
 //        BlockReplacementManager.addBlockReplacement(GregTech_API.sBlockOres1, 1018, Blocks.end_stone, 0);
 
         // Define the transformation function
-        Function<NBTTagCompound, NBTTagCompound> myTransformer = (tag) -> {
+/*        Function<NBTTagCompound, NBTTagCompound> myTransformer = (tag) -> {
             if (tag.getInteger("m") == 86) {
                 tag.setInteger("m", 323);
                 return tag;
             }
             return tag;
-        };
+        };*/
 
         //TileEntityReplacementManager.tileEntityFixer("GT_TileEntity_Ores", myTransformer);
         TileEntityReplacementManager.tileEntityToNormalBlockTransformer("GT_TileEntity_Ores", (tag) -> {
@@ -37,6 +37,14 @@ public class Postea {
             }
 
             return new ChunkFixerUtility.BlockInfo(Blocks.wool, 1);
+        });
+
+        TileEntityReplacementManager.tileEntityToNormalBlockTransformer("Furnace", (tag) -> {
+            return new ChunkFixerUtility.BlockInfo(Blocks.planks, 3);
+        });
+
+        TileEntityReplacementManager.tileEntityToNormalBlockTransformer("Chest", (tag) -> {
+            return new ChunkFixerUtility.BlockInfo(Blocks.coal_block, 0);
         });
     }
 

@@ -90,23 +90,21 @@ public class ChunkFixerUtility {
     }
 
     private static List<ConversionInfo> removeTileEntities(NBTTagList tileEntities) {
-
         List<ConversionInfo> conversionInfo = new ArrayList<>();
-        String targetTileEntityId = "GT_TileEntity_Ores";
         List<Integer> indicesToRemove = new ArrayList<>();  // List to store indices of tileEntities to be removed
 
-        // Loop through each tile entity to check for matches
         for (int i = 0; i < tileEntities.tagCount(); i++) {
             NBTTagCompound tileEntity = tileEntities.getCompoundTagAt(i);
             String tileEntityId = tileEntity.getString("id");
 
-            // If the tile entity matches the target
-            if (tileEntityId.equals(targetTileEntityId)) {
+            // Check if we have a transformer registered for this tile entity ID
+            Function<NBTTagCompound, BlockInfo> transformationFunction = TileEntityReplacementManager.getTileEntityToNormalBlockTransformerFunction(tileEntityId);
+
+            if (transformationFunction != null) {
                 int x = tileEntity.getInteger("x");
                 int y = tileEntity.getInteger("y");
                 int z = tileEntity.getInteger("z");
 
-                Function<NBTTagCompound, BlockInfo> transformationFunction = TileEntityReplacementManager.getTileEntityToNormalBlockTransformerFunction(tileEntityId);
                 BlockInfo blockInfo = transformationFunction.apply(tileEntity);
 
                 conversionInfo.add(new ConversionInfo(x, y, z, blockInfo));
@@ -114,7 +112,7 @@ public class ChunkFixerUtility {
             }
         }
 
-        // Now remove the tile entities in reverse order to avoid index shifts
+        // Remove the tile entities in reverse order to avoid index shifts
         Collections.reverse(indicesToRemove);
         for (int index : indicesToRemove) {
             tileEntities.removeTag(index);
