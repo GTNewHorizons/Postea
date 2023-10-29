@@ -65,53 +65,70 @@ public class ChunkFixerUtility {
      * @param chunkNBT           The chunk's NBT data.
      */
     public static void replaceTileEntitiesWithNormalBlock(NBTTagCompound chunkNBT) {
-
-        final NBTTagCompound level = chunkNBT.getCompoundTag("Level");
-
-        final List<ConversionInfo> conversionInfoList = removeTileEntities(level.getTagList("TileEntities", 10));
-        NBTTagList sections = level.getTagList("Sections", 10);
+        NBTTagCompound level = chunkNBT.getCompoundTag("Level");
+        List<ConversionInfo> conversionInfoList = removeTileEntities(level.getTagList("TileEntities", 10));
 
         int chunkXPos = level.getInteger("xPos") * 16;  // Assuming each chunk is 16 blocks along x-axis
         int chunkZPos = level.getInteger("zPos") * 16;  // Assuming each chunk is 16 blocks along z-axis
 
+        NBTTagList sections = level.getTagList("Sections", 10);
         for (int i = 0; i < sections.tagCount(); i++) {
             NBTTagCompound section = sections.getCompoundTagAt(i);
-            byte[] blockArray = section.getByteArray("Blocks16");
-            byte[] metadataArray = section.getByteArray("Data");
-            byte y = section.getByte("Y");
+            processSection(section, conversionInfoList, chunkXPos, chunkZPos);
+        }
+    }
 
-            List<ConversionInfo> filteredList = conversionInfoList.stream()
-                .filter(info -> info.y >= y * 16 && info.y < (y + 1) * 16).collect(Collectors.toList());
+    private static void processSection(NBTTagCompound section, List<ConversionInfo> conversionInfoList, int chunkXPos, int chunkZPos) {
+        byte[] blockArray = section.getByteArray("Blocks16");
+        byte[] metadataArray = section.getByteArray("Data");
+        byte y = section.getByte("Y");
 
-            for (ConversionInfo info : filteredList) {
-                int tileX = info.x - chunkXPos;  // Convert global x-coordinate to local x-coordinate within the chunk.
-                int tileY = info.y - y * 16;     // Convert global y-coordinate to local y-coordinate within the section.
-                int tileZ = info.z - chunkZPos;  // Convert global z-coordinate to local z-coordinate within the chunk.
+        List<ConversionInfo> filteredList = filterConversionInfosByY(conversionInfoList, y);
 
-                int index = tileY * 256 + tileZ * 16 + tileX;
+        for (ConversionInfo info : filteredList) {
+            int[] localCoords = convertToChunkLocalCoordinates(info, y, chunkXPos, chunkZPos);
+            int index = computeBlockIndex(localCoords);
+            setBlockInfo(info, index, blockArray);
+            setMetadata(info, index, metadataArray);
+        }
+    }
 
-                // Set block ID from ConversionInfo
-                int blockID = Block.getIdFromBlock(info.blockInfo.block);
-                blockArray[index * 2] = (byte) ((blockID >> 8) & 0xFF);
-                blockArray[index * 2 + 1] = (byte) (blockID & 0xFF);
+    private static List<ConversionInfo> filterConversionInfosByY(List<ConversionInfo> conversionInfoList, byte y) {
+        return conversionInfoList.stream()
+            .filter(info -> info.y >= y * 16 && info.y < (y + 1) * 16)
+            .collect(Collectors.toList());
+    }
 
-                // Set metadata from ConversionInfo
-                int metadataIndex = index / 2;
-                byte currentMetadataByte = metadataArray[metadataIndex];
+    private static int[] convertToChunkLocalCoordinates(ConversionInfo info, byte y, int chunkXPos, int chunkZPos) {
+        int tileX = info.x - chunkXPos;
+        int tileY = info.y - y * 16;
+        int tileZ = info.z - chunkZPos;
+        return new int[]{tileX, tileY, tileZ};
+    }
 
-                if ((index & 1) == 0) { // Even
-                    currentMetadataByte &= 0xF0;
-                    currentMetadataByte |= (info.blockInfo.metadata & 0x0F);
-                } else { // Odd
-                    currentMetadataByte &= 0x0F;
-                    currentMetadataByte |= ((info.blockInfo.metadata << 4) & 0xF0);
-                }
+    private static int computeBlockIndex(int[] localCoords) {
+        return localCoords[1] * 256 + localCoords[2] * 16 + localCoords[0];
+    }
 
-                metadataArray[metadataIndex] = currentMetadataByte;
-            }
+    private static void setBlockInfo(ConversionInfo info, int index, byte[] blockArray) {
+        int blockID = Block.getIdFromBlock(info.blockInfo.block);
+        blockArray[index * 2] = (byte) ((blockID >> 8) & 0xFF);
+        blockArray[index * 2 + 1] = (byte) (blockID & 0xFF);
+    }
 
+    private static void setMetadata(ConversionInfo info, int index, byte[] metadataArray) {
+        int metadataIndex = index / 2;
+        byte currentMetadataByte = metadataArray[metadataIndex];
+
+        if ((index & 1) == 0) { // Even
+            currentMetadataByte &= 0xF0;
+            currentMetadataByte |= (info.blockInfo.metadata & 0x0F);
+        } else { // Odd
+            currentMetadataByte &= 0x0F;
+            currentMetadataByte |= ((info.blockInfo.metadata << 4) & 0xF0);
         }
 
+        metadataArray[metadataIndex] = currentMetadataByte;
     }
 
     private static List<ConversionInfo> removeTileEntities(NBTTagList tileEntities) {
