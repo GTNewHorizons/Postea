@@ -7,11 +7,11 @@ import net.minecraft.item.Item;
 
 public class BlockKey {
 
-    private final Block block;
-    private final int meta;
+    public final String blockName;
+    public final int meta;
 
-    public BlockKey(Block block, int meta) {
-        this.block = block;
+    public BlockKey(String blockName, int meta) {
+        this.blockName = blockName;
         this.meta = meta;
     }
 
@@ -19,20 +19,13 @@ public class BlockKey {
     public boolean equals(Object o) {
         if (o == null) return false;
         if (o instanceof BlockKey that) {
-            return (this.meta == that.meta) && (this.block == that.block);
+            return (this.meta == that.meta) && (this.blockName.equals(that.blockName));
         } else return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(block, meta);
+        return Objects.hash(blockName, meta);
     }
 
-    public int getDamage() {
-        return meta;
-    }
-
-    public Block getBlock() {
-        return block;
-    }
 }

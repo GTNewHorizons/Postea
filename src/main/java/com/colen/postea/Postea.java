@@ -1,5 +1,8 @@
 package com.colen.postea;
 
+import akka.japi.Pair;
+import com.colen.postea.API.BlockKey;
+import com.colen.postea.API.BlockReplacementManager;
 import com.colen.postea.API.ChunkFixerUtility;
 import com.colen.postea.API.TileEntityReplacementManager;
 import cpw.mods.fml.common.Mod;
@@ -98,9 +101,12 @@ public class Postea {
             return new ChunkFixerUtility.BlockInfo(Blocks.chest, 0, chestTransformer);
         });
 
-//        TileEntityReplacementManager.tileEntityToNormalBlockTransformer("Chest", (tag) -> {
-//            return new ChunkFixerUtility.BlockInfo(Blocks.coal_block, 0);
-//        });
+        Function<BlockKey, Pair<Integer, Integer>> blockTransformer = (blockKey) -> {
+            return new Pair<>(7, 0);
+        };
+
+        BlockReplacementManager.addBlockReplacement("grass", 0, blockTransformer);
+
     }
 
     private NBTTagCompound cleanseNBT(String newTileEntityID, NBTTagCompound tag) {

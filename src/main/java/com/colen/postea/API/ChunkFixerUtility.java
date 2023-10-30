@@ -13,7 +13,30 @@ import java.util.stream.Collectors;
 public class ChunkFixerUtility {
 
     public static void processChunkNBT(NBTTagCompound compound) {
-        replaceTileEntitiesWithNormalBlock(compound);
+        transformTileEntities(compound);
+        transformNormalBlocks(compound);
+
+    }
+
+    private static void transformNormalBlocks(NBTTagCompound compound) {
+        NBTTagCompound level = compound.getCompoundTag("Level");
+        NBTTagList sections = level.getTagList("Sections", 10);
+        for (int i = 0; i < sections.tagCount(); i++) {
+            NBTTagCompound section = sections.getCompoundTagAt(i);
+            byte[] blockArray = section.getByteArray("Blocks16");
+            byte[] metadataArray = section.getByteArray("Data");
+
+            for (int index = 0; index < blockArray.length / 2; index++) {
+                int blockId = ((blockArray[index * 2] & 0xFF) << 8) | (blockArray[index * 2 + 1] & 0xFF);
+                byte metadata = (byte) ((index & 1) == 0 ? (metadataArray[index / 2] & 0x0F) : ((metadataArray[index / 2] & 0xF0) >> 4));
+
+                Pair<Integer, Integer> output = BlockReplacementManager.getBlockReplacement(blockId, metadata);
+                if (output != null) {
+                    setBlockInfo(Block.getBlockById(output.first()), index, blockArray);
+                    setMetadata(output.second(), index, metadataArray);
+                }
+            }
+        }
     }
 
     /**
@@ -21,7 +44,7 @@ public class ChunkFixerUtility {
      *
      * @param chunkNBT           The chunk's NBT data.
      */
-    public static void replaceTileEntitiesWithNormalBlock(NBTTagCompound chunkNBT) {
+    public static void transformTileEntities(NBTTagCompound chunkNBT) {
         NBTTagCompound level = chunkNBT.getCompoundTag("Level");
 
         Pair<List<ConversionInfo>, NBTTagList> output = adjustTileEntities(level.getTagList("TileEntities", 10));
@@ -126,19 +149,6 @@ public class ChunkFixerUtility {
         return new Pair<>(conversionInfo, tileEntitiesCopy);
     }
 
-
-    private static void fixTileEntities(NBTTagCompound compound) {
-        NBTTagList tileEntities = compound.getCompoundTag("Level").getTagList("TileEntities", 10);
-        for (int i = 0; i < tileEntities.tagCount(); i++) {
-            NBTTagCompound tileEntity = tileEntities.getCompoundTagAt(i);
-            String tileEntityStringName = tileEntity.getString("id");
-            Function<NBTTagCompound, NBTTagCompound> tileFixer = TileEntityReplacementManager.getTileEntityFixer(tileEntityStringName);
-
-            if (tileFixer != null) {
-                tileFixer.apply(tileEntity);
-            }
-        }
-    }
 
     public static class ConversionInfo {
 
