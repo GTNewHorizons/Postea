@@ -35,12 +35,16 @@ public class Postea {
         };*/
 
         //TileEntityReplacementManager.tileEntityFixer("GT_TileEntity_Ores", myTransformer);
-        TileEntityReplacementManager.tileEntityTransformer("GT_TileEntity_Ores", (tag) -> {
-            if (tag.getInteger("m") == 86) {
-                return new ChunkFixerUtility.BlockInfo(Blocks.wool, 5);
+        TileEntityReplacementManager.tileEntityTransformer("GT_TileEntity_Ores", (tag, world) -> {
+            if (world.provider.dimensionId == -1) {
+                return new ChunkFixerUtility.BlockInfo(Blocks.wool, 1);
             }
 
-            return new ChunkFixerUtility.BlockInfo(Blocks.wool, 1);
+            if (world.provider.dimensionId == 1) {
+                return new ChunkFixerUtility.BlockInfo(Blocks.wool, 2);
+            }
+
+            return new ChunkFixerUtility.BlockInfo(Blocks.wool, 3);
         });
 
 
@@ -70,7 +74,7 @@ public class Postea {
             return new ChunkFixerUtility.BlockInfo(Blocks.chest, 0, chestTransformer);
         });*/
 
-        TileEntityReplacementManager.tileEntityTransformer("Chest", (tag) -> {
+        TileEntityReplacementManager.tileEntityTransformer("Chest", (tag, world) -> {
 
             Function<NBTTagCompound, NBTTagCompound> chestTransformer = (oldTag) -> {
 
@@ -105,7 +109,7 @@ public class Postea {
             return new Pair<>(7, 0);
         };
 
-        BlockReplacementManager.addBlockReplacement("grass", 0, blockTransformer);
+        BlockReplacementManager.addBlockReplacement("minecraft:grass", 0, blockTransformer);
 
     }
 

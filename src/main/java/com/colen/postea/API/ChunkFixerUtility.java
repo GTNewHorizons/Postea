@@ -4,21 +4,22 @@ import akka.japi.Pair;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ChunkFixerUtility {
 
-    public static void processChunkNBT(NBTTagCompound compound) {
-        transformTileEntities(compound);
-        transformNormalBlocks(compound);
-
+    public static void processChunkNBT(NBTTagCompound compound, World world) {
+        transformTileEntities(compound, world);
+        transformNormalBlocks(compound, world);
     }
 
-    private static void transformNormalBlocks(NBTTagCompound compound) {
+    private static void transformNormalBlocks(NBTTagCompound compound, World world) {
         NBTTagCompound level = compound.getCompoundTag("Level");
         NBTTagList sections = level.getTagList("Sections", 10);
         for (int i = 0; i < sections.tagCount(); i++) {
@@ -32,8 +33,19 @@ public class ChunkFixerUtility {
 
                 Pair<Integer, Integer> output = BlockReplacementManager.getBlockReplacement(blockId, metadata);
                 if (output != null) {
-                    setBlockInfo(Block.getBlockById(output.first()), index, blockArray);
-                    setMetadata(output.second(), index, metadataArray);
+                    int newBlockId = output.first();
+                    int newMetadata = output.second();
+
+                    blockArray[index * 2] = (byte) ((newBlockId >> 8) & 0xFF);
+                    blockArray[index * 2 + 1] = (byte) (newBlockId & 0xFF);
+
+                    if ((index & 1) == 0) { // Even
+                        metadataArray[index / 2] &= 0xF0;
+                        metadataArray[index / 2] |= (newMetadata & 0x0F);
+                    } else { // Odd
+                        metadataArray[index / 2] &= 0x0F;
+                        metadataArray[index / 2] |= ((newMetadata << 4) & 0xF0);
+                    }
                 }
             }
         }
@@ -44,10 +56,10 @@ public class ChunkFixerUtility {
      *
      * @param chunkNBT           The chunk's NBT data.
      */
-    public static void transformTileEntities(NBTTagCompound chunkNBT) {
+    public static void transformTileEntities(NBTTagCompound chunkNBT, World world) {
         NBTTagCompound level = chunkNBT.getCompoundTag("Level");
 
-        Pair<List<ConversionInfo>, NBTTagList> output = adjustTileEntities(level.getTagList("TileEntities", 10));
+        Pair<List<ConversionInfo>, NBTTagList> output = adjustTileEntities(level.getTagList("TileEntities", 10), world);
         List<ConversionInfo> conversionInfoList = output.first();
         NBTTagList tileEntities = output.second();
 
@@ -118,7 +130,7 @@ public class ChunkFixerUtility {
         metadataArray[metadataIndex] = currentMetadataByte;
     }
 
-    private static Pair<List<ConversionInfo>, NBTTagList> adjustTileEntities(NBTTagList tileEntities) {
+    private static Pair<List<ConversionInfo>, NBTTagList> adjustTileEntities(NBTTagList tileEntities, World world) {
         List<ConversionInfo> conversionInfo = new ArrayList<>();
 
         NBTTagList tileEntitiesCopy = new NBTTagList();
@@ -128,14 +140,14 @@ public class ChunkFixerUtility {
             String tileEntityId = tileEntity.getString("id");
 
             // Check if we have a transformer registered for this tile entity ID
-            Function<NBTTagCompound, BlockInfo> transformationFunction = TileEntityReplacementManager.getTileEntityToNormalBlockTransformerFunction(tileEntityId);
+            BiFunction<NBTTagCompound, World, BlockInfo> transformationFunction = TileEntityReplacementManager.getTileEntityToNormalBlockTransformerFunction(tileEntityId);
 
             if (transformationFunction != null) {
                 int x = tileEntity.getInteger("x");
                 int y = tileEntity.getInteger("y");
                 int z = tileEntity.getInteger("z");
 
-                BlockInfo blockInfo = transformationFunction.apply(tileEntity);
+                BlockInfo blockInfo = transformationFunction.apply(tileEntity, world);
 
                 if (blockInfo.tileTransformer != null) {
                     tileEntitiesCopy.appendTag(blockInfo.tileTransformer.apply(tileEntity));

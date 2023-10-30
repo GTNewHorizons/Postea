@@ -92,7 +92,7 @@ public abstract class MixinAnvilChunkLoader {
     @Inject(method = "checkedReadChunkFromNBT__Async", at = @At("HEAD"), remap = false)
     private void onCheckedReadChunkFromNBT__Async(World world, int x, int z, NBTTagCompound compound, CallbackInfoReturnable<Object[]> cir) {
         // Your injection code here
-        processChunkNBT(compound);
+        processChunkNBT(compound, world);
     }
 
 }

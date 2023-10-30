@@ -1,6 +1,7 @@
 package com.colen.postea.API;
 
 import akka.japi.Pair;
+import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 
@@ -22,7 +23,7 @@ public class BlockReplacementManager {
     @SuppressWarnings("unused")
     public static Pair<Integer, Integer> getBlockReplacement(int blockID, int metadataIn) {
         Block block = Block.getBlockById(blockID);
-        String blockName = block.getUnlocalizedName();
+        String blockName = GameRegistry.findUniqueIdentifierFor(block).toString();
 
         Function<BlockKey, Pair<Integer, Integer>> transformer = blockReplacementMap.getOrDefault(new BlockKey(blockName, metadataIn), null);
 
