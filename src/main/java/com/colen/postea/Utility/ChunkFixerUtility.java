@@ -1,6 +1,8 @@
-package com.colen.postea.API;
+package com.colen.postea.Utility;
 
 import akka.japi.Pair;
+import com.colen.postea.API.BlockReplacementManager;
+import com.colen.postea.API.TileEntityReplacementManager;
 import com.colen.postea.Utility.BlockConversionInfo;
 import com.colen.postea.Utility.BlockInfo;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -75,11 +77,6 @@ public class ChunkFixerUtility {
         }
     }
 
-    /**
-     * Replaces specified tile entities with a block in the chunk NBT data.
-     *
-     * @param chunkNBT           The chunk's NBT data.
-     */
     public static void transformTileEntities(NBTTagCompound chunkNBT, World world) {
         NBTTagCompound level = chunkNBT.getCompoundTag("Level");
 
@@ -200,6 +197,4 @@ public class ChunkFixerUtility {
             this.blockInfo = blockInfo;
         }
     }
-
-
 }

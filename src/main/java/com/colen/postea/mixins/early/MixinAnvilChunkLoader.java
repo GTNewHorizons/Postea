@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static com.colen.postea.API.ChunkFixerUtility.processChunkNBT;
+import static com.colen.postea.Utility.ChunkFixerUtility.processChunkNBT;
 
 @Mixin(AnvilChunkLoader.class)
 @SuppressWarnings("unused")

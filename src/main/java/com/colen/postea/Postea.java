@@ -111,21 +111,12 @@ public class Postea {
 
             BlockConversionInfo blockConversionInfoNew = new BlockConversionInfo();
 
-            if ((blockConversionInfoOld.x % 2 == 1) && (blockConversionInfoOld.y % 2 == 0)) {
+            if ((blockConversionInfoOld.x == 334 && blockConversionInfoOld.y == 4 && blockConversionInfoOld.z == 73)) {
                 blockConversionInfoNew.blockID = Block.getIdFromBlock(Blocks.wool);
                 blockConversionInfoNew.metadata = 1;
-            }
-            if ((blockConversionInfoOld.x % 2 == 1) && (blockConversionInfoOld.y % 2 == 1)) {
-                blockConversionInfoNew.blockID = Block.getIdFromBlock(Blocks.wool);
-                blockConversionInfoNew.metadata = 2;
-            }
-            if ((blockConversionInfoOld.x % 2 == 0) && (blockConversionInfoOld.y % 2 == 0)) {
-                blockConversionInfoNew.blockID = Block.getIdFromBlock(Blocks.wool);
-                blockConversionInfoNew.metadata = 3;
-            }
-            if ((blockConversionInfoOld.x % 2 == 0) && (blockConversionInfoOld.y % 2 == 1)) {
-                blockConversionInfoNew.blockID = Block.getIdFromBlock(Blocks.wool);
-                blockConversionInfoNew.metadata = 4;
+            } else {
+                blockConversionInfoNew.blockID = blockConversionInfoOld.blockID;
+                blockConversionInfoNew.metadata = blockConversionInfoOld.metadata;
             }
 
             return blockConversionInfoNew;

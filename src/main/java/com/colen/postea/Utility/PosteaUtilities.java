@@ -16,4 +16,11 @@ public abstract class PosteaUtilities {
 
         return tagCompound;
     }
+
+    public static void fixItemStack(NBTTagCompound tag) {
+
+        if (tag.hasNoTags()) return;
+
+        // Todo {id:5s,Count:4b,Damage:3s}
+    }
 }
