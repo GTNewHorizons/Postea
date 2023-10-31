@@ -1,11 +1,12 @@
 package com.colen.postea.Utility;
 
+import java.util.function.Function;
+
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 
-import java.util.function.Function;
-
 public final class BlockInfo {
+
     public final Block block;
     public final int metadata;
     public final Function<NBTTagCompound, NBTTagCompound> tileTransformer;

@@ -1,20 +1,20 @@
 package com.colen.postea.Utility;
 
-import akka.japi.Pair;
-import com.colen.postea.API.BlockReplacementManager;
-import com.colen.postea.API.TileEntityReplacementManager;
-import com.colen.postea.Utility.BlockConversionInfo;
-import com.colen.postea.Utility.BlockInfo;
-import cpw.mods.fml.common.registry.GameRegistry;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
+import com.colen.postea.API.BlockReplacementManager;
+import com.colen.postea.API.TileEntityReplacementManager;
+
+import akka.japi.Pair;
+import cpw.mods.fml.common.registry.GameRegistry;
 
 public class ChunkFixerUtility {
 
@@ -27,8 +27,8 @@ public class ChunkFixerUtility {
         NBTTagCompound level = compound.getCompoundTag("Level");
         NBTTagList sections = level.getTagList("Sections", 10);
 
-        int chunkXPos = level.getInteger("xPos") * 16;  // Assuming each chunk is 16 blocks along x-axis
-        int chunkZPos = level.getInteger("zPos") * 16;  // Assuming each chunk is 16 blocks along z-axis
+        int chunkXPos = level.getInteger("xPos") * 16; // Assuming each chunk is 16 blocks along x-axis
+        int chunkZPos = level.getInteger("zPos") * 16; // Assuming each chunk is 16 blocks along z-axis
 
         for (int i = 0; i < sections.tagCount(); i++) {
             NBTTagCompound section = sections.getCompoundTagAt(i);
@@ -38,10 +38,12 @@ public class ChunkFixerUtility {
 
             for (int index = 0; index < blockArray.length / 2; index++) {
                 int blockId = ((blockArray[index * 2] & 0xFF) << 8) | (blockArray[index * 2 + 1] & 0xFF);
-                byte metadata = (byte) ((index & 1) == 0 ? (metadataArray[index / 2] & 0x0F) : ((metadataArray[index / 2] & 0xF0) >> 4));
+                byte metadata = (byte) ((index & 1) == 0 ? (metadataArray[index / 2] & 0x0F)
+                    : ((metadataArray[index / 2] & 0xF0) >> 4));
 
                 Block block = Block.getBlockById(blockId);
-                String blockName = GameRegistry.findUniqueIdentifierFor(block).toString();
+                String blockName = GameRegistry.findUniqueIdentifierFor(block)
+                    .toString();
 
                 BlockConversionInfo blockConversionInfo = new BlockConversionInfo();
                 blockConversionInfo.blocKName = blockName;
@@ -50,11 +52,11 @@ public class ChunkFixerUtility {
                 blockConversionInfo.world = world;
 
                 int x = index % 16;
-                int y = (index / 256) + (sectionY * 16);  // Add the offset of the current section in Y direction
+                int y = (index / 256) + (sectionY * 16); // Add the offset of the current section in Y direction
                 int z = (index / 16) % 16;
 
                 blockConversionInfo.x = x + chunkXPos;
-                blockConversionInfo.y = y;  // Y remains unchanged as it's already global
+                blockConversionInfo.y = y; // Y remains unchanged as it's already global
                 blockConversionInfo.z = z + chunkZPos;
 
                 BlockConversionInfo output = BlockReplacementManager.getBlockReplacement(blockConversionInfo);
@@ -88,8 +90,8 @@ public class ChunkFixerUtility {
             level.setTag("TileEntities", tileEntities);
         }
 
-        int chunkXPos = level.getInteger("xPos") * 16;  // Assuming each chunk is 16 blocks along x-axis
-        int chunkZPos = level.getInteger("zPos") * 16;  // Assuming each chunk is 16 blocks along z-axis
+        int chunkXPos = level.getInteger("xPos") * 16; // Assuming each chunk is 16 blocks along x-axis
+        int chunkZPos = level.getInteger("zPos") * 16; // Assuming each chunk is 16 blocks along z-axis
 
         NBTTagList sections = level.getTagList("Sections", 10);
         for (int i = 0; i < sections.tagCount(); i++) {
@@ -98,7 +100,8 @@ public class ChunkFixerUtility {
         }
     }
 
-    private static void processSection(NBTTagCompound section, List<ConversionInfo> conversionInfoList, int chunkXPos, int chunkZPos) {
+    private static void processSection(NBTTagCompound section, List<ConversionInfo> conversionInfoList, int chunkXPos,
+        int chunkZPos) {
         byte[] blockArray = section.getByteArray("Blocks16");
         byte[] metadataArray = section.getByteArray("Data");
         byte y = section.getByte("Y");
@@ -123,7 +126,7 @@ public class ChunkFixerUtility {
         int tileX = info.x - chunkXPos;
         int tileY = info.y - y * 16;
         int tileZ = info.z - chunkZPos;
-        return new int[]{tileX, tileY, tileZ};
+        return new int[] { tileX, tileY, tileZ };
     }
 
     private static int computeBlockIndex(int[] localCoords) {
@@ -161,7 +164,8 @@ public class ChunkFixerUtility {
             String tileEntityId = tileEntity.getString("id");
 
             // Check if we have a transformer registered for this tile entity ID
-            BiFunction<NBTTagCompound, World, BlockInfo> transformationFunction = TileEntityReplacementManager.getTileEntityToNormalBlockTransformerFunction(tileEntityId);
+            BiFunction<NBTTagCompound, World, BlockInfo> transformationFunction = TileEntityReplacementManager
+                .getTileEntityToNormalBlockTransformerFunction(tileEntityId);
 
             if (transformationFunction != null) {
                 int x = tileEntity.getInteger("x");
@@ -178,10 +182,8 @@ public class ChunkFixerUtility {
             }
         }
 
-
         return new Pair<>(conversionInfo, tileEntitiesCopy);
     }
-
 
     public static class ConversionInfo {
 

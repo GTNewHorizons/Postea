@@ -1,13 +1,14 @@
 package com.colen.postea.mixins.early;
 
+import static com.colen.postea.Utility.ItemFixerUtility.fixItemStack;
+
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import static com.colen.postea.Utility.ItemFixerUtility.fixItemStack;
 
 @Mixin(ItemStack.class)
 @SuppressWarnings("unused")

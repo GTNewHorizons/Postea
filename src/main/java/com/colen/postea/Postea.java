@@ -1,13 +1,9 @@
 package com.colen.postea;
 
-import com.colen.postea.API.BlockReplacementManager;
-import com.colen.postea.API.ItemStackReplacementManager;
-import com.colen.postea.API.TileEntityReplacementManager;
-import com.colen.postea.Utility.BlockConversionInfo;
-import com.colen.postea.Utility.BlockInfo;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.event.FMLPostInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import static com.colen.postea.Utility.PosteaUtilities.cleanseNBT;
+
+import java.util.function.Function;
+
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -15,9 +11,14 @@ import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
-import java.util.function.Function;
+import com.colen.postea.API.BlockReplacementManager;
+import com.colen.postea.API.ItemStackReplacementManager;
+import com.colen.postea.API.TileEntityReplacementManager;
+import com.colen.postea.Utility.BlockConversionInfo;
+import com.colen.postea.Utility.BlockInfo;
 
-import static com.colen.postea.Utility.PosteaUtilities.cleanseNBT;
+import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 
 @Mod(modid = Tags.MODID, version = Tags.VERSION, name = Tags.MODNAME, acceptedMinecraftVersions = "[1.7.10]")
 @SuppressWarnings("unused")
@@ -27,7 +28,8 @@ public class Postea {
     public void preInit(FMLPreInitializationEvent event) {
 
         // This is an example of replacing GT ore blocks depending on the dimension. Because BlockInfo has no TileEntity
-        // transformer set, it will delete the underlying tile entity fully. This will essentially convert a TE block to a non-TE block.
+        // transformer set, it will delete the underlying tile entity fully. This will essentially convert a TE block to
+        // a non-TE block.
         // You can use the data in the tile to determine this conversion from the "tag" variable.
         TileEntityReplacementManager.tileEntityTransformer("GT_TileEntity_Ores", (tag, world) -> {
             if (world.provider.dimensionId == -1) {
@@ -41,8 +43,8 @@ public class Postea {
             return new BlockInfo(Blocks.wool, 3);
         });
 
-
-        // This is an example of how to replace another tile entity and it's block. Here we are replacing furnaces with chests.
+        // This is an example of how to replace another tile entity and it's block. Here we are replacing furnaces with
+        // chests.
         // It will then also replace the furnace block with a chest. Otherwise the Tile would not match the block.
         TileEntityReplacementManager.tileEntityTransformer("Furnace", (tag, world) -> {
 
@@ -102,7 +104,6 @@ public class Postea {
             return new BlockInfo(Blocks.chest, 0, chestTransformer);
         });
 
-
         // Example of how to replace a non-TE block with another non-TE block, this replaces grass with wool.
         // It converts every grass block with an even x coordinate to orange wool.
         Function<BlockConversionInfo, BlockConversionInfo> blockTransformer = (blockConversionInfoOld) -> {
@@ -121,7 +122,6 @@ public class Postea {
         };
 
         BlockReplacementManager.addBlockReplacement("minecraft:grass", blockTransformer);
-
 
         // Example of how to replace an item, this replaces iron ingots with gold ingots.
         // You can manipulate stack size but it isn't recommended.

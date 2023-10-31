@@ -1,10 +1,10 @@
 package com.colen.postea.API;
 
-import net.minecraft.nbt.NBTTagCompound;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+
+import net.minecraft.nbt.NBTTagCompound;
 
 public class ItemStackReplacementManager {
 

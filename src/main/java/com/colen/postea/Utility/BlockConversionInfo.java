@@ -4,6 +4,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 public final class BlockConversionInfo {
+
     public int x;
     public int y;
     public int z;

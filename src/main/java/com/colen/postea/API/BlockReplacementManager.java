@@ -1,24 +1,26 @@
 package com.colen.postea.API;
 
-import com.colen.postea.Utility.BlockConversionInfo;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+
+import com.colen.postea.Utility.BlockConversionInfo;
 
 public class BlockReplacementManager {
 
     private static final Map<String, Function<BlockConversionInfo, BlockConversionInfo>> blockReplacementMap = new HashMap<>();
 
     @SuppressWarnings("unused")
-    public static void addBlockReplacement(String blockNameIn, Function<BlockConversionInfo, BlockConversionInfo> transformer) {
+    public static void addBlockReplacement(String blockNameIn,
+        Function<BlockConversionInfo, BlockConversionInfo> transformer) {
         blockReplacementMap.put(blockNameIn, transformer);
     }
 
     @SuppressWarnings("unused")
     public static BlockConversionInfo getBlockReplacement(BlockConversionInfo blockConversionInfo) {
 
-        Function<BlockConversionInfo, BlockConversionInfo> transformer = blockReplacementMap.getOrDefault(blockConversionInfo.blocKName, null);
+        Function<BlockConversionInfo, BlockConversionInfo> transformer = blockReplacementMap
+            .getOrDefault(blockConversionInfo.blocKName, null);
 
         if (transformer == null) {
             return null;
