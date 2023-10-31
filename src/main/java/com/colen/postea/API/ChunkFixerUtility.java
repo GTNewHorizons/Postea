@@ -1,6 +1,9 @@
 package com.colen.postea.API;
 
 import akka.japi.Pair;
+import com.colen.postea.Utility.BlockConversionInfo;
+import com.colen.postea.Utility.BlockInfo;
+import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -9,7 +12,6 @@ import net.minecraft.world.World;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ChunkFixerUtility {
@@ -22,19 +24,41 @@ public class ChunkFixerUtility {
     private static void transformNormalBlocks(NBTTagCompound compound, World world) {
         NBTTagCompound level = compound.getCompoundTag("Level");
         NBTTagList sections = level.getTagList("Sections", 10);
+
+        int chunkXPos = level.getInteger("xPos") * 16;  // Assuming each chunk is 16 blocks along x-axis
+        int chunkZPos = level.getInteger("zPos") * 16;  // Assuming each chunk is 16 blocks along z-axis
+
         for (int i = 0; i < sections.tagCount(); i++) {
             NBTTagCompound section = sections.getCompoundTagAt(i);
             byte[] blockArray = section.getByteArray("Blocks16");
             byte[] metadataArray = section.getByteArray("Data");
+            byte sectionY = section.getByte("Y");
 
             for (int index = 0; index < blockArray.length / 2; index++) {
                 int blockId = ((blockArray[index * 2] & 0xFF) << 8) | (blockArray[index * 2 + 1] & 0xFF);
                 byte metadata = (byte) ((index & 1) == 0 ? (metadataArray[index / 2] & 0x0F) : ((metadataArray[index / 2] & 0xF0) >> 4));
 
-                Pair<Integer, Integer> output = BlockReplacementManager.getBlockReplacement(blockId, metadata);
+                Block block = Block.getBlockById(blockId);
+                String blockName = GameRegistry.findUniqueIdentifierFor(block).toString();
+
+                BlockConversionInfo blockConversionInfo = new BlockConversionInfo();
+                blockConversionInfo.blocKName = blockName;
+                blockConversionInfo.blockID = blockId;
+                blockConversionInfo.metadata = metadata;
+                blockConversionInfo.world = world;
+
+                int x = index % 16;
+                int y = (index / 256) + (sectionY * 16);  // Add the offset of the current section in Y direction
+                int z = (index / 16) % 16;
+
+                blockConversionInfo.x = x + chunkXPos;
+                blockConversionInfo.y = y;  // Y remains unchanged as it's already global
+                blockConversionInfo.z = z + chunkZPos;
+
+                BlockConversionInfo output = BlockReplacementManager.getBlockReplacement(blockConversionInfo);
                 if (output != null) {
-                    int newBlockId = output.first();
-                    int newMetadata = output.second();
+                    int newBlockId = output.blockID;
+                    int newMetadata = output.metadata;
 
                     blockArray[index * 2] = (byte) ((newBlockId >> 8) & 0xFF);
                     blockArray[index * 2 + 1] = (byte) (newBlockId & 0xFF);
@@ -177,22 +201,5 @@ public class ChunkFixerUtility {
         }
     }
 
-    public static class BlockInfo {
-        public final Block block;
-        public final int metadata;
-        public final Function<NBTTagCompound, NBTTagCompound> tileTransformer;
-
-        public BlockInfo(Block block, int metadata, Function<NBTTagCompound, NBTTagCompound> tileTransformer) {
-            this.block = block;
-            this.metadata = metadata;
-            this.tileTransformer = tileTransformer;
-        }
-
-        public BlockInfo(Block block, int metadata) {
-            this.block = block;
-            this.metadata = metadata;
-            this.tileTransformer = null;
-        }
-    }
 
 }

@@ -1,36 +1,29 @@
 package com.colen.postea.API;
 
-import akka.japi.Pair;
-import cpw.mods.fml.common.registry.GameRegistry;
-import net.minecraft.block.Block;
-import net.minecraft.item.Item;
+import com.colen.postea.Utility.BlockConversionInfo;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import static com.colen.postea.API.ItemStackReplacementManager.addItemReplacement;
-
 public class BlockReplacementManager {
 
-    private static final Map<BlockKey, Function<BlockKey, Pair<Integer, Integer>>> blockReplacementMap = new HashMap<>();
+    private static final Map<String, Function<BlockConversionInfo, BlockConversionInfo>> blockReplacementMap = new HashMap<>();
 
     @SuppressWarnings("unused")
-    public static void addBlockReplacement(String blockNameIn, int metadataIn, Function<BlockKey, Pair<Integer, Integer>> transformer) {
-        blockReplacementMap.put(new BlockKey(blockNameIn, metadataIn), transformer);
+    public static void addBlockReplacement(String blockNameIn, Function<BlockConversionInfo, BlockConversionInfo> transformer) {
+        blockReplacementMap.put(blockNameIn, transformer);
     }
 
     @SuppressWarnings("unused")
-    public static Pair<Integer, Integer> getBlockReplacement(int blockID, int metadataIn) {
-        Block block = Block.getBlockById(blockID);
-        String blockName = GameRegistry.findUniqueIdentifierFor(block).toString();
+    public static BlockConversionInfo getBlockReplacement(BlockConversionInfo blockConversionInfo) {
 
-        Function<BlockKey, Pair<Integer, Integer>> transformer = blockReplacementMap.getOrDefault(new BlockKey(blockName, metadataIn), null);
+        Function<BlockConversionInfo, BlockConversionInfo> transformer = blockReplacementMap.getOrDefault(blockConversionInfo.blocKName, null);
 
         if (transformer == null) {
             return null;
         } else {
-            return transformer.apply(new BlockKey(blockName, metadataIn));
+            return transformer.apply(blockConversionInfo);
         }
     }
 

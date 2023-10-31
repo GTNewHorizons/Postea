@@ -1,18 +1,20 @@
 package com.colen.postea;
 
-import akka.japi.Pair;
-import com.colen.postea.API.BlockKey;
 import com.colen.postea.API.BlockReplacementManager;
-import com.colen.postea.API.ChunkFixerUtility;
 import com.colen.postea.API.TileEntityReplacementManager;
+import com.colen.postea.Utility.BlockConversionInfo;
+import com.colen.postea.Utility.BlockInfo;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
 import java.util.function.Function;
+
+import static com.colen.postea.Utility.PosteaUtilities.cleanseNBT;
 
 @Mod(modid = Tags.MODID, version = Tags.VERSION, name = Tags.MODNAME, acceptedMinecraftVersions = "[1.7.10]")
 @SuppressWarnings("unused")
@@ -37,17 +39,15 @@ public class Postea {
         //TileEntityReplacementManager.tileEntityFixer("GT_TileEntity_Ores", myTransformer);
         TileEntityReplacementManager.tileEntityTransformer("GT_TileEntity_Ores", (tag, world) -> {
             if (world.provider.dimensionId == -1) {
-                return new ChunkFixerUtility.BlockInfo(Blocks.wool, 1);
+                return new BlockInfo(Blocks.wool, 1);
             }
 
             if (world.provider.dimensionId == 1) {
-                return new ChunkFixerUtility.BlockInfo(Blocks.wool, 2);
+                return new BlockInfo(Blocks.wool, 2);
             }
 
-            return new ChunkFixerUtility.BlockInfo(Blocks.wool, 3);
+            return new BlockInfo(Blocks.wool, 3);
         });
-
-
 
 
 /*        TileEntityReplacementManager.tileEntityTransformer("Furnace", (tag) -> {
@@ -102,27 +102,37 @@ public class Postea {
                 return newTag;
             };
 
-            return new ChunkFixerUtility.BlockInfo(Blocks.chest, 0, chestTransformer);
+            return new BlockInfo(Blocks.chest, 0, chestTransformer);
         });
 
-        Function<BlockKey, Pair<Integer, Integer>> blockTransformer = (blockKey) -> {
-            return new Pair<>(7, 0);
+
+
+        Function<BlockConversionInfo, BlockConversionInfo> blockTransformer = (blockConversionInfoOld) -> {
+
+            BlockConversionInfo blockConversionInfoNew = new BlockConversionInfo();
+
+            if ((blockConversionInfoOld.x % 2 == 1) && (blockConversionInfoOld.y % 2 == 0)) {
+                blockConversionInfoNew.blockID = Block.getIdFromBlock(Blocks.wool);
+                blockConversionInfoNew.metadata = 1;
+            }
+            if ((blockConversionInfoOld.x % 2 == 1) && (blockConversionInfoOld.y % 2 == 1)) {
+                blockConversionInfoNew.blockID = Block.getIdFromBlock(Blocks.wool);
+                blockConversionInfoNew.metadata = 2;
+            }
+            if ((blockConversionInfoOld.x % 2 == 0) && (blockConversionInfoOld.y % 2 == 0)) {
+                blockConversionInfoNew.blockID = Block.getIdFromBlock(Blocks.wool);
+                blockConversionInfoNew.metadata = 3;
+            }
+            if ((blockConversionInfoOld.x % 2 == 0) && (blockConversionInfoOld.y % 2 == 1)) {
+                blockConversionInfoNew.blockID = Block.getIdFromBlock(Blocks.wool);
+                blockConversionInfoNew.metadata = 4;
+            }
+
+            return blockConversionInfoNew;
         };
 
-        BlockReplacementManager.addBlockReplacement("minecraft:grass", 0, blockTransformer);
+        BlockReplacementManager.addBlockReplacement("minecraft:grass", blockTransformer);
 
-    }
-
-    private NBTTagCompound cleanseNBT(String newTileEntityID, NBTTagCompound tag) {
-        // Cleans the NBT, so that it replaces the ID and adds the x, y, z coordinates.
-        NBTTagCompound tagCompound = new NBTTagCompound();
-
-        tagCompound.setString("id", newTileEntityID);
-        tagCompound.setInteger("x", tag.getInteger("x"));
-        tagCompound.setInteger("y", tag.getInteger("y"));
-        tagCompound.setInteger("z", tag.getInteger("z"));
-
-        return tagCompound;
     }
 
     @Mod.EventHandler
