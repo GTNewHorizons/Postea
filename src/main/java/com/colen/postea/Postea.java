@@ -1,6 +1,7 @@
 package com.colen.postea;
 
 import com.colen.postea.API.BlockReplacementManager;
+import com.colen.postea.API.ItemStackReplacementManager;
 import com.colen.postea.API.TileEntityReplacementManager;
 import com.colen.postea.Utility.BlockConversionInfo;
 import com.colen.postea.Utility.BlockInfo;
@@ -9,6 +10,8 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
@@ -22,21 +25,10 @@ public class Postea {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        //ItemStackReplacementManager.addItemReplacement(Item.getItemFromBlock(Blocks.grass), 0, Item.getItemFromBlock(Blocks.coal_ore), 10);
-//        BlockReplacementManager.addBlockReplacement(GregTech_API.sBlockOres1, 6, Blocks.emerald_ore, 0);
-//        BlockReplacementManager.addBlockReplacement(GregTech_API.sBlockOres1, 16022, Blocks.nether_brick, 0);
-//        BlockReplacementManager.addBlockReplacement(GregTech_API.sBlockOres1, 1018, Blocks.end_stone, 0);
 
-        // Define the transformation function
-/*        Function<NBTTagCompound, NBTTagCompound> myTransformer = (tag) -> {
-            if (tag.getInteger("m") == 86) {
-                tag.setInteger("m", 323);
-                return tag;
-            }
-            return tag;
-        };*/
-
-        //TileEntityReplacementManager.tileEntityFixer("GT_TileEntity_Ores", myTransformer);
+        // This is an example of replacing GT ore blocks depending on the dimension. Because BlockInfo has no TileEntity
+        // transformer set, it will delete the underlying tile entity fully. This will essentially convert a TE block to a non-TE block.
+        // You can use the data in the tile to determine this conversion from the "tag" variable.
         TileEntityReplacementManager.tileEntityTransformer("GT_TileEntity_Ores", (tag, world) -> {
             if (world.provider.dimensionId == -1) {
                 return new BlockInfo(Blocks.wool, 1);
@@ -50,7 +42,9 @@ public class Postea {
         });
 
 
-/*        TileEntityReplacementManager.tileEntityTransformer("Furnace", (tag) -> {
+        // This is an example of how to replace another tile entity and it's block. Here we are replacing furnaces with chests.
+        // It will then also replace the furnace block with a chest. Otherwise the Tile would not match the block.
+        TileEntityReplacementManager.tileEntityTransformer("Furnace", (tag, world) -> {
 
             Function<NBTTagCompound, NBTTagCompound> chestTransformer = (oldTag) -> {
 
@@ -71,9 +65,12 @@ public class Postea {
                 return newTag;
             };
 
-            return new ChunkFixerUtility.BlockInfo(Blocks.chest, 0, chestTransformer);
-        });*/
+            return new BlockInfo(Blocks.chest, 0, chestTransformer);
+        });
 
+        // This is an example of how to change the data of a specific tile entity. You provide the Tiles ID e.g. Chest
+        // and then provide a conversion function. In this instance we are changing the contents of a chest.
+        // This will replace the contents fully with stone and jungle planks at specific slots.
         TileEntityReplacementManager.tileEntityTransformer("Chest", (tag, world) -> {
 
             Function<NBTTagCompound, NBTTagCompound> chestTransformer = (oldTag) -> {
@@ -86,13 +83,13 @@ public class Postea {
                 stoneAtSlot12.setByte("Count", (byte) 2);
                 stoneAtSlot12.setByte("Slot", (byte) 12);
                 stoneAtSlot12.setShort("Damage", (short) 0);
-                stoneAtSlot12.setShort("id", (short) 1);
+                stoneAtSlot12.setShort("id", (short) Block.getIdFromBlock(Blocks.stone));
 
                 NBTTagCompound stoneAtSlot14 = new NBTTagCompound();
                 stoneAtSlot14.setByte("Count", (byte) 4);
                 stoneAtSlot14.setByte("Slot", (byte) 14);
                 stoneAtSlot14.setShort("Damage", (short) 3);
-                stoneAtSlot14.setShort("id", (short) 5);
+                stoneAtSlot14.setShort("id", (short) Block.getIdFromBlock(Blocks.planks));
 
                 tagList.appendTag(stoneAtSlot12);
                 tagList.appendTag(stoneAtSlot14);
@@ -106,12 +103,13 @@ public class Postea {
         });
 
 
-
+        // Example of how to replace a non-TE block with another non-TE block, this replaces grass with wool.
+        // It converts every grass block with an even x coordinate to orange wool.
         Function<BlockConversionInfo, BlockConversionInfo> blockTransformer = (blockConversionInfoOld) -> {
 
             BlockConversionInfo blockConversionInfoNew = new BlockConversionInfo();
 
-            if ((blockConversionInfoOld.x == 334 && blockConversionInfoOld.y == 4 && blockConversionInfoOld.z == 73)) {
+            if ((blockConversionInfoOld.x % 2 == 0)) {
                 blockConversionInfoNew.blockID = Block.getIdFromBlock(Blocks.wool);
                 blockConversionInfoNew.metadata = 1;
             } else {
@@ -124,10 +122,16 @@ public class Postea {
 
         BlockReplacementManager.addBlockReplacement("minecraft:grass", blockTransformer);
 
-    }
 
-    @Mod.EventHandler
-    public void postInit(FMLPostInitializationEvent event) {
-        //BlockReplacementManager.addBlockReplacement(GregTech_API.sBlockOres1, 0, Blocks.chest, 0);
+        // Example of how to replace an item, this replaces iron ingots with gold ingots.
+        // You can manipulate stack size but it isn't recommended.
+        // You can also use the tag associated with this ItemStack to determine the replacement.
+        Function<NBTTagCompound, NBTTagCompound> itemTransformer = (tag) -> {
+            tag.setShort("id", (short) Item.getIdFromItem(Items.gold_ingot));
+            return tag;
+        };
+
+        ItemStackReplacementManager.addItemReplacement("minecraft:iron_ingot", itemTransformer);
+
     }
 }

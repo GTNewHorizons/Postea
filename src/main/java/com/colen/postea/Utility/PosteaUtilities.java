@@ -1,5 +1,7 @@
 package com.colen.postea.Utility;
 
+import cpw.mods.fml.common.registry.GameRegistry;
+import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 
 public abstract class PosteaUtilities {
@@ -10,17 +12,15 @@ public abstract class PosteaUtilities {
         NBTTagCompound tagCompound = new NBTTagCompound();
 
         tagCompound.setString("id", newTileEntityID);
-        tagCompound.setInteger("x", tag.getInteger("x"));
-        tagCompound.setInteger("y", tag.getInteger("y"));
-        tagCompound.setInteger("z", tag.getInteger("z"));
+
+        // This part is for tile entities only.
+        if (tag.hasKey("x") && tag.hasKey("y") && tag.hasKey("z")) {
+            tagCompound.setInteger("x", tag.getInteger("x"));
+            tagCompound.setInteger("y", tag.getInteger("y"));
+            tagCompound.setInteger("z", tag.getInteger("z"));
+        }
 
         return tagCompound;
     }
 
-    public static void fixItemStack(NBTTagCompound tag) {
-
-        if (tag.hasNoTags()) return;
-
-        // Todo {id:5s,Count:4b,Damage:3s}
-    }
 }
