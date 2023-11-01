@@ -55,9 +55,9 @@ public class ChunkFixerUtility {
                 int y = (index / 256) + (sectionY * 16); // Add the offset of the current section in Y direction
                 int z = (index / 16) % 16;
 
-                blockConversionInfo.x = x + chunkXPos;
+                blockConversionInfo.x = x + chunkXPos + 1;
                 blockConversionInfo.y = y; // Y remains unchanged as it's already global
-                blockConversionInfo.z = z + chunkZPos;
+                blockConversionInfo.z = z + chunkZPos + 1;
 
                 BlockConversionInfo output = BlockReplacementManager.getBlockReplacement(blockConversionInfo);
                 if (output != null) {

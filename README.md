@@ -1,80 +1,92 @@
-# Example Forge Mod for Minecraft 1.7.10
+# TileEntityReplacementManager API
 
-[![](https://jitpack.io/v/GTNewHorizons/ExampleMod1.7.10.svg)](https://jitpack.io/#GTNewHorizons/ExampleMod1.7.10)
-[![](https://github.com/GTNewHorizons/ExampleMod1.7.10/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/GTNewHorizons/ExampleMod1.7.10/actions/workflows/build-and-test.yml)
+This API provides a suite of tools for transforming blocks and items in the game, allowing developers to replace or modify game elements based on specific conditions.
 
-An example mod for Minecraft 1.7.10 with Forge focussed on a stable, updatable setup.
+## Features
 
-### Motivation
+1. **Tile Entity Transformation**: Replace or modify Tile Entities in the game.
+2. **Block Replacement**: Replace normal blocks with another normal block.
+3. **ItemStack Replacement**: Modify or replace items.
 
-We had our fair share in struggles with build scripts for Minecraft Forge. There are quite a few pitfalls from non-obvious error messages. This Example Project provides you a build system you can adapt to over 90% of Minecraft Forge mods and can easily be updated if need be.
+## Examples
 
-### Help! I'm stuck!
+### 1. Tile Entity Transformation
 
-We all have been there! Check out our [FAQ](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/docs/FAQ.md). If that doesn't help, please open an issue.
+#### a. We provide the registered TE ID "GT_TileEntity_Ores" and a lambda function that takes in the NBTTagCompound for any matching tile entity in world and a World and returns a BlockInfo. This will replace all TE's with the ID "GT_TileEntity_Ores" with the block specified in the BlockInfo. The secondary parameter determines the damage value of the block.
 
-### Getting started
+```java
+TileEntityReplacementManager.tileEntityTransformer("GT_TileEntity_Ores", (tag, world) -> {
+  if (world.provider.dimensionId == -1) {
+      return new BlockInfo(Blocks.wool, 1);
+  }
+  if (world.provider.dimensionId == 1) {
+      return new BlockInfo(Blocks.wool, 2);
+  }
+  return new BlockInfo(Blocks.wool, 3);
+});
+```
 
-Creating mod from scratch:
-1. Unzip [project starter](https://github.com/GTNewHorizons/ExampleMod1.7.10/releases/download/master-packages/starter.zip) into project directory.
-2. Replace placeholders in LICENSE-template and rename it to LICENSE, or remove LICENSE-template and put any other license you like on your code. This is an permissive OSS project and we encourage you participate in OSS movement by having permissive license like one in template. You can find out pros and cons of OSS software in [this article](https://www.freecodecamp.org/news/what-is-great-about-developing-open-source-and-what-is-not/)
-3. Ensure your project is under VCS. For example initialise git repository by running `git init; git commit --message "initialized repository"`.
-4. Replace placeholders (edit values in gradle.properties, change example package and class names, etc.)
-5. Run `./gradlew build`
-6. Make sure to check out the rest sections of this file.
-7. You are good to go!
+#### b. We do the same here, but now we convert a Furnace TE to a chest TE. We also need to convert the underlying block to a chest. In addtion to this we can provide a transformer that can edit the NBTTagCompound of the TE. This is useful for converting NBT data from one format to another. Here we simply edit the NBT to place stone in the middle slot.
 
-We also have described guidelines for existing mod [migration](docs/migration.md) and [porting](docs/porting.md)
+```java
+TileEntityReplacementManager.tileEntityTransformer("Furnace", (tag, world) -> {
+  return new BlockInfo(Blocks.chest, 0, Postea::chestTransformer);
+});
 
-### Features
+private static NBTTagCompound chestTransformer(NBTTagCompound oldTag) {
 
- - Updatable: Replace [`build.gradle`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/build.gradle) with a newer version
- - Optional API artifact (.jar)
- - Optional version replacement in Java files
- - Optional shadowing of dependencies
- - Simplified setup of Mixin and example
- - Scala support (add sources under `src/main/scala/` instead of `src/main/java/`)
- - Optional named developer account for consistent player progression during testing
- - Boilerplate forge mod as starting point
- - Improved warnings for pitfalls
- - Git Tags integration for versioning
- - [Jitpack](https://jitpack.io) CI
- - GitHub CI:
-   - Releasing your artifacts on new tags pushed. Push git tag named after version (e.g. 1.0.0) which will trigger a release of artifacts with according names.
-   - Running smoke test for server startup. On any server crash occurring workflow will fail and print the crash log.
+  NBTTagCompound newTag = cleanseNBT("Chest", oldTag);
 
-### Files
- - [`build.gradle`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/build.gradle): This is the core script of the build process. You should not need to tamper with it, unless you are trying to accomplish something out of the ordinary. __Do not touch this file! You will make a future update near impossible if you do so!__
- - [`gradle.properties`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/gradle.properties): The core configuration file. It includes
- - [`dependencies.gradle[.kts]`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/dependencies.gradle): Add your mod's dependencies in this file. This is separate from the main build script, so you may replace the [`build.gradle`](https://github.com/SinTh0r4s/ExampleMod1.7.10/blob/main/build.gradle) if an update is available.
- - [`repositories.gradle[.kts]`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/repositories.gradle): Add your dependencies' repositories. This is separate from the main build script, so you may replace the [`build.gradle`](https://github.com/SinTh0r4s/ExampleMod1.7.10/blob/main/build.gradle) if an update is available.
- - [`jitpack.yml`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/jitpack.yml): Ensures that your mod is available as import over [Jitpack](https://jitpack.io).
- - [`.github/workflows/gradle.yml`](https://github.com/GTNewHorizons/ExampleMod1.7.10/blob/main/.github/workflows/gradle.yml): A simple CI script that will build your mod any time it is pushed to `master` or `main` and publish the result as release in your repository. This feature is free with GitHub if your repository is public.
+  NBTTagList tagList = new NBTTagList();
 
-### Forge's Access Transformers
+  NBTTagCompound stoneAtSlot13 = new NBTTagCompound();
+  stoneAtSlot13.setByte("Count", (byte) 1);
+  stoneAtSlot13.setByte("Slot", (byte) 13);
+  stoneAtSlot13.setShort("Damage", (short) 0);
+  stoneAtSlot13.setShort("id", (short) Block.getIdFromBlock(Blocks.stone));
 
-You may activate Forge's Access Transformers by defining a configuration file in `gradle.properties`.
+  tagList.appendTag(stoneAtSlot13);
 
-Check out the [`example-access-transformers`](https://github.com/GTNewHorizons/ExampleMod1.7.10/tree/example-access-transformers) brach for a working example!
+  newTag.setTag("Items", tagList);
 
-__Warning:__ Access Transformers are bugged and will deny you any sources for the decompiled minecraft! Your development environment will still work, but you might face some inconveniences. For example, IntelliJ will not permit searches in dependencies without attached sources.
+  return newTag;
+}
+```
 
-### Mixins
+### 2. Normal Block Transformation
 
-Mixins are usually used to modify vanilla or mod/library in runtime without having to change source code. For example, redirect a call, change visibility or make class implement your interface. It's an advanced topic and most mods don't need to do that.
+#### a. The following example will replace all grass blocks with even x-coordinates with orange wool blocks.
 
-You can activate Mixin in 'gradle.properties'. In that case a mixin configuration (usually named `mixins.mymodid.json`) will be generated automatically, and you only have to write the mixins itself. Dependencies are handled as well.
-Take a look at the examples in [Hodgepodge](https://github.com/GTNewHorizons/Hodgepodge/) and [Angelica](https://github.com/GTNewHorizons/Angelica/pull/8).
+```java
+Function<BlockConversionInfo, BlockConversionInfo> blockTransformer = (blockConversionInfoOld) -> {
 
-### Advanced
+  BlockConversionInfo blockConversionInfoNew = new BlockConversionInfo();
 
-If your project requires custom gradle commands you may add a `addon.gradle[.kts]` to your project. It will be added automatically to the build script. Although we recommend against it, it is sometimes required. When in doubt, feel free to ask us about it. You may break future updates of this build system!
-If you need access to properties modified later in the buildscript, you can also use a `addon.late.gradle[.kts]`.
-For local tweaks that you don't want to commit to Git, like adding extra JVM arguments for testing, use `addon[.late].local.gradle[.kts]`.
+  if ((blockConversionInfoOld.x % 2 == 0)) {
+    blockConversionInfoNew.blockID = Block.getIdFromBlock(Blocks.wool);
+    blockConversionInfoNew.metadata = 1;
+  } else {
+    blockConversionInfoNew.blockID = blockConversionInfoOld.blockID;
+    blockConversionInfoNew.metadata = blockConversionInfoOld.metadata;
+  }
 
-### Feedback wanted
+  return blockConversionInfoNew;
+};
 
-If you tried out this build script we would love to head your opinion! Is there any feature missing for you? Did something not work? Please open an issue and we will try to resolve it asap!
+BlockReplacementManager.addBlockReplacement("minecraft:grass", blockTransformer);
+```
 
-Happy modding, \
-[SinTh0r4s](https://github.com/SinTh0r4s), [TheElan](https://github.com/TheElan) and [basdxz](https://github.com/basdxz)
+
+### 3. ItemStack Transformation
+
+#### a. The following example will replace all iron ingots with gold ingots.
+
+```java
+Function<NBTTagCompound, NBTTagCompound> itemTransformer = (tag) -> {
+  tag.setShort("id", (short) Item.getIdFromItem(Items.gold_ingot));
+  return tag;
+};
+
+ItemStackReplacementManager.addItemReplacement("minecraft:iron_ingot", itemTransformer);
+```
+
