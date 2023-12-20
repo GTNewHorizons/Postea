@@ -95,9 +95,9 @@ public class ChunkFixerUtility {
     }
 
     private static void processSection(NBTTagCompound section, List<ConversionInfo> conversionInfoList, int chunkXPos,
-        int chunkZPos) {
+                                       int chunkZPos) {
         byte[] blockArray = section.getByteArray("Blocks16");
-        byte[] metadataArray = section.getByteArray("Data");
+        byte[] metadataArray = section.getByteArray("Data16"); // Updated to use Data16
         byte y = section.getByte("Y");
 
         List<ConversionInfo> filteredList = filterConversionInfosByY(conversionInfoList, y);
@@ -106,7 +106,7 @@ public class ChunkFixerUtility {
             int[] localCoords = convertToChunkLocalCoordinates(info, y, chunkXPos, chunkZPos);
             int index = computeBlockIndex(localCoords);
             setBlockInfo(info.blockInfo.block, index, blockArray);
-            setMetadata(info.blockInfo.metadata, index, metadataArray);
+            setMetadata(info.blockInfo.metadata, index, metadataArray); // This uses the updated setMetadata
         }
     }
 
@@ -134,19 +134,14 @@ public class ChunkFixerUtility {
     }
 
     private static void setMetadata(int metadata, int index, byte[] metadataArray) {
-        int metadataIndex = index / 2;
-        byte currentMetadataByte = metadataArray[metadataIndex];
+        // Since each metadata is now two bytes, multiply the index by 2 to get the correct position.
+        int metadataStartIndex = index * 2;
 
-        if ((index & 1) == 0) { // Even
-            currentMetadataByte &= 0xF0;
-            currentMetadataByte |= (metadata & 0x0F);
-        } else { // Odd
-            currentMetadataByte &= 0x0F;
-            currentMetadataByte |= ((metadata << 4) & 0xF0);
-        }
-
-        metadataArray[metadataIndex] = currentMetadataByte;
+        // Split the 16-bit metadata into two bytes and store them in the array.
+        metadataArray[metadataStartIndex] = (byte) ((metadata >> 8) & 0xFF); // Higher 8 bits
+        metadataArray[metadataStartIndex + 1] = (byte) (metadata & 0xFF); // Lower 8 bits
     }
+
 
     private static Pair<List<ConversionInfo>, NBTTagList> adjustTileEntities(NBTTagList tileEntities, World world) {
         List<ConversionInfo> conversionInfo = new ArrayList<>();
