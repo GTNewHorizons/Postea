@@ -20,7 +20,7 @@ public class BlockReplacementManager {
     public static BlockConversionInfo getBlockReplacement(BlockConversionInfo blockConversionInfo) {
 
         Function<BlockConversionInfo, BlockConversionInfo> transformer = blockReplacementMap
-            .getOrDefault(blockConversionInfo.blocKName, null);
+            .getOrDefault(blockConversionInfo.blockName, null);
 
         if (transformer == null) {
             return null;

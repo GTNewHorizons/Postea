@@ -27,36 +27,34 @@ public class ChunkFixerUtility {
         NBTTagCompound level = compound.getCompoundTag("Level");
         NBTTagList sections = level.getTagList("Sections", 10);
 
-        int chunkXPos = level.getInteger("xPos") * 16; // Assuming each chunk is 16 blocks along x-axis
-        int chunkZPos = level.getInteger("zPos") * 16; // Assuming each chunk is 16 blocks along z-axis
+        int chunkXPos = level.getInteger("xPos") * 16;
+        int chunkZPos = level.getInteger("zPos") * 16;
 
         for (int i = 0; i < sections.tagCount(); i++) {
             NBTTagCompound section = sections.getCompoundTagAt(i);
             byte[] blockArray = section.getByteArray("Blocks16");
-            byte[] metadataArray = section.getByteArray("Data");
+            byte[] metadataArray = section.getByteArray("Data16"); // Updated to Data16
             byte sectionY = section.getByte("Y");
 
             for (int index = 0; index < blockArray.length / 2; index++) {
                 int blockId = ((blockArray[index * 2] & 0xFF) << 8) | (blockArray[index * 2 + 1] & 0xFF);
-                byte metadata = (byte) ((index & 1) == 0 ? (metadataArray[index / 2] & 0x0F)
-                    : ((metadataArray[index / 2] & 0xF0) >> 4));
+                int metadata = ((metadataArray[index * 2] & 0xFF) << 8) | (metadataArray[index * 2 + 1] & 0xFF); // Updated for Data16
 
                 Block block = Block.getBlockById(blockId);
-                String blockName = GameRegistry.findUniqueIdentifierFor(block)
-                    .toString();
+                String blockName = GameRegistry.findUniqueIdentifierFor(block).toString();
 
                 BlockConversionInfo blockConversionInfo = new BlockConversionInfo();
-                blockConversionInfo.blocKName = blockName;
+                blockConversionInfo.blockName = blockName;
                 blockConversionInfo.blockID = blockId;
-                blockConversionInfo.metadata = metadata;
+                blockConversionInfo.metadata = (byte) metadata; // Updated
                 blockConversionInfo.world = world;
 
                 int x = index % 16;
-                int y = (index / 256) + (sectionY * 16); // Add the offset of the current section in Y direction
+                int y = (index / 256) + (sectionY * 16);
                 int z = (index / 16) % 16;
 
                 blockConversionInfo.x = x + chunkXPos + 1;
-                blockConversionInfo.y = y; // Y remains unchanged as it's already global
+                blockConversionInfo.y = y;
                 blockConversionInfo.z = z + chunkZPos + 1;
 
                 BlockConversionInfo output = BlockReplacementManager.getBlockReplacement(blockConversionInfo);
@@ -67,17 +65,13 @@ public class ChunkFixerUtility {
                     blockArray[index * 2] = (byte) ((newBlockId >> 8) & 0xFF);
                     blockArray[index * 2 + 1] = (byte) (newBlockId & 0xFF);
 
-                    if ((index & 1) == 0) { // Even
-                        metadataArray[index / 2] &= 0xF0;
-                        metadataArray[index / 2] |= (newMetadata & 0x0F);
-                    } else { // Odd
-                        metadataArray[index / 2] &= 0x0F;
-                        metadataArray[index / 2] |= ((newMetadata << 4) & 0xF0);
-                    }
+                    metadataArray[index * 2] = (byte) ((newMetadata >> 8) & 0xFF);
+                    metadataArray[index * 2 + 1] = (byte) (newMetadata & 0xFF);
                 }
             }
         }
     }
+
 
     public static void transformTileEntities(NBTTagCompound chunkNBT, World world) {
         NBTTagCompound level = chunkNBT.getCompoundTag("Level");

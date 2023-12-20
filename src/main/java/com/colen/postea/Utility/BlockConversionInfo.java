@@ -15,5 +15,5 @@ public final class BlockConversionInfo {
     public World world;
     public NBTTagCompound tileEntityNBT;
 
-    public String blocKName;
+    public String blockName;
 }
