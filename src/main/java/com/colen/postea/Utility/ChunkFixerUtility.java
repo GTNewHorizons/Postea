@@ -38,10 +38,13 @@ public class ChunkFixerUtility {
 
             for (int index = 0; index < blockArray.length / 2; index++) {
                 int blockId = ((blockArray[index * 2] & 0xFF) << 8) | (blockArray[index * 2 + 1] & 0xFF);
-                int metadata = ((metadataArray[index * 2] & 0xFF) << 8) | (metadataArray[index * 2 + 1] & 0xFF); // Updated for Data16
+                int metadata = ((metadataArray[index * 2] & 0xFF) << 8) | (metadataArray[index * 2 + 1] & 0xFF); // Updated
+                                                                                                                 // for
+                                                                                                                 // Data16
 
                 Block block = Block.getBlockById(blockId);
-                String blockName = GameRegistry.findUniqueIdentifierFor(block).toString();
+                String blockName = GameRegistry.findUniqueIdentifierFor(block)
+                    .toString();
 
                 BlockConversionInfo blockConversionInfo = new BlockConversionInfo();
                 blockConversionInfo.blockName = blockName;
@@ -72,7 +75,6 @@ public class ChunkFixerUtility {
         }
     }
 
-
     public static void transformTileEntities(NBTTagCompound chunkNBT, World world) {
         NBTTagCompound level = chunkNBT.getCompoundTag("Level");
 
@@ -95,7 +97,7 @@ public class ChunkFixerUtility {
     }
 
     private static void processSection(NBTTagCompound section, List<ConversionInfo> conversionInfoList, int chunkXPos,
-                                       int chunkZPos) {
+        int chunkZPos) {
         byte[] blockArray = section.getByteArray("Blocks16");
         byte[] metadataArray = section.getByteArray("Data16"); // Updated to use Data16
         byte y = section.getByte("Y");
@@ -141,7 +143,6 @@ public class ChunkFixerUtility {
         metadataArray[metadataStartIndex] = (byte) ((metadata >> 8) & 0xFF); // Higher 8 bits
         metadataArray[metadataStartIndex + 1] = (byte) (metadata & 0xFF); // Lower 8 bits
     }
-
 
     private static Pair<List<ConversionInfo>, NBTTagList> adjustTileEntities(NBTTagList tileEntities, World world) {
         List<ConversionInfo> conversionInfo = new ArrayList<>();
