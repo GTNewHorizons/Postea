@@ -32,15 +32,16 @@ public class ChunkFixerUtility {
 
         for (int i = 0; i < sections.tagCount(); i++) {
             NBTTagCompound section = sections.getCompoundTagAt(i);
+
+            // Blocks16 and Data16 exist only because of NEID.
             byte[] blockArray = section.getByteArray("Blocks16");
-            byte[] metadataArray = section.getByteArray("Data16"); // Updated to Data16
+            byte[] metadataArray = section.getByteArray("Data16");
+
             byte sectionY = section.getByte("Y");
 
             for (int index = 0; index < blockArray.length / 2; index++) {
                 int blockId = ((blockArray[index * 2] & 0xFF) << 8) | (blockArray[index * 2 + 1] & 0xFF);
-                int metadata = ((metadataArray[index * 2] & 0xFF) << 8) | (metadataArray[index * 2 + 1] & 0xFF); // Updated
-                                                                                                                 // for
-                                                                                                                 // Data16
+                int metadata = ((metadataArray[index * 2] & 0xFF) << 8) | (metadataArray[index * 2 + 1] & 0xFF);
 
                 Block block = Block.getBlockById(blockId);
                 String blockName = GameRegistry.findUniqueIdentifierFor(block)
@@ -60,7 +61,8 @@ public class ChunkFixerUtility {
                 blockConversionInfo.y = y;
                 blockConversionInfo.z = z + chunkZPos + 1;
 
-                BlockConversionInfo output = BlockReplacementManager.getBlockReplacement(blockConversionInfo);
+                BlockConversionInfo output = BlockReplacementManager.getBlockReplacement(blockConversionInfo, world);
+
                 if (output != null) {
                     int newBlockId = output.blockID;
                     int newMetadata = output.metadata;
