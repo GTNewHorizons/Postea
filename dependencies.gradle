@@ -1,4 +1,4 @@
 
 dependencies {
-    api('com.github.GTNewHorizons:NotEnoughIds:1.5.1-metadatav2.2+a20bd8c0f6')
+    api('com.github.GTNewHorizons:NotEnoughIds:1.5.4-pre')
 }
