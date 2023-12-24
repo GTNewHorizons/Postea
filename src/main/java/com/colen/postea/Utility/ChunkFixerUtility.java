@@ -82,11 +82,9 @@ public class ChunkFixerUtility {
 
         Pair<List<ConversionInfo>, NBTTagList> output = adjustTileEntities(level.getTagList("TileEntities", 10), world);
         List<ConversionInfo> conversionInfoList = output.first();
-        NBTTagList tileEntities = output.second();
 
-        if (tileEntities.tagCount() > 0) {
-            level.setTag("TileEntities", tileEntities);
-        }
+        NBTTagList tileEntities = output.second();
+        level.setTag("TileEntities", tileEntities);
 
         int chunkXPos = level.getInteger("xPos") * 16; // Assuming each chunk is 16 blocks along x-axis
         int chunkZPos = level.getInteger("zPos") * 16; // Assuming each chunk is 16 blocks along z-axis
