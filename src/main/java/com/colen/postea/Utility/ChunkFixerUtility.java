@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import com.colen.postea.checker.PosteaProcessedChunksWorldSavedData;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -17,11 +18,18 @@ import akka.japi.Pair;
 import cpw.mods.fml.common.registry.GameRegistry;
 
 public class ChunkFixerUtility {
-
     public static void processChunkNBT(NBTTagCompound compound, World world) {
-        transformTileEntities(compound, world);
-        transformNormalBlocks(compound, world);
+        NBTTagCompound level = compound.getCompoundTag("Level");
+        int x = level.getInteger("xPos");
+        int z = level.getInteger("zPos");
+
+        if (PosteaProcessedChunksWorldSavedData.addChunk(x, z)) {
+            transformTileEntities(compound, world);
+            transformNormalBlocks(compound, world);
+        }
+
     }
+
 
     private static void transformNormalBlocks(NBTTagCompound compound, World world) {
         NBTTagCompound level = compound.getCompoundTag("Level");
@@ -171,6 +179,8 @@ public class ChunkFixerUtility {
                 } // Otherwise they are removed, therefore not appended.
 
                 conversionInfo.add(new ConversionInfo(x, y, z, blockInfo));
+            } else {
+                tileEntitiesCopy.appendTag(tileEntity);
             }
         }
 
