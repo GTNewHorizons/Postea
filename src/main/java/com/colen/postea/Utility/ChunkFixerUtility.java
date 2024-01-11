@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-import com.colen.postea.checker.PosteaProcessedChunksWorldSavedData;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -13,11 +12,13 @@ import net.minecraft.world.World;
 
 import com.colen.postea.API.BlockReplacementManager;
 import com.colen.postea.API.TileEntityReplacementManager;
+import com.colen.postea.checker.PosteaProcessedChunksWorldSavedData;
 
 import akka.japi.Pair;
 import cpw.mods.fml.common.registry.GameRegistry;
 
 public class ChunkFixerUtility {
+
     public static void processChunkNBT(NBTTagCompound compound, World world) {
         NBTTagCompound level = compound.getCompoundTag("Level");
         int x = level.getInteger("xPos");
@@ -29,7 +30,6 @@ public class ChunkFixerUtility {
         }
 
     }
-
 
     private static void transformNormalBlocks(NBTTagCompound compound, World world) {
         NBTTagCompound level = compound.getCompoundTag("Level");

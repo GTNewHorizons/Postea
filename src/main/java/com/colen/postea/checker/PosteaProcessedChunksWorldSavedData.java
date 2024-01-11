@@ -1,15 +1,5 @@
 package com.colen.postea.checker;
 
-import akka.japi.Pair;
-import cpw.mods.fml.common.eventhandler.EventPriority;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldSavedData;
-import net.minecraft.world.storage.MapStorage;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.WorldEvent;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,6 +7,17 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashSet;
+
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldSavedData;
+import net.minecraft.world.storage.MapStorage;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.WorldEvent;
+
+import akka.japi.Pair;
+import cpw.mods.fml.common.eventhandler.EventPriority;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 public class PosteaProcessedChunksWorldSavedData extends WorldSavedData {
 
@@ -29,7 +30,8 @@ public class PosteaProcessedChunksWorldSavedData extends WorldSavedData {
         boolean updateChunk = chunkCoordinates.add(new Pair<>(x, z));
 
         if (updateChunk) {
-            // Only mark the world NBT as dirty if we actually process a new chunk, since we will need to save that info.
+            // Only mark the world NBT as dirty if we actually process a new chunk, since we will need to save that
+            // info.
             INSTANCE.markDirty();
         }
 
@@ -75,13 +77,13 @@ public class PosteaProcessedChunksWorldSavedData extends WorldSavedData {
         }
     }
 
-
     public static void get(World world) {
 
         chunkCoordinates.clear();
 
         MapStorage storage = world.mapStorage;
-        INSTANCE = (PosteaProcessedChunksWorldSavedData) storage.loadData(PosteaProcessedChunksWorldSavedData.class, DATA_NAME);
+        INSTANCE = (PosteaProcessedChunksWorldSavedData) storage
+            .loadData(PosteaProcessedChunksWorldSavedData.class, DATA_NAME);
 
         if (INSTANCE == null) {
             INSTANCE = new PosteaProcessedChunksWorldSavedData();

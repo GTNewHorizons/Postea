@@ -1,12 +1,13 @@
 package com.colen.postea.Utility;
 
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.ModContainer;
-import net.minecraft.nbt.NBTTagCompound;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
+
+import net.minecraft.nbt.NBTTagCompound;
+
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.ModContainer;
 
 public abstract class PosteaUtilities {
 
@@ -27,7 +28,6 @@ public abstract class PosteaUtilities {
         return tagCompound;
     }
 
-
     public static int getModListHash() {
 
         // We iterate over every mod, get its version and put it into a giant list.
@@ -36,7 +36,8 @@ public abstract class PosteaUtilities {
 
         ArrayList<String> modList = new ArrayList<>();
 
-        for (ModContainer mod : Loader.instance().getActiveModList()) {
+        for (ModContainer mod : Loader.instance()
+            .getActiveModList()) {
             modList.add(mod.getModId() + ":" + mod.getVersion());
         }
 
