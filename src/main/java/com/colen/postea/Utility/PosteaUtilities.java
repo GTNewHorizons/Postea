@@ -3,6 +3,8 @@ package com.colen.postea.Utility;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,12 +46,24 @@ public abstract class PosteaUtilities {
         Collections.sort(modList);
 
         // Step 2: Append all elements into one string
-        StringBuilder combinedModStringSorted = new StringBuilder();
+        StringBuilder combinedModStringSortedBuilder = new StringBuilder();
         for (String element : modList) {
-            combinedModStringSorted.append(element);
+            combinedModStringSortedBuilder.append(element);
         }
 
-        return Objects.hash(combinedModStringSorted);
+        String combinedModStringSorted = combinedModStringSortedBuilder.toString();
+
+        return combinedModStringSorted.hashCode();
     }
+
+    public static void markChunkAsDirty(World world, int chunkX, int chunkZ) {
+        if (!world.isRemote) { // Check to make sure we're on the server side.
+            Chunk chunk = world.getChunkFromChunkCoords(chunkX, chunkZ);
+            if (chunk == null) return;
+
+            chunk.setChunkModified();
+        }
+    }
+
 
 }

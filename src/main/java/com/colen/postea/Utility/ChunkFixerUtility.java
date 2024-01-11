@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-import com.colen.postea.checker.PosteaProcessedChunksWorldSavedData;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -17,19 +16,36 @@ import com.colen.postea.API.TileEntityReplacementManager;
 import akka.japi.Pair;
 import cpw.mods.fml.common.registry.GameRegistry;
 
+import static com.colen.postea.Utility.PosteaUtilities.getModListHash;
+
 public class ChunkFixerUtility {
     public static void processChunkNBT(NBTTagCompound compound, World world) {
-        NBTTagCompound level = compound.getCompoundTag("Level");
-        int x = level.getInteger("xPos");
-        int z = level.getInteger("zPos");
-
-        if (PosteaProcessedChunksWorldSavedData.addChunk(x, z)) {
+        if (processChunk(compound)) {
             transformTileEntities(compound, world);
             transformNormalBlocks(compound, world);
+            compound.setInteger("POSTEA", POSTEA_UPDATE_CODE);
+
+//            NBTTagCompound level = compound.getCompoundTag("Level");
+//            int x = level.getInteger("xPos");
+//            int z = level.getInteger("zPos");
+//
+//            PosteaUtilities.markChunkAsDirty(world, x, z);
         }
 
     }
 
+    // This will not change between runs.
+    private static final int POSTEA_UPDATE_CODE = getModListHash();
+
+    // If a chunk has the same postea code, then do not update it. Return false.
+    private static boolean processChunk(NBTTagCompound compound) {
+        // I'm minimising the string length here since this
+        // will be on every single chunk in every world... Rather not duplicate too much.
+        if (compound.hasKey("POSTEA")) {
+            return compound.getInteger("POSTEA") != POSTEA_UPDATE_CODE;
+        }
+        return true;
+    }
 
     private static void transformNormalBlocks(NBTTagCompound compound, World world) {
         NBTTagCompound level = compound.getCompoundTag("Level");
@@ -85,7 +101,7 @@ public class ChunkFixerUtility {
         }
     }
 
-    public static void transformTileEntities(NBTTagCompound chunkNBT, World world) {
+    private static void transformTileEntities(NBTTagCompound chunkNBT, World world) {
         NBTTagCompound level = chunkNBT.getCompoundTag("Level");
 
         Pair<List<ConversionInfo>, NBTTagList> output = adjustTileEntities(level.getTagList("TileEntities", 10), world);
@@ -187,7 +203,7 @@ public class ChunkFixerUtility {
         return new Pair<>(conversionInfo, tileEntitiesCopy);
     }
 
-    public static class ConversionInfo {
+    private static class ConversionInfo {
 
         public final int x;
         public final int y;
