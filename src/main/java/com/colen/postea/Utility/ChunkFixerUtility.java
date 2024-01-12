@@ -1,5 +1,7 @@
 package com.colen.postea.Utility;
 
+import static com.colen.postea.Utility.PosteaUtilities.getModListHash;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -15,8 +17,6 @@ import com.colen.postea.API.TileEntityReplacementManager;
 
 import akka.japi.Pair;
 import cpw.mods.fml.common.registry.GameRegistry;
-
-import static com.colen.postea.Utility.PosteaUtilities.getModListHash;
 
 public class ChunkFixerUtility {
 
@@ -98,7 +98,9 @@ public class ChunkFixerUtility {
 
     private static void transformTileEntities(NBTTagCompound levelCompoundTag, World world) {
 
-        Pair<List<ConversionInfo>, NBTTagList> output = adjustTileEntities(levelCompoundTag.getTagList("TileEntities", 10), world);
+        Pair<List<ConversionInfo>, NBTTagList> output = adjustTileEntities(
+            levelCompoundTag.getTagList("TileEntities", 10),
+            world);
         List<ConversionInfo> conversionInfoList = output.first();
         NBTTagList tileEntities = output.second();
 

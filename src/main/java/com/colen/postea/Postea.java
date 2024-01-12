@@ -8,7 +8,6 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 public class Postea {
 
     @Mod.EventHandler
-    public void preInit(FMLPreInitializationEvent event) {
-    }
+    public void preInit(FMLPreInitializationEvent event) {}
 
 }

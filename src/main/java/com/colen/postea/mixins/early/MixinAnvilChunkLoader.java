@@ -3,7 +3,6 @@ package com.colen.postea.mixins.early;
 import static com.colen.postea.Utility.ChunkFixerUtility.POSTEA_UPDATE_CODE;
 import static com.colen.postea.Utility.ChunkFixerUtility.processChunkNBT;
 
-import com.colen.postea.mixins.interfaces.IChunkMixin;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -14,6 +13,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import com.colen.postea.mixins.interfaces.IChunkMixin;
 
 @Mixin(AnvilChunkLoader.class)
 public abstract class MixinAnvilChunkLoader {
