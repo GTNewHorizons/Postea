@@ -1,5 +1,6 @@
 package com.colen.postea.mixins.early;
 
+import static com.colen.postea.Utility.ChunkFixerUtility.POSTEA_UPDATE_CODE;
 import static com.colen.postea.Utility.ChunkFixerUtility.processChunkNBT;
 
 import com.colen.postea.mixins.interfaces.IChunkMixin;
@@ -27,12 +28,13 @@ public abstract class MixinAnvilChunkLoader {
     private Chunk onReadChunkFromNBT(World world, NBTTagCompound nbtTagCompound, CallbackInfoReturnable<Chunk> cir) {
         Chunk chunk = cir.getReturnValue();
         if (chunk instanceof IChunkMixin iChunkMixin) {
-
             if (nbtTagCompound.hasKey("POSTEA")) {
-                iChunkMixin.Postea$setPosteaCode(nbtTagCompound.getLong("POSTEA"));
-                System.out.println("On loading this chunk from NBT, it had a code of " + nbtTagCompound.getLong("POSTEA") + " at coordinates (" + chunk.xPosition + ", " + chunk.zPosition + ").");
-            }
+                long posteaCode = nbtTagCompound.getLong("POSTEA");
+                iChunkMixin.Postea$setPosteaCode(posteaCode);
 
+                // Chunk has been updated with Postea, so we will mark it to save later.
+                if (posteaCode != POSTEA_UPDATE_CODE) chunk.setChunkModified();
+            }
         }
 
         return chunk;
@@ -41,7 +43,6 @@ public abstract class MixinAnvilChunkLoader {
     @Inject(method = "writeChunkToNBT", at = @At("HEAD"))
     private void onWriteChunkToNBT(Chunk chunk, World world, NBTTagCompound nbtTagCompound, CallbackInfo ci) {
         if (chunk instanceof IChunkMixin iChunkMixin) {
-            System.out.println("On saving this chunk to NBT, it had a code of " + iChunkMixin.Postea$getPosteaCode() + " at coordinates (" + chunk.xPosition + ", " + chunk.zPosition + ").");
             nbtTagCompound.setLong("POSTEA", iChunkMixin.Postea$getPosteaCode());
         }
     }

@@ -19,23 +19,19 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import static com.colen.postea.Utility.PosteaUtilities.getModListHash;
 
 public class ChunkFixerUtility {
+
     public static void processChunkNBT(NBTTagCompound compound, World world) {
-        if (processChunk(compound)) {
-            transformTileEntities(compound, world);
-            transformNormalBlocks(compound, world);
-            compound.setInteger("POSTEA", POSTEA_UPDATE_CODE);
+        NBTTagCompound levelCompoundTag = compound.getCompoundTag("Level");
 
-//            NBTTagCompound level = compound.getCompoundTag("Level");
-//            int x = level.getInteger("xPos");
-//            int z = level.getInteger("zPos");
-//
-//            PosteaUtilities.markChunkAsDirty(world, x, z);
+        if (processChunk(levelCompoundTag)) {
+            transformTileEntities(levelCompoundTag, world);
+            transformNormalBlocks(levelCompoundTag, world);
+            levelCompoundTag.setInteger("POSTEA", POSTEA_UPDATE_CODE);
         }
-
     }
 
-    // This will not change between runs.
-    private static final int POSTEA_UPDATE_CODE = getModListHash();
+    // This will not change between runs, unless a mod is updated or added.
+    public static final int POSTEA_UPDATE_CODE = getModListHash();
 
     // If a chunk has the same postea code, then do not update it. Return false.
     private static boolean processChunk(NBTTagCompound compound) {
@@ -47,12 +43,11 @@ public class ChunkFixerUtility {
         return true;
     }
 
-    private static void transformNormalBlocks(NBTTagCompound compound, World world) {
-        NBTTagCompound level = compound.getCompoundTag("Level");
-        NBTTagList sections = level.getTagList("Sections", 10);
+    private static void transformNormalBlocks(NBTTagCompound levelCompoundTag, World world) {
+        NBTTagList sections = levelCompoundTag.getTagList("Sections", 10);
 
-        int chunkXPos = level.getInteger("xPos") * 16;
-        int chunkZPos = level.getInteger("zPos") * 16;
+        int chunkXPos = levelCompoundTag.getInteger("xPos") * 16;
+        int chunkZPos = levelCompoundTag.getInteger("zPos") * 16;
 
         for (int i = 0; i < sections.tagCount(); i++) {
             NBTTagCompound section = sections.getCompoundTagAt(i);
@@ -101,21 +96,20 @@ public class ChunkFixerUtility {
         }
     }
 
-    private static void transformTileEntities(NBTTagCompound chunkNBT, World world) {
-        NBTTagCompound level = chunkNBT.getCompoundTag("Level");
+    private static void transformTileEntities(NBTTagCompound levelCompoundTag, World world) {
 
-        Pair<List<ConversionInfo>, NBTTagList> output = adjustTileEntities(level.getTagList("TileEntities", 10), world);
+        Pair<List<ConversionInfo>, NBTTagList> output = adjustTileEntities(levelCompoundTag.getTagList("TileEntities", 10), world);
         List<ConversionInfo> conversionInfoList = output.first();
         NBTTagList tileEntities = output.second();
 
         if (tileEntities.tagCount() > 0) {
-            level.setTag("TileEntities", tileEntities);
+            levelCompoundTag.setTag("TileEntities", tileEntities);
         }
 
-        int chunkXPos = level.getInteger("xPos") * 16; // Assuming each chunk is 16 blocks along x-axis
-        int chunkZPos = level.getInteger("zPos") * 16; // Assuming each chunk is 16 blocks along z-axis
+        int chunkXPos = levelCompoundTag.getInteger("xPos") * 16; // Assuming each chunk is 16 blocks along x-axis
+        int chunkZPos = levelCompoundTag.getInteger("zPos") * 16; // Assuming each chunk is 16 blocks along z-axis
 
-        NBTTagList sections = level.getTagList("Sections", 10);
+        NBTTagList sections = levelCompoundTag.getTagList("Sections", 10);
         for (int i = 0; i < sections.tagCount(); i++) {
             NBTTagCompound section = sections.getCompoundTagAt(i);
             processSection(section, conversionInfoList, chunkXPos, chunkZPos);
