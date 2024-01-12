@@ -1,6 +1,7 @@
 package com.colen.postea.API;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.function.BiFunction;
 
@@ -10,7 +11,8 @@ import com.colen.postea.Utility.BlockConversionInfo;
 
 public class BlockReplacementManager {
 
-    private static final Map<String, BiFunction<BlockConversionInfo, World, BlockConversionInfo>> blockReplacementMap = new HashMap<>();
+    public static final Map<String, BiFunction<BlockConversionInfo, World, BlockConversionInfo>> blockReplacementMap = new HashMap<>();
+    public static final HashSet<Integer> posteaMarkedIDs = new HashSet<>();
 
     @SuppressWarnings("unused")
     public static void addBlockReplacement(String blockNameIn,
@@ -28,6 +30,11 @@ public class BlockReplacementManager {
         } else {
             return transformer.apply(blockConversionInfo, world);
         }
+    }
+
+    // We need this to save reprocessing blocks.
+    public static boolean blockNotConvertible(int blockID) {
+        return !posteaMarkedIDs.contains(blockID);
     }
 
 }

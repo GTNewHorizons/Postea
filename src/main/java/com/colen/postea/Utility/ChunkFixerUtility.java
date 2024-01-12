@@ -1,8 +1,10 @@
 package com.colen.postea.Utility;
 
+import static com.colen.postea.API.BlockReplacementManager.blockNotConvertible;
 import static com.colen.postea.Utility.PosteaUtilities.getModListHash;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -43,6 +45,9 @@ public class ChunkFixerUtility {
         return true;
     }
 
+    private static final int AIR_ID = 0;
+    private static final HashMap<Block, String> loadedBlocks = new HashMap<>();
+
     private static void transformNormalBlocks(NBTTagCompound levelCompoundTag, World world) {
         NBTTagList sections = levelCompoundTag.getTagList("Sections", 10);
 
@@ -50,50 +55,60 @@ public class ChunkFixerUtility {
         int chunkZPos = levelCompoundTag.getInteger("zPos") * 16;
 
         for (int i = 0; i < sections.tagCount(); i++) {
-            NBTTagCompound section = sections.getCompoundTagAt(i);
+                NBTTagCompound section = sections.getCompoundTagAt(i);
 
-            // Blocks16 and Data16 exist only because of NEID.
-            byte[] blockArray = section.getByteArray("Blocks16");
-            byte[] metadataArray = section.getByteArray("Data16");
+                // Blocks16 and Data16 exist only because of NEID.
+                byte[] blockArray = section.getByteArray("Blocks16");
+                byte[] metadataArray = section.getByteArray("Data16");
 
-            byte sectionY = section.getByte("Y");
+                byte sectionY = section.getByte("Y");
+                System.out.println("Y: " + sectionY);
+                System.out.println("i: " + i);
+                System.out.println("sections.tagCount(): " + sections.tagCount());
 
-            for (int index = 0; index < blockArray.length / 2; index++) {
-                int blockId = ((blockArray[index * 2] & 0xFF) << 8) | (blockArray[index * 2 + 1] & 0xFF);
-                int metadata = ((metadataArray[index * 2] & 0xFF) << 8) | (metadataArray[index * 2 + 1] & 0xFF);
+                for (int index = 0; index < blockArray.length / 2; index++) {
+                    // Horrible bit jank to recreate the actual IDs, because the array is just a byte array.
+                    int blockId = ((blockArray[index * 2] & 0xFF) << 8) | (blockArray[index * 2 + 1] & 0xFF);
+                    int metadata = ((metadataArray[index * 2] & 0xFF) << 8) | (metadataArray[index * 2 + 1] & 0xFF);
 
-                Block block = Block.getBlockById(blockId);
-                String blockName = GameRegistry.findUniqueIdentifierFor(block)
-                    .toString();
+                    // Skip air.
+                    if (blockId == AIR_ID) continue;
+                    // If this block has no registered Postea conversion, skip it.
+                    if (blockNotConvertible(blockId)) continue;
 
-                BlockConversionInfo blockConversionInfo = new BlockConversionInfo();
-                blockConversionInfo.blockName = blockName;
-                blockConversionInfo.blockID = blockId;
-                blockConversionInfo.metadata = (byte) metadata; // Updated
-                blockConversionInfo.world = world;
+                    // Cache block names to improve performance, as findUniqueIdentifierFor is expensive.
+                    Block block = Block.getBlockById(blockId);
+                    String blockName = loadedBlocks.computeIfAbsent(block, b -> GameRegistry.findUniqueIdentifierFor(b).toString());
 
-                int x = index % 16;
-                int y = (index / 256) + (sectionY * 16);
-                int z = (index / 16) % 16;
+                    BlockConversionInfo blockConversionInfo = new BlockConversionInfo();
+                    blockConversionInfo.blockName = blockName;
+                    blockConversionInfo.blockID = blockId;
+                    blockConversionInfo.metadata = (byte) metadata; // Updated
+                    blockConversionInfo.world = world;
 
-                blockConversionInfo.x = x + chunkXPos + 1;
-                blockConversionInfo.y = y;
-                blockConversionInfo.z = z + chunkZPos + 1;
+                    int x = index % 16;
+                    int y = (index / 256) + (sectionY * 16);
+                    int z = (index / 16) % 16;
 
-                BlockConversionInfo output = BlockReplacementManager.getBlockReplacement(blockConversionInfo, world);
+                    blockConversionInfo.x = x + chunkXPos + 1;
+                    blockConversionInfo.y = y;
+                    blockConversionInfo.z = z + chunkZPos + 1;
 
-                if (output != null) {
-                    int newBlockId = output.blockID;
-                    int newMetadata = output.metadata;
+                    BlockConversionInfo output = BlockReplacementManager.getBlockReplacement(blockConversionInfo, world);
 
-                    blockArray[index * 2] = (byte) ((newBlockId >> 8) & 0xFF);
-                    blockArray[index * 2 + 1] = (byte) (newBlockId & 0xFF);
+                    if (output != null) {
+                        int newBlockId = output.blockID;
+                        int newMetadata = output.metadata;
 
-                    metadataArray[index * 2] = (byte) ((newMetadata >> 8) & 0xFF);
-                    metadataArray[index * 2 + 1] = (byte) (newMetadata & 0xFF);
+                        blockArray[index * 2] = (byte) ((newBlockId >> 8) & 0xFF);
+                        blockArray[index * 2 + 1] = (byte) (newBlockId & 0xFF);
+
+                        metadataArray[index * 2] = (byte) ((newMetadata >> 8) & 0xFF);
+                        metadataArray[index * 2 + 1] = (byte) (newMetadata & 0xFF);
+                    }
                 }
             }
-        }
+
     }
 
     private static void transformTileEntities(NBTTagCompound levelCompoundTag, World world) {
