@@ -62,9 +62,6 @@ public class ChunkFixerUtility {
             byte[] metadataArray = section.getByteArray("Data16");
 
             byte sectionY = section.getByte("Y");
-            System.out.println("Y: " + sectionY);
-            System.out.println("i: " + i);
-            System.out.println("sections.tagCount(): " + sections.tagCount());
 
             for (int index = 0; index < blockArray.length / 2; index++) {
                 // Horrible bit jank to recreate the actual IDs, because the array is just a byte array.
@@ -111,7 +108,6 @@ public class ChunkFixerUtility {
                 }
             }
         }
-
     }
 
     private static void transformTileEntities(NBTTagCompound levelCompoundTag, World world) {
