@@ -58,7 +58,7 @@ private static NBTTagCompound chestTransformer(NBTTagCompound oldTag) {
 #### a. The following example will replace all grass blocks with even x-coordinates with orange wool blocks.
 
 ```java
-Function<BlockConversionInfo, BlockConversionInfo> blockTransformer = (blockConversionInfoOld) -> {
+BiFunction<BlockConversionInfo, World, BlockConversionInfo> blockTransformer = (blockConversionInfoOld, world) -> {
 
   BlockConversionInfo blockConversionInfoNew = new BlockConversionInfo();
 
