@@ -1,20 +1,14 @@
 package com.colen.postea;
 
-import com.colen.postea.API.BlockReplacementManager;
-import com.colen.postea.Utility.BlockConversionInfo;
+import static com.colen.postea.API.BlockReplacementManager.blockReplacementMap;
+import static com.colen.postea.API.BlockReplacementManager.posteaMarkedIDs;
+
+import net.minecraft.block.Block;
+
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerAboutToStartEvent;
 import cpw.mods.fml.common.event.FMLServerStoppingEvent;
-import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
-import net.minecraft.world.World;
-
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
-import static com.colen.postea.API.BlockReplacementManager.blockReplacementMap;
-import static com.colen.postea.API.BlockReplacementManager.posteaMarkedIDs;
 
 @Mod(modid = Tags.MODID, version = Tags.VERSION, name = Tags.MODNAME, acceptedMinecraftVersions = "[1.7.10]")
 @SuppressWarnings("unused")

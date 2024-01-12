@@ -55,59 +55,62 @@ public class ChunkFixerUtility {
         int chunkZPos = levelCompoundTag.getInteger("zPos") * 16;
 
         for (int i = 0; i < sections.tagCount(); i++) {
-                NBTTagCompound section = sections.getCompoundTagAt(i);
+            NBTTagCompound section = sections.getCompoundTagAt(i);
 
-                // Blocks16 and Data16 exist only because of NEID.
-                byte[] blockArray = section.getByteArray("Blocks16");
-                byte[] metadataArray = section.getByteArray("Data16");
+            // Blocks16 and Data16 exist only because of NEID.
+            byte[] blockArray = section.getByteArray("Blocks16");
+            byte[] metadataArray = section.getByteArray("Data16");
 
-                byte sectionY = section.getByte("Y");
-                System.out.println("Y: " + sectionY);
-                System.out.println("i: " + i);
-                System.out.println("sections.tagCount(): " + sections.tagCount());
+            byte sectionY = section.getByte("Y");
+            System.out.println("Y: " + sectionY);
+            System.out.println("i: " + i);
+            System.out.println("sections.tagCount(): " + sections.tagCount());
 
-                for (int index = 0; index < blockArray.length / 2; index++) {
-                    // Horrible bit jank to recreate the actual IDs, because the array is just a byte array.
-                    int blockId = ((blockArray[index * 2] & 0xFF) << 8) | (blockArray[index * 2 + 1] & 0xFF);
-                    int metadata = ((metadataArray[index * 2] & 0xFF) << 8) | (metadataArray[index * 2 + 1] & 0xFF);
+            for (int index = 0; index < blockArray.length / 2; index++) {
+                // Horrible bit jank to recreate the actual IDs, because the array is just a byte array.
+                int blockId = ((blockArray[index * 2] & 0xFF) << 8) | (blockArray[index * 2 + 1] & 0xFF);
+                int metadata = ((metadataArray[index * 2] & 0xFF) << 8) | (metadataArray[index * 2 + 1] & 0xFF);
 
-                    // Skip air.
-                    if (blockId == AIR_ID) continue;
-                    // If this block has no registered Postea conversion, skip it.
-                    if (blockNotConvertible(blockId)) continue;
+                // Skip air.
+                if (blockId == AIR_ID) continue;
+                // If this block has no registered Postea conversion, skip it.
+                if (blockNotConvertible(blockId)) continue;
 
-                    // Cache block names to improve performance, as findUniqueIdentifierFor is expensive.
-                    Block block = Block.getBlockById(blockId);
-                    String blockName = loadedBlocks.computeIfAbsent(block, b -> GameRegistry.findUniqueIdentifierFor(b).toString());
+                // Cache block names to improve performance, as findUniqueIdentifierFor is expensive.
+                Block block = Block.getBlockById(blockId);
+                String blockName = loadedBlocks.computeIfAbsent(
+                    block,
+                    b -> GameRegistry.findUniqueIdentifierFor(b)
+                        .toString());
 
-                    BlockConversionInfo blockConversionInfo = new BlockConversionInfo();
-                    blockConversionInfo.blockName = blockName;
-                    blockConversionInfo.blockID = blockId;
-                    blockConversionInfo.metadata = (byte) metadata; // Updated
-                    blockConversionInfo.world = world;
+                BlockConversionInfo blockConversionInfo = new BlockConversionInfo();
+                blockConversionInfo.blockName = blockName;
+                blockConversionInfo.blockID = blockId;
+                blockConversionInfo.metadata = (byte) metadata; // Updated
+                blockConversionInfo.world = world;
 
-                    int x = index % 16;
-                    int y = (index / 256) + (sectionY * 16);
-                    int z = (index / 16) % 16;
+                int x = index % 16;
+                int y = (index / 256) + (sectionY * 16);
+                int z = (index / 16) % 16;
 
-                    blockConversionInfo.x = x + chunkXPos + 1;
-                    blockConversionInfo.y = y;
-                    blockConversionInfo.z = z + chunkZPos + 1;
+                blockConversionInfo.x = x + chunkXPos + 1;
+                blockConversionInfo.y = y;
+                blockConversionInfo.z = z + chunkZPos + 1;
 
-                    BlockConversionInfo output = BlockReplacementManager.getBlockReplacement(blockConversionInfo, world);
+                BlockConversionInfo output = BlockReplacementManager.getBlockReplacement(blockConversionInfo, world);
 
-                    if (output != null) {
-                        int newBlockId = output.blockID;
-                        int newMetadata = output.metadata;
+                if (output != null) {
+                    int newBlockId = output.blockID;
+                    int newMetadata = output.metadata;
 
-                        blockArray[index * 2] = (byte) ((newBlockId >> 8) & 0xFF);
-                        blockArray[index * 2 + 1] = (byte) (newBlockId & 0xFF);
+                    blockArray[index * 2] = (byte) ((newBlockId >> 8) & 0xFF);
+                    blockArray[index * 2 + 1] = (byte) (newBlockId & 0xFF);
 
-                        metadataArray[index * 2] = (byte) ((newMetadata >> 8) & 0xFF);
-                        metadataArray[index * 2 + 1] = (byte) (newMetadata & 0xFF);
-                    }
+                    metadataArray[index * 2] = (byte) ((newMetadata >> 8) & 0xFF);
+                    metadataArray[index * 2 + 1] = (byte) (newMetadata & 0xFF);
                 }
             }
+        }
 
     }
 
