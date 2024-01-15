@@ -1,4 +1,4 @@
-package com.colen.postea.utility;
+package com.gtnewhorizons.postea.utility;
 
 import java.util.ArrayList;
 import java.util.Collections;

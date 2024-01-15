@@ -1,7 +1,7 @@
-package com.colen.postea.utility;
+package com.gtnewhorizons.postea.utility;
 
-import static com.colen.postea.api.BlockReplacementManager.blockNotConvertible;
-import static com.colen.postea.utility.PosteaUtilities.getModListHash;
+import static com.gtnewhorizons.postea.api.BlockReplacementManager.blockNotConvertible;
+import static com.gtnewhorizons.postea.utility.PosteaUtilities.getModListHash;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,8 +14,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
 
-import com.colen.postea.api.BlockReplacementManager;
-import com.colen.postea.api.TileEntityReplacementManager;
+import com.gtnewhorizons.postea.api.BlockReplacementManager;
+import com.gtnewhorizons.postea.api.TileEntityReplacementManager;
 
 import akka.japi.Pair;
 import cpw.mods.fml.common.registry.GameRegistry;

@@ -1,11 +1,11 @@
-package com.colen.postea.mixins.early;
+package com.gtnewhorizons.postea.mixins.early;
 
 import net.minecraft.world.chunk.Chunk;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
-import com.colen.postea.mixins.interfaces.IChunkMixin;
+import com.gtnewhorizons.postea.mixins.interfaces.IChunkMixin;
 
 @Mixin(Chunk.class)
 public class MixinChunk implements IChunkMixin {

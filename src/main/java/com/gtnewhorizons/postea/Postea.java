@@ -1,7 +1,7 @@
-package com.colen.postea;
+package com.gtnewhorizons.postea;
 
-import static com.colen.postea.api.BlockReplacementManager.blockReplacementMap;
-import static com.colen.postea.api.BlockReplacementManager.posteaMarkedIDs;
+import static com.gtnewhorizons.postea.api.BlockReplacementManager.blockReplacementMap;
+import static com.gtnewhorizons.postea.api.BlockReplacementManager.posteaMarkedIDs;
 
 import net.minecraft.block.Block;
 

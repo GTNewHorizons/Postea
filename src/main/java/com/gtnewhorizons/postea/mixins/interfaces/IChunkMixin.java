@@ -1,4 +1,4 @@
-package com.colen.postea.mixins.interfaces;
+package com.gtnewhorizons.postea.mixins.interfaces;
 
 public interface IChunkMixin {
 

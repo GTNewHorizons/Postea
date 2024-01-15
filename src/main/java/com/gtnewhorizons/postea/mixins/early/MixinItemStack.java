@@ -1,6 +1,6 @@
-package com.colen.postea.mixins.early;
+package com.gtnewhorizons.postea.mixins.early;
 
-import static com.colen.postea.utility.ItemFixerUtility.fixItemStack;
+import static com.gtnewhorizons.postea.utility.ItemFixerUtility.fixItemStack;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;

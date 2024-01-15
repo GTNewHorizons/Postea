@@ -1,4 +1,4 @@
-package com.colen.postea.api;
+package com.gtnewhorizons.postea.api;
 
 import java.util.HashMap;
 import java.util.function.BiFunction;
@@ -6,7 +6,7 @@ import java.util.function.BiFunction;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
-import com.colen.postea.utility.BlockInfo;
+import com.gtnewhorizons.postea.utility.BlockInfo;
 
 public class TileEntityReplacementManager {
 

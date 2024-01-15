@@ -1,7 +1,4 @@
-package com.colen.postea.mixins.early;
-
-import static com.colen.postea.utility.ChunkFixerUtility.POSTEA_UPDATE_CODE;
-import static com.colen.postea.utility.ChunkFixerUtility.processChunkNBT;
+package com.gtnewhorizons.postea.mixins.early;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
@@ -14,7 +11,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.colen.postea.mixins.interfaces.IChunkMixin;
+import com.gtnewhorizons.postea.mixins.interfaces.IChunkMixin;
+import com.gtnewhorizons.postea.utility.ChunkFixerUtility;
 
 @Mixin(AnvilChunkLoader.class)
 public abstract class MixinAnvilChunkLoader {
@@ -22,7 +20,7 @@ public abstract class MixinAnvilChunkLoader {
     @Inject(method = "checkedReadChunkFromNBT__Async", at = @At("HEAD"), remap = false)
     private void onCheckedReadChunkFromNBT__Async(World world, int x, int z, NBTTagCompound compound,
         CallbackInfoReturnable<Object[]> cir) {
-        processChunkNBT(compound, world);
+        ChunkFixerUtility.processChunkNBT(compound, world);
     }
 
     @Inject(method = "readChunkFromNBT", at = @At("RETURN"))
@@ -34,7 +32,7 @@ public abstract class MixinAnvilChunkLoader {
                 iChunkMixin.Postea$setPosteaCode(posteaCode);
 
                 // Chunk has been updated with Postea, so we will mark it to save later.
-                if (posteaCode != POSTEA_UPDATE_CODE) chunk.setChunkModified();
+                if (posteaCode != ChunkFixerUtility.POSTEA_UPDATE_CODE) chunk.setChunkModified();
             }
         }
 
