@@ -18,6 +18,7 @@ public abstract class ItemFixerUtility {
         if (tag.hasKey("id")) {
             short id = tag.getShort("id");
             Item item = Item.getItemById(id);
+            if (item == null) return;
             String itemNameInternal = GameRegistry.findUniqueIdentifierFor(item).modId + ":"
                 + GameRegistry.findUniqueIdentifierFor(item).name;
 
