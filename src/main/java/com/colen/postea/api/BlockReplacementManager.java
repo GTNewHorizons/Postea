@@ -1,4 +1,4 @@
-package com.colen.postea.API;
+package com.colen.postea.api;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,7 +7,7 @@ import java.util.function.BiFunction;
 
 import net.minecraft.world.World;
 
-import com.colen.postea.Utility.BlockConversionInfo;
+import com.colen.postea.utility.BlockConversionInfo;
 
 public class BlockReplacementManager {
 

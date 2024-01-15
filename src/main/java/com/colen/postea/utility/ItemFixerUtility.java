@@ -1,11 +1,11 @@
-package com.colen.postea.Utility;
+package com.colen.postea.utility;
 
 import java.util.function.Function;
 
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 
-import com.colen.postea.API.ItemStackReplacementManager;
+import com.colen.postea.api.ItemStackReplacementManager;
 
 import cpw.mods.fml.common.registry.GameRegistry;
 

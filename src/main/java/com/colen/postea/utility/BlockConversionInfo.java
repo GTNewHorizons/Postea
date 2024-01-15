@@ -1,4 +1,4 @@
-package com.colen.postea.Utility;
+package com.colen.postea.utility;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;

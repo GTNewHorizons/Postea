@@ -1,4 +1,4 @@
-package com.colen.postea.API;
+package com.colen.postea.api;
 
 import java.util.HashMap;
 import java.util.Map;

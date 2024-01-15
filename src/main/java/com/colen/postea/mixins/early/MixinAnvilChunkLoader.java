@@ -1,7 +1,7 @@
 package com.colen.postea.mixins.early;
 
-import static com.colen.postea.Utility.ChunkFixerUtility.POSTEA_UPDATE_CODE;
-import static com.colen.postea.Utility.ChunkFixerUtility.processChunkNBT;
+import static com.colen.postea.utility.ChunkFixerUtility.POSTEA_UPDATE_CODE;
+import static com.colen.postea.utility.ChunkFixerUtility.processChunkNBT;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
