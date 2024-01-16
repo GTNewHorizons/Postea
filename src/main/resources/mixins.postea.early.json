@@ -6,9 +6,9 @@
   "target": "@env(DEFAULT)",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "com.gtnewhorizons.postea.mixins.early.MixinAnvilChunkLoader",
-    "com.gtnewhorizons.postea.mixins.early.MixinChunk",
-    "com.gtnewhorizons.postea.mixins.early.MixinItemStack"
+    "MixinAnvilChunkLoader",
+    "MixinChunk",
+    "MixinItemStack"
   ],
   "client": [],
   "server": []
