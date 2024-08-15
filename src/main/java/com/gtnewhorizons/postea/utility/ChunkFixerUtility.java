@@ -199,6 +199,11 @@ public class ChunkFixerUtility {
                 int z = tileEntity.getInteger("z");
 
                 BlockInfo blockInfo = transformationFunction.apply(tileEntity, world);
+                if (blockInfo == null) {
+                    // Do nothing.
+                    tileEntitiesCopy.appendTag(tileEntity);
+                    continue;
+                }
 
                 if (blockInfo.tileTransformer != null) {
                     tileEntitiesCopy.appendTag(blockInfo.tileTransformer.apply(tileEntity));
@@ -206,6 +211,7 @@ public class ChunkFixerUtility {
 
                 conversionInfo.add(new ConversionInfo(x, y, z, blockInfo));
             } else {
+                // Do nothing.
                 tileEntitiesCopy.appendTag(tileEntity);
             }
         }

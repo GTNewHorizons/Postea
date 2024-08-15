@@ -4,7 +4,7 @@ This API provides a suite of tools for transforming blocks and items in the game
 
 ## Features
 
-1. **Tile Entity Transformation**: Replace or modify Tile Entities in the game.
+1. **Tile Entity Transformation**: Replace or modify tile entities.
 2. **Block Replacement**: Replace normal blocks with another normal block.
 3. **ItemStack Replacement**: Modify or replace items.
 
@@ -12,7 +12,7 @@ This API provides a suite of tools for transforming blocks and items in the game
 
 ### 1. Tile Entity Transformation
 
-#### a. We provide the registered TE ID "GT_TileEntity_Ores" and a lambda function that takes in the NBTTagCompound for any matching tile entity in world and a World and returns a BlockInfo. This will replace all TE's with the ID "GT_TileEntity_Ores" with the block specified in the BlockInfo. The secondary parameter determines the damage value of the block.
+#### a. We provide the registered TE ID "GT_TileEntity_Ores" and a lambda function that takes in the NBTTagCompound for any matching tile entity in world and a World and returns a BlockInfo. This will replace all TE's with the ID "GT_TileEntity_Ores" with the block specified in the BlockInfo. The secondary parameter determines the damage value of the block. Returning null instead of a BlockInfo will leave the existing tile and block totally unchanged.
 
 ```java
 TileEntityReplacementManager.tileEntityTransformer("GT_TileEntity_Ores", (tag, world) -> {
