@@ -66,7 +66,10 @@ public class ChunkFixerUtility {
             for (int index = 0; index < blockArray.length / 2; index++) {
                 // Horrible bit jank to recreate the actual IDs, because the array is just a byte array.
                 int blockId = ((blockArray[index * 2] & 0xFF) << 8) | (blockArray[index * 2 + 1] & 0xFF);
-                int metadata = ((metadataArray[index * 2] & 0xFF) << 8) | (metadataArray[index * 2 + 1] & 0xFF);
+                // If metadata is all zeroes, it isn't stored, so simply check the length and assign zero to
+                // metadata if it's empty.
+                int metadata = (metadataArray.length == 0) ? 0
+                    : (((metadataArray[index * 2] & 0xFF) << 8) | (metadataArray[index * 2 + 1] & 0xFF));
 
                 // Skip air.
                 if (blockId == AIR_ID) continue;
