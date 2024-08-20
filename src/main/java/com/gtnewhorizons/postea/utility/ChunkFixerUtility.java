@@ -60,16 +60,22 @@ public class ChunkFixerUtility {
             // Blocks16 and Data16 exist only because of NEID.
             byte[] blockArray = section.getByteArray("Blocks16");
             byte[] metadataArray = section.getByteArray("Data16");
+            // If metadata array is empty, it was all zeroes. We create a new array to write our new values to,
+            // and only save this when a nonzero value was written
+            boolean wasAllZero = false;
+            if (metadataArray.length == 0) {
+                wasAllZero = true;
+                metadataArray = new byte[8192];
+            }
+            // Keep track of if we write a nonzero element to the metadata array
+            boolean hasWrittenNonZero = false;
 
             byte sectionY = section.getByte("Y");
 
             for (int index = 0; index < blockArray.length / 2; index++) {
                 // Horrible bit jank to recreate the actual IDs, because the array is just a byte array.
                 int blockId = ((blockArray[index * 2] & 0xFF) << 8) | (blockArray[index * 2 + 1] & 0xFF);
-                // If metadata is all zeroes, it isn't stored, so simply check the length and assign zero to
-                // metadata if it's empty.
-                int metadata = (metadataArray.length == 0) ? 0
-                    : (((metadataArray[index * 2] & 0xFF) << 8) | (metadataArray[index * 2 + 1] & 0xFF));
+                int metadata = ((metadataArray[index * 2] & 0xFF) << 8) | (metadataArray[index * 2 + 1] & 0xFF);
 
                 // Skip air.
                 if (blockId == AIR_ID) continue;
@@ -87,6 +93,11 @@ public class ChunkFixerUtility {
                 blockConversionInfo.blockName = blockName;
                 blockConversionInfo.blockID = blockId;
                 blockConversionInfo.metadata = (byte) metadata; // Updated
+                // If we wrote a nonzero metadata, keep track of this because it means the
+                // new array needs to be written back to NBT
+                if (metadata != 0) {
+                    hasWrittenNonZero = true;
+                }
                 blockConversionInfo.world = world;
 
                 int x = index % 16;
@@ -109,6 +120,12 @@ public class ChunkFixerUtility {
                     metadataArray[index * 2] = (byte) ((newMetadata >> 8) & 0xFF);
                     metadataArray[index * 2 + 1] = (byte) (newMetadata & 0xFF);
                 }
+            }
+
+            // After processing all replacements, if we made a new metadata array and wrote a nonzero value to it,
+            // write it back to world NBT to save
+            if (wasAllZero && hasWrittenNonZero) {
+                section.setByteArray("Data16", metadataArray);
             }
         }
     }
