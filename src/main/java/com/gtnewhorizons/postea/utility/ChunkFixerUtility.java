@@ -156,6 +156,17 @@ public class ChunkFixerUtility {
         int chunkZPos) {
         byte[] blockArray = section.getByteArray("Blocks16");
         byte[] metadataArray = section.getByteArray("Data16"); // Updated to use Data16
+
+        // If metadata array is empty, it was all zeroes. We create a new array to write our new values to,
+        // and only save this when a nonzero value was written
+        boolean wasAllZero = false;
+        if (metadataArray.length == 0) {
+            wasAllZero = true;
+            metadataArray = new byte[8192];
+        }
+        // Keep track of if we write a nonzero element to the metadata array
+        boolean hasWrittenNonZero = false;
+
         byte y = section.getByte("Y");
 
         List<ConversionInfo> filteredList = filterConversionInfosByY(conversionInfoList, y);
@@ -165,6 +176,13 @@ public class ChunkFixerUtility {
             int index = computeBlockIndex(localCoords);
             setBlockInfo(info.blockInfo.block, index, blockArray);
             setMetadata(info.blockInfo.metadata, index, metadataArray); // This uses the updated setMetadata
+            if (info.blockInfo.metadata != 0) hasWrittenNonZero = true;
+        }
+
+        // After processing all replacements, if we made a new metadata array and wrote a nonzero value to it,
+        // write it back to world NBT to save
+        if (wasAllZero && hasWrittenNonZero) {
+            section.setByteArray("Data16", metadataArray);
         }
     }
 
