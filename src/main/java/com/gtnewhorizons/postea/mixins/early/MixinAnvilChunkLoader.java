@@ -17,7 +17,13 @@ import com.gtnewhorizons.postea.utility.ChunkFixerUtility;
 @Mixin(AnvilChunkLoader.class)
 public abstract class MixinAnvilChunkLoader {
 
-    @Inject(method = "checkedReadChunkFromNBT__Async", at = @At("HEAD"), remap = false)
+    @Inject(
+        method = "checkedReadChunkFromNBT__Async",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/chunk/storage/AnvilChunkLoader;readChunkFromNBT(Lnet/minecraft/world/World;Lnet/minecraft/nbt/NBTTagCompound;)Lnet/minecraft/world/chunk/Chunk;"),
+        remap = false
+    )
     private void onCheckedReadChunkFromNBT__Async(World world, int x, int z, NBTTagCompound compound,
         CallbackInfoReturnable<Object[]> cir) {
         ChunkFixerUtility.processChunkNBT(compound, world);
