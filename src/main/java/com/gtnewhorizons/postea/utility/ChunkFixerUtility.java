@@ -13,7 +13,10 @@ import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
+import com.gtnewhorizons.neid.mixins.interfaces.IExtendedBlockStorageMixin;
 import com.gtnewhorizons.postea.api.BlockReplacementManager;
 import com.gtnewhorizons.postea.api.TileEntityReplacementManager;
 
@@ -22,115 +25,64 @@ import cpw.mods.fml.common.registry.GameRegistry;
 
 public class ChunkFixerUtility {
 
-    public static void processChunkNBT(NBTTagCompound compound, World world) {
-        NBTTagCompound levelCompoundTag = compound.getCompoundTag("Level");
-
-        if (processChunk(levelCompoundTag)) {
-            transformTileEntities(levelCompoundTag, world);
-            transformNormalBlocks(levelCompoundTag, world);
-            levelCompoundTag.setInteger("POSTEA", POSTEA_UPDATE_CODE);
-        }
-    }
-
     // This will not change between runs, unless a mod is updated or added.
     public static final int POSTEA_UPDATE_CODE = getModListHash();
-
-    // If a chunk has the same postea code, then do not update it. Return false.
-    private static boolean processChunk(NBTTagCompound compound) {
-        // I'm minimising the string length here since this
-        // will be on every single chunk in every world... Rather not duplicate too much.
-        if (compound.hasKey("POSTEA")) {
-            return compound.getInteger("POSTEA") != POSTEA_UPDATE_CODE;
-        }
-        return true;
-    }
 
     private static final int AIR_ID = 0;
     private static final HashMap<Block, String> loadedBlocks = new HashMap<>();
 
-    private static void transformNormalBlocks(NBTTagCompound levelCompoundTag, World world) {
-        NBTTagList sections = levelCompoundTag.getTagList("Sections", 10);
+    public static void transformNormalBlocks(Chunk chunk, ExtendedBlockStorage ebs, World world) {
 
-        int chunkXPos = levelCompoundTag.getInteger("xPos") * 16;
-        int chunkZPos = levelCompoundTag.getInteger("zPos") * 16;
+        int chunkXPos = chunk.xPosition * 16;
+        int chunkZPos = chunk.zPosition * 16;
 
-        for (int i = 0; i < sections.tagCount(); i++) {
-            NBTTagCompound section = sections.getCompoundTagAt(i);
+        int sectionY = ebs.getYLocation();
 
-            // Blocks16 and Data16 exist only because of NEID.
-            byte[] blockArray = section.getByteArray("Blocks16");
-            byte[] metadataArray = section.getByteArray("Data16");
-            // If metadata array is empty, it was all zeroes. We create a new array to write our new values to,
-            // and only save this when a nonzero value was written
-            boolean wasAllZero = false;
-            if (metadataArray.length == 0) {
-                wasAllZero = true;
-                metadataArray = new byte[8192];
-            }
-            // Keep track of if we write a nonzero element to the metadata array
-            boolean hasWrittenNonZero = false;
+        IExtendedBlockStorageMixin ebsMixin = (IExtendedBlockStorageMixin) ebs;
+        short[] blockArray = ebsMixin.getBlock16BArray();
+        short[] metadataArray = ebsMixin.getBlock16BMetaArray();
 
-            byte sectionY = section.getByte("Y");
+        for (int index = 0; index < blockArray.length; index++) {
+            int blockId = blockArray[index];
+            int metadata = metadataArray[index];
 
-            for (int index = 0; index < blockArray.length / 2; index++) {
-                // Horrible bit jank to recreate the actual IDs, because the array is just a byte array.
-                int blockId = ((blockArray[index * 2] & 0xFF) << 8) | (blockArray[index * 2 + 1] & 0xFF);
-                int metadata = ((metadataArray[index * 2] & 0xFF) << 8) | (metadataArray[index * 2 + 1] & 0xFF);
+            // Skip air.
+            if (blockId == AIR_ID) continue;
+            // If this block has no registered Postea conversion, skip it.
+            if (blockNotConvertible(blockId)) continue;
 
-                // Skip air.
-                if (blockId == AIR_ID) continue;
-                // If this block has no registered Postea conversion, skip it.
-                if (blockNotConvertible(blockId)) continue;
+            // Cache block names to improve performance, as findUniqueIdentifierFor is expensive.
+            Block block = Block.getBlockById(blockId);
+            String blockName = loadedBlocks.computeIfAbsent(
+                block,
+                b -> GameRegistry.findUniqueIdentifierFor(b)
+                    .toString());
 
-                // Cache block names to improve performance, as findUniqueIdentifierFor is expensive.
-                Block block = Block.getBlockById(blockId);
-                String blockName = loadedBlocks.computeIfAbsent(
-                    block,
-                    b -> GameRegistry.findUniqueIdentifierFor(b)
-                        .toString());
+            BlockConversionInfo blockConversionInfo = new BlockConversionInfo();
+            blockConversionInfo.blockName = blockName;
+            blockConversionInfo.blockID = blockId;
+            blockConversionInfo.metadata = (byte) metadata; // Updated
 
-                BlockConversionInfo blockConversionInfo = new BlockConversionInfo();
-                blockConversionInfo.blockName = blockName;
-                blockConversionInfo.blockID = blockId;
-                blockConversionInfo.metadata = (byte) metadata; // Updated
-                // If we wrote a nonzero metadata, keep track of this because it means the
-                // new array needs to be written back to NBT
-                if (metadata != 0) {
-                    hasWrittenNonZero = true;
-                }
-                blockConversionInfo.world = world;
+            blockConversionInfo.world = world;
 
-                int x = index % 16;
-                int y = (index / 256) + (sectionY * 16);
-                int z = (index / 16) % 16;
+            int x = index % 16;
+            int y = (index / 256) + (sectionY * 16);
+            int z = (index / 16) % 16;
 
-                blockConversionInfo.x = x + chunkXPos + 1;
-                blockConversionInfo.y = y;
-                blockConversionInfo.z = z + chunkZPos + 1;
+            blockConversionInfo.x = x + chunkXPos + 1;
+            blockConversionInfo.y = y;
+            blockConversionInfo.z = z + chunkZPos + 1;
 
-                BlockConversionInfo output = BlockReplacementManager.getBlockReplacement(blockConversionInfo, world);
+            BlockConversionInfo output = BlockReplacementManager.getBlockReplacement(blockConversionInfo, world);
 
-                if (output != null) {
-                    int newBlockId = output.blockID;
-                    int newMetadata = output.metadata;
-
-                    blockArray[index * 2] = (byte) ((newBlockId >> 8) & 0xFF);
-                    blockArray[index * 2 + 1] = (byte) (newBlockId & 0xFF);
-
-                    metadataArray[index * 2] = (byte) ((newMetadata >> 8) & 0xFF);
-                    metadataArray[index * 2 + 1] = (byte) (newMetadata & 0xFF);
-                }
-            }
-
-            // After processing all replacements, if we made a new metadata array and wrote a nonzero value to it,
-            // write it back to world NBT to save
-            if (wasAllZero && hasWrittenNonZero) {
-                section.setByteArray("Data16", metadataArray);
+            if (output != null) {
+                blockArray[index] = (short) output.blockID;
+                metadataArray[index] = (short) output.metadata;
             }
         }
     }
 
-    private static void transformTileEntities(NBTTagCompound levelCompoundTag, World world) {
+    public static void transformTileEntities(NBTTagCompound levelCompoundTag, Chunk chunk, World world) {
 
         Pair<List<ConversionInfo>, NBTTagList> output = adjustTileEntities(
             levelCompoundTag.getTagList("TileEntities", 10),
@@ -142,80 +94,31 @@ public class ChunkFixerUtility {
             levelCompoundTag.setTag("TileEntities", tileEntities);
         }
 
-        int chunkXPos = levelCompoundTag.getInteger("xPos") * 16; // Assuming each chunk is 16 blocks along x-axis
-        int chunkZPos = levelCompoundTag.getInteger("zPos") * 16; // Assuming each chunk is 16 blocks along z-axis
+        int chunkXPos = chunk.xPosition * 16;
+        int chunkZPos = chunk.zPosition * 16;
 
-        NBTTagList sections = levelCompoundTag.getTagList("Sections", 10);
-        for (int i = 0; i < sections.tagCount(); i++) {
-            NBTTagCompound section = sections.getCompoundTagAt(i);
-            processSection(section, conversionInfoList, chunkXPos, chunkZPos);
+        for (ExtendedBlockStorage ebs : chunk.getBlockStorageArray()) {
+            processSection(ebs, conversionInfoList, chunkXPos, chunkZPos);
         }
     }
 
-    private static void processSection(NBTTagCompound section, List<ConversionInfo> conversionInfoList, int chunkXPos,
+    private static void processSection(ExtendedBlockStorage ebs, List<ConversionInfo> conversionInfoList, int chunkXPos,
         int chunkZPos) {
-        byte[] blockArray = section.getByteArray("Blocks16");
-        byte[] metadataArray = section.getByteArray("Data16"); // Updated to use Data16
+        IExtendedBlockStorageMixin ebsMixin = (IExtendedBlockStorageMixin) ebs;
+        short[] blockArray = ebsMixin.getBlock16BArray();
+        short[] metadataArray = ebsMixin.getBlock16BMetaArray();
 
-        // If metadata array is empty, it was all zeroes. We create a new array to write our new values to,
-        // and only save this when a nonzero value was written
-        boolean wasAllZero = false;
-        if (metadataArray.length == 0) {
-            wasAllZero = true;
-            metadataArray = new byte[8192];
-        }
-        // Keep track of if we write a nonzero element to the metadata array
-        boolean hasWrittenNonZero = false;
+        int sectionY = ebs.getYLocation();
 
-        byte y = section.getByte("Y");
-
-        List<ConversionInfo> filteredList = filterConversionInfosByY(conversionInfoList, y);
+        List<ConversionInfo> filteredList = conversionInfoList.stream()
+            .filter(info -> info.y >= sectionY * 16 && info.y < (sectionY + 1) * 16)
+            .collect(Collectors.toList());
 
         for (ConversionInfo info : filteredList) {
-            int[] localCoords = convertToChunkLocalCoordinates(info, y, chunkXPos, chunkZPos);
-            int index = computeBlockIndex(localCoords);
-            setBlockInfo(info.blockInfo.block, index, blockArray);
-            setMetadata(info.blockInfo.metadata, index, metadataArray); // This uses the updated setMetadata
-            if (info.blockInfo.metadata != 0) hasWrittenNonZero = true;
+            int index = (info.y - sectionY * 16) * 256 + (info.z - chunkZPos) * 16 + (info.x - chunkXPos);
+            blockArray[index] = (short) Block.getIdFromBlock(info.blockInfo.block);
+            metadataArray[index] = (short) info.blockInfo.metadata;
         }
-
-        // After processing all replacements, if we made a new metadata array and wrote a nonzero value to it,
-        // write it back to world NBT to save
-        if (wasAllZero && hasWrittenNonZero) {
-            section.setByteArray("Data16", metadataArray);
-        }
-    }
-
-    private static List<ConversionInfo> filterConversionInfosByY(List<ConversionInfo> conversionInfoList, byte y) {
-        return conversionInfoList.stream()
-            .filter(info -> info.y >= y * 16 && info.y < (y + 1) * 16)
-            .collect(Collectors.toList());
-    }
-
-    private static int[] convertToChunkLocalCoordinates(ConversionInfo info, byte y, int chunkXPos, int chunkZPos) {
-        int tileX = info.x - chunkXPos;
-        int tileY = info.y - y * 16;
-        int tileZ = info.z - chunkZPos;
-        return new int[] { tileX, tileY, tileZ };
-    }
-
-    private static int computeBlockIndex(int[] localCoords) {
-        return localCoords[1] * 256 + localCoords[2] * 16 + localCoords[0];
-    }
-
-    private static void setBlockInfo(Block block, int index, byte[] blockArray) {
-        int blockID = Block.getIdFromBlock(block);
-        blockArray[index * 2] = (byte) ((blockID >> 8) & 0xFF);
-        blockArray[index * 2 + 1] = (byte) (blockID & 0xFF);
-    }
-
-    private static void setMetadata(int metadata, int index, byte[] metadataArray) {
-        // Since each metadata is now two bytes, multiply the index by 2 to get the correct position.
-        int metadataStartIndex = index * 2;
-
-        // Split the 16-bit metadata into two bytes and store them in the array.
-        metadataArray[metadataStartIndex] = (byte) ((metadata >> 8) & 0xFF); // Higher 8 bits
-        metadataArray[metadataStartIndex + 1] = (byte) (metadata & 0xFF); // Lower 8 bits
     }
 
     private static Pair<List<ConversionInfo>, NBTTagList> adjustTileEntities(NBTTagList tileEntities, World world) {
