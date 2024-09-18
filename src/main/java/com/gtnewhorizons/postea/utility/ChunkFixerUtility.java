@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
@@ -81,15 +82,42 @@ public class ChunkFixerUtility {
         }
     }
 
-    public static void transformTileEntities(NBTTagCompound levelCompoundTag, World world) {
+    public static void transformTileEntities(NBTTagCompound levelCompoundTag, Chunk chunk, World world) {
 
         Pair<List<ConversionInfo>, NBTTagList> output = adjustTileEntities(
             levelCompoundTag.getTagList("TileEntities", 10),
             world);
+        List<ConversionInfo> conversionInfoList = output.first();
         NBTTagList tileEntities = output.second();
 
         if (tileEntities.tagCount() > 0) {
             levelCompoundTag.setTag("TileEntities", tileEntities);
+        }
+
+        int chunkXPos = chunk.xPosition * 16;
+        int chunkZPos = chunk.zPosition * 16;
+
+        for (ExtendedBlockStorage ebs : chunk.getBlockStorageArray()) {
+            processSection(ebs, conversionInfoList, chunkXPos, chunkZPos);
+        }
+    }
+
+    private static void processSection(ExtendedBlockStorage ebs, List<ConversionInfo> conversionInfoList, int chunkXPos,
+        int chunkZPos) {
+        IExtendedBlockStorageMixin ebsMixin = (IExtendedBlockStorageMixin) ebs;
+        short[] blockArray = ebsMixin.getBlock16BArray();
+        short[] metadataArray = ebsMixin.getBlock16BMetaArray();
+
+        int sectionY = ebs.getYLocation();
+
+        List<ConversionInfo> filteredList = conversionInfoList.stream()
+            .filter(info -> info.y >= sectionY * 16 && info.y < (sectionY + 1) * 16)
+            .collect(Collectors.toList());
+
+        for (ConversionInfo info : filteredList) {
+            int index = (info.y - sectionY * 16) * 256 + (info.z - chunkZPos) * 16 + (info.x - chunkXPos);
+            blockArray[index] = (short) Block.getIdFromBlock(info.blockInfo.block);
+            metadataArray[index] = (short) info.blockInfo.metadata;
         }
     }
 

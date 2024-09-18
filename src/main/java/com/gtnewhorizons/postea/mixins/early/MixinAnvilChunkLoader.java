@@ -64,7 +64,7 @@ public abstract class MixinAnvilChunkLoader {
         // This checks if the chunk has been run with the current POSTEA_UPDATE_CODE and skips it if so.
         if (chunkMixin.Postea$getPosteaCode() == ChunkFixerUtility.POSTEA_UPDATE_CODE) return;
 
-        ChunkFixerUtility.transformTileEntities(tag, world);
+        ChunkFixerUtility.transformTileEntities(tag, chunk, world);
     }
 
     @Inject(method = "loadChunk", at = @At("RETURN"))
