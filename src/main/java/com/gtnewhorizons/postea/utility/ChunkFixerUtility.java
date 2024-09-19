@@ -66,7 +66,7 @@ public class ChunkFixerUtility {
             blockConversionInfo.world = world;
 
             int x = index % 16;
-            int y = (index / 256) + (sectionY * 16);
+            int y = (index / 256) + sectionY;
             int z = (index / 16) % 16;
 
             blockConversionInfo.x = x + chunkXPos + 1;
@@ -94,30 +94,26 @@ public class ChunkFixerUtility {
             levelCompoundTag.setTag("TileEntities", tileEntities);
         }
 
-        int chunkXPos = chunk.xPosition * 16;
-        int chunkZPos = chunk.zPosition * 16;
-
         for (ExtendedBlockStorage ebs : chunk.getBlockStorageArray()) {
-            processSection(ebs, conversionInfoList, chunkXPos, chunkZPos);
+            processSection(ebs, conversionInfoList);
         }
     }
 
-    private static void processSection(ExtendedBlockStorage ebs, List<ConversionInfo> conversionInfoList, int chunkXPos,
-        int chunkZPos) {
-        IExtendedBlockStorageMixin ebsMixin = (IExtendedBlockStorageMixin) ebs;
-        short[] blockArray = ebsMixin.getBlock16BArray();
-        short[] metadataArray = ebsMixin.getBlock16BMetaArray();
-
+    private static void processSection(ExtendedBlockStorage ebs, List<ConversionInfo> conversionInfoList) {
+        if (ebs instanceof final IExtendedBlockStorageMixin ebsMixin) {
         int sectionY = ebs.getYLocation();
 
         List<ConversionInfo> filteredList = conversionInfoList.stream()
-            .filter(info -> info.y >= sectionY * 16 && info.y < (sectionY + 1) * 16)
+                .filter(info -> info.y >= sectionY && info.y < (sectionY + 16))
             .collect(Collectors.toList());
 
         for (ConversionInfo info : filteredList) {
-            int index = (info.y - sectionY * 16) * 256 + (info.z - chunkZPos) * 16 + (info.x - chunkXPos);
-            blockArray[index] = (short) Block.getIdFromBlock(info.blockInfo.block);
-            metadataArray[index] = (short) info.blockInfo.metadata;
+                int localX = info.x & 15;
+                int localY = info.y & 15;
+                int localZ = info.z & 15;
+                ebs.func_150818_a(localX, localY, localZ, info.blockInfo.block);
+                ebs.setExtBlockMetadata(localX, localY, localZ, info.blockInfo.metadata);
+            }
         }
     }
 
