@@ -10,9 +10,17 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerAboutToStartEvent;
 import cpw.mods.fml.common.event.FMLServerStoppingEvent;
 
-@Mod(modid = Tags.MODID, version = Tags.VERSION, name = Tags.MODNAME, acceptedMinecraftVersions = "[1.7.10]")
+@Mod(
+    modid = Postea.MODID,
+    version = Tags.VERSION,
+    name = Postea.MODNAME,
+    acceptedMinecraftVersions = "[1.7.10]",
+    dependencies = " required-after:gtnhlib@[0.6.21,);")
 @SuppressWarnings("unused")
 public class Postea {
+
+    public static final String MODID = "postea";
+    public static final String MODNAME = "Postea";
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {}
