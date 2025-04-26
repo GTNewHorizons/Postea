@@ -1,10 +1,10 @@
 package com.gtnewhorizons.postea.api;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.function.BiFunction;
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import net.minecraft.world.World;
 
 import com.gtnewhorizons.postea.utility.BlockConversionInfo;
@@ -12,7 +12,7 @@ import com.gtnewhorizons.postea.utility.BlockConversionInfo;
 public class BlockReplacementManager {
 
     public static final Map<String, BiFunction<BlockConversionInfo, World, BlockConversionInfo>> blockReplacementMap = new HashMap<>();
-    public static final HashSet<Integer> posteaMarkedIDs = new HashSet<>();
+    public static final IntOpenHashSet posteaMarkedIDs = new IntOpenHashSet();
 
     @SuppressWarnings("unused")
     public static void addBlockReplacement(String blockNameIn,
