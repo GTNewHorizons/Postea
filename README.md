@@ -83,7 +83,8 @@ BlockReplacementManager.addBlockReplacement("minecraft:grass", blockTransformer)
 
 ```java
 Function<NBTTagCompound, NBTTagCompound> itemTransformer = (tag) -> {
-  tag.setShort("id", (short) Item.getIdFromItem(Items.gold_ingot));
+  // Use the utility method for compatibility with NEID/EndlessIDs
+  IDExtenderCompat.setItemStackID(tag, Item.getIdFromItem(Items.gold_ingot));
   return tag;
 };
 

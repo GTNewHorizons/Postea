@@ -5,6 +5,7 @@ import java.util.function.Function;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 
+import com.gtnewhorizons.postea.api.IDExtenderCompat;
 import com.gtnewhorizons.postea.api.ItemStackReplacementManager;
 
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -16,7 +17,7 @@ public abstract class ItemFixerUtility {
         if (tag.hasNoTags()) return;
 
         if (tag.hasKey("id")) {
-            short id = tag.getShort("id");
+            int id = IDExtenderCompat.getItemStackID(tag);
             Item item = Item.getItemById(id);
             if (item == null) return;
             String itemNameInternal = GameRegistry.findUniqueIdentifierFor(item).modId + ":"

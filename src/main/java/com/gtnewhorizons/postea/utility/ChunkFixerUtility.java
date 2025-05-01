@@ -16,9 +16,10 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
-import com.gtnewhorizons.neid.mixins.interfaces.IExtendedBlockStorageMixin;
 import com.gtnewhorizons.postea.api.BlockReplacementManager;
 import com.gtnewhorizons.postea.api.TileEntityReplacementManager;
+import com.gtnewhorizons.postea.compat.Compat;
+import com.gtnewhorizons.postea.compat.SubChunkAccess;
 
 import akka.japi.Pair;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -38,46 +39,45 @@ public class ChunkFixerUtility {
 
         int sectionY = ebs.getYLocation();
 
-        IExtendedBlockStorageMixin ebsMixin = (IExtendedBlockStorageMixin) ebs;
-        short[] blockArray = ebsMixin.getBlock16BArray();
-        short[] metadataArray = ebsMixin.getBlock16BMetaArray();
+        SubChunkAccess access = Compat.getSubChunkAccess(ebs);
 
-        for (int index = 0; index < blockArray.length; index++) {
-            int blockId = blockArray[index];
-            int metadata = metadataArray[index];
+        for (int y = 0; y < 16; y++) {
+            for (int z = 0; z < 16; z++) {
+                for (int x = 0; x < 16; x++) {
+                    int blockId = access.getBlockId(x, y, z);
+                    int metadata = access.getMeta(x, y, z);
 
-            // Skip air.
-            if (blockId == AIR_ID) continue;
-            // If this block has no registered Postea conversion, skip it.
-            if (blockNotConvertible(blockId)) continue;
+                    // Skip air.
+                    if (blockId == AIR_ID) continue;
+                    // If this block has no registered Postea conversion, skip it.
+                    if (blockNotConvertible(blockId)) continue;
 
-            // Cache block names to improve performance, as findUniqueIdentifierFor is expensive.
-            Block block = Block.getBlockById(blockId);
-            String blockName = loadedBlocks.computeIfAbsent(
-                block,
-                b -> GameRegistry.findUniqueIdentifierFor(b)
-                    .toString());
+                    // Cache block names to improve performance, as findUniqueIdentifierFor is expensive.
+                    Block block = Block.getBlockById(blockId);
+                    String blockName = loadedBlocks.computeIfAbsent(
+                        block,
+                        b -> GameRegistry.findUniqueIdentifierFor(b)
+                            .toString());
 
-            BlockConversionInfo blockConversionInfo = new BlockConversionInfo();
-            blockConversionInfo.blockName = blockName;
-            blockConversionInfo.blockID = blockId;
-            blockConversionInfo.metadata = (byte) metadata; // Updated
+                    BlockConversionInfo blockConversionInfo = new BlockConversionInfo();
+                    blockConversionInfo.blockName = blockName;
+                    blockConversionInfo.blockID = blockId;
+                    blockConversionInfo.metadata = (byte) metadata; // Updated
 
-            blockConversionInfo.world = world;
+                    blockConversionInfo.world = world;
 
-            int x = index % 16;
-            int y = (index / 256) + sectionY;
-            int z = (index / 16) % 16;
+                    blockConversionInfo.x = x + chunkXPos + 1;
+                    blockConversionInfo.y = y + sectionY;
+                    blockConversionInfo.z = z + chunkZPos + 1;
 
-            blockConversionInfo.x = x + chunkXPos + 1;
-            blockConversionInfo.y = y;
-            blockConversionInfo.z = z + chunkZPos + 1;
+                    BlockConversionInfo output = BlockReplacementManager
+                        .getBlockReplacement(blockConversionInfo, world);
 
-            BlockConversionInfo output = BlockReplacementManager.getBlockReplacement(blockConversionInfo, world);
-
-            if (output != null) {
-                blockArray[index] = (short) output.blockID;
-                metadataArray[index] = (short) output.metadata;
+                    if (output != null) {
+                        access.setBlockId(x, y, z, output.blockID);
+                        access.setMeta(x, y, z, output.metadata);
+                    }
+                }
             }
         }
     }
@@ -95,25 +95,24 @@ public class ChunkFixerUtility {
         }
 
         for (ExtendedBlockStorage ebs : chunk.getBlockStorageArray()) {
+            if (ebs == null) continue;
             processSection(ebs, conversionInfoList);
         }
     }
 
     private static void processSection(ExtendedBlockStorage ebs, List<ConversionInfo> conversionInfoList) {
-        if (ebs instanceof final IExtendedBlockStorageMixin ebsMixin) {
         int sectionY = ebs.getYLocation();
 
         List<ConversionInfo> filteredList = conversionInfoList.stream()
-                .filter(info -> info.y >= sectionY && info.y < (sectionY + 16))
+            .filter(info -> info.y >= sectionY && info.y < (sectionY + 16))
             .collect(Collectors.toList());
 
         for (ConversionInfo info : filteredList) {
-                int localX = info.x & 15;
-                int localY = info.y & 15;
-                int localZ = info.z & 15;
-                ebs.func_150818_a(localX, localY, localZ, info.blockInfo.block);
-                ebs.setExtBlockMetadata(localX, localY, localZ, info.blockInfo.metadata);
-            }
+            int localX = info.x & 15;
+            int localY = info.y & 15;
+            int localZ = info.z & 15;
+            ebs.func_150818_a(localX, localY, localZ, info.blockInfo.block);
+            ebs.setExtBlockMetadata(localX, localY, localZ, info.blockInfo.metadata);
         }
     }
 

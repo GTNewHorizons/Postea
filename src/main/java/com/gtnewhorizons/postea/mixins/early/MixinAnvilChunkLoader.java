@@ -16,39 +16,26 @@ import com.gtnewhorizons.postea.mixins.interfaces.IChunkMixin;
 import com.gtnewhorizons.postea.utility.ChunkFixerUtility;
 import com.llamalad7.mixinextras.sugar.Local;
 
-@Mixin(AnvilChunkLoader.class)
+@Mixin(value = AnvilChunkLoader.class, priority = 1100)
 public abstract class MixinAnvilChunkLoader {
 
-    @Inject(
-        method = "readChunkFromNBT",
-        at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/nbt/NBTTagCompound;getIntArray(Ljava/lang/String;)[I",
-            ordinal = 0),
-        require = 1)
-    private void postea$readPosteaChunkCode(CallbackInfoReturnable<Chunk> cir, @Local Chunk chunk,
-        @Local(ordinal = 0) NBTTagCompound tag) {
+    // This hook is compatible with Vanilla/NEID/EIDs
+    @Inject(method = "readChunkFromNBT", at = @At("RETURN"), require = 1)
+    private void postea$chunkHook(CallbackInfoReturnable<Chunk> cir, @Local Chunk chunk,
+        @Local(argsOnly = true) World world, @Local(ordinal = 0, argsOnly = true) NBTTagCompound tag) {
         IChunkMixin chunkMixin = (IChunkMixin) chunk;
         chunkMixin.Postea$setPosteaCode(-1);
         if (tag.hasKey("POSTEA")) {
             chunkMixin.Postea$setPosteaCode(tag.getLong("POSTEA"));
         }
-    }
-
-    @Inject(
-        method = "readChunkFromNBT",
-        at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;setBlockMetadataArray(Lnet/minecraft/world/chunk/NibbleArray;)V",
-            shift = At.Shift.AFTER),
-        require = 1)
-    private void postea$transformBlocks(CallbackInfoReturnable<Chunk> cir, @Local World world, @Local Chunk chunk,
-        @Local ExtendedBlockStorage ebs) {
-        IChunkMixin chunkMixin = (IChunkMixin) chunk;
         // This checks if the chunk has been run with the current POSTEA_UPDATE_CODE and skips it if so.
         if (chunkMixin.Postea$getPosteaCode() == ChunkFixerUtility.POSTEA_UPDATE_CODE) return;
-
-        ChunkFixerUtility.transformNormalBlocks(chunk, ebs, world);
+        for (ExtendedBlockStorage ebs : chunk.getBlockStorageArray()) {
+            if (ebs == null) {
+                continue;
+            }
+            ChunkFixerUtility.transformNormalBlocks(chunk, ebs, world);
+        }
     }
 
     @Inject(
