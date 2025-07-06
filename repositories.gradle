@@ -5,7 +5,7 @@ repositories {
         name = "mavenpattern"
         url = "https://mvn.falsepattern.com/releases"
         content {
-            group("com.falsepattern")
+            includeGroup("com.falsepattern")
         }
     }
     mavenLocal()
