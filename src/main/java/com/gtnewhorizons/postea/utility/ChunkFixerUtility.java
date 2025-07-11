@@ -16,6 +16,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
+import com.gtnewhorizons.postea.api.BiomeReplacementManager;
 import com.gtnewhorizons.postea.api.BlockReplacementManager;
 import com.gtnewhorizons.postea.api.TileEntityReplacementManager;
 import com.gtnewhorizons.postea.compat.Compat;
@@ -31,6 +32,27 @@ public class ChunkFixerUtility {
 
     private static final int AIR_ID = 0;
     private static final HashMap<Block, String> loadedBlocks = new HashMap<>();
+
+    public static void transformBiomes(Chunk chunk, World world) {
+
+        for (int z = 0; z < 16; z++) {
+            for (int x = 0; x < 16; x++) {
+                BiomeConversionInfo conversionInfo = new BiomeConversionInfo();
+                conversionInfo.chunkX = chunk.xPosition;
+                conversionInfo.chunkZ = chunk.zPosition;
+                conversionInfo.x = x;
+                conversionInfo.z = z;
+                conversionInfo.biomeID = Compat.getBiomeId(chunk, x, z);
+
+                BiomeConversionInfo output = BiomeReplacementManager.getBiomeReplacement(conversionInfo, world);
+
+                if (output != null) {
+                    Compat.setBiomeId(chunk, x, z, output.biomeID);
+                }
+            }
+        }
+
+    }
 
     public static void transformNormalBlocks(Chunk chunk, ExtendedBlockStorage ebs, World world) {
 

@@ -1,9 +1,11 @@
 package com.gtnewhorizons.postea.compat;
 
 import net.minecraft.launchwrapper.Launch;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
+import com.falsepattern.endlessids.mixin.helpers.ChunkBiomeHook;
 import com.falsepattern.endlessids.mixin.helpers.SubChunkBlockHook;
 import com.gtnewhorizons.neid.mixins.interfaces.IExtendedBlockStorageMixin;
 
@@ -54,6 +56,26 @@ public class Compat {
             return NEIDCompat.getSubChunkAccess(subChunk);
         } else {
             return VanillaCompat.getSubChunkAccess(subChunk);
+        }
+    }
+
+    public static int getBiomeId(Chunk chunk, int x, int z) {
+        if (endlessidsPresent()) {
+            ChunkBiomeHook chunkHook = (ChunkBiomeHook) chunk;
+            return chunkHook.getBiomeShortArray()[x << 4 | z] & 0xFFFF;
+        } else {
+            // NEID doesn't change anything with biomes, same as vanilla
+            return chunk.getBiomeArray()[x << 4 | z] & 0xFF;
+        }
+    }
+
+    public static void setBiomeId(Chunk chunk, int x, int z, int id) {
+        if (endlessidsPresent()) {
+            ChunkBiomeHook chunkHook = (ChunkBiomeHook) chunk;
+            chunkHook.getBiomeShortArray()[x << 4 | z] = (short) id;
+        } else {
+            // NEID doesn't change anything with biomes, same as vanilla
+            chunk.getBiomeArray()[x << 4 | z] = (byte) id;
         }
     }
 

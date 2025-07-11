@@ -36,6 +36,7 @@ public abstract class MixinAnvilChunkLoader {
             }
             ChunkFixerUtility.transformNormalBlocks(chunk, ebs, world);
         }
+        ChunkFixerUtility.transformBiomes(chunk, world);
     }
 
     @Inject(
