@@ -6,8 +6,8 @@ import static com.gtnewhorizons.postea.api.BlockReplacementManager.posteaMarkedI
 import net.minecraft.block.Block;
 
 import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.event.FMLModIdMappingEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.event.FMLServerAboutToStartEvent;
 import cpw.mods.fml.common.event.FMLServerStoppingEvent;
 
 @Mod(
@@ -26,7 +26,8 @@ public class Postea {
     public void preInit(FMLPreInitializationEvent event) {}
 
     @Mod.EventHandler
-    public void onServerStarting(FMLServerAboutToStartEvent event) {
+    public void onIdMappingsChanged(FMLModIdMappingEvent event) {
+        posteaMarkedIDs.clear();
         for (String name : blockReplacementMap.keySet()) {
             Block block = Block.getBlockFromName(name);
             if (block != null) {
