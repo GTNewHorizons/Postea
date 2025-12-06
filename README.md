@@ -29,7 +29,7 @@ TileEntityReplacementManager.tileEntityTransformer("GT_TileEntity_Ores", (tag, w
 #### b. We do the same here, but now we convert a Furnace TE to a chest TE. We also need to convert the underlying block to a chest. In addtion to this we can provide a transformer that can edit the NBTTagCompound of the TE. This is useful for converting NBT data from one format to another. Here we simply edit the NBT to place stone in the middle slot.
 
 ```java
-TileEntityReplacementManager.tileEntityTransformer("Chest", (tag, world) -> {
+TileEntityReplacementManager.tileEntityTransformer("Furnace", (tag, world, chunk) -> {
   return new BlockInfo(Blocks.chest, 0, Postea::chestTransformer);
 });
 
@@ -52,6 +52,7 @@ private static NBTTagCompound chestTransformer(NBTTagCompound oldTag) {
   return newTag;
 }
 ```
+Remember that unlike items, tile entities manually store every tag of their nbt data individually, meaning that any additional tags will be discarded and cannot be used to store additional data unless it is already a part of the new tile entity.
 
 ### 2. Normal Block Transformation
 
