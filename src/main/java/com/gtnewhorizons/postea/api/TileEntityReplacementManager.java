@@ -5,19 +5,26 @@ import java.util.function.BiFunction;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 
 import com.gtnewhorizons.postea.utility.BlockInfo;
 
 public class TileEntityReplacementManager {
 
-    private static final HashMap<String, BiFunction<NBTTagCompound, World, BlockInfo>> tileEntityToNormalBlockTransformer = new HashMap<>();
+    private static final HashMap<String, TriFunction<NBTTagCompound, World, Chunk, BlockInfo>> tileEntityToNormalBlockTransformer = new HashMap<>();
 
     public static void tileEntityTransformer(String tileEntityId,
         BiFunction<NBTTagCompound, World, BlockInfo> transformerFunction) {
+        tileEntityToNormalBlockTransformer
+            .put(tileEntityId, (tag, world, chunk) -> transformerFunction.apply(tag, world));
+    }
+
+    public static void tileEntityTransformer(String tileEntityId,
+        TriFunction<NBTTagCompound, World, Chunk, BlockInfo> transformerFunction) {
         tileEntityToNormalBlockTransformer.put(tileEntityId, transformerFunction);
     }
 
-    public static BiFunction<NBTTagCompound, World, BlockInfo> getTileEntityToNormalBlockTransformerFunction(
+    public static TriFunction<NBTTagCompound, World, Chunk, BlockInfo> getTileEntityToNormalBlockTransformerFunction(
         String tileEntityId) {
         return tileEntityToNormalBlockTransformer.getOrDefault(tileEntityId, null);
     }

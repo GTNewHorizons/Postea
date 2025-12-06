@@ -6,7 +6,6 @@ import static com.gtnewhorizons.postea.utility.PosteaUtilities.getModListHash;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import net.minecraft.block.Block;
@@ -18,6 +17,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import com.gtnewhorizons.postea.api.BlockReplacementManager;
 import com.gtnewhorizons.postea.api.TileEntityReplacementManager;
+import com.gtnewhorizons.postea.api.TriFunction;
 import com.gtnewhorizons.postea.compat.Compat;
 import com.gtnewhorizons.postea.compat.SubChunkAccess;
 
@@ -86,7 +86,8 @@ public class ChunkFixerUtility {
 
         Pair<List<ConversionInfo>, NBTTagList> output = adjustTileEntities(
             levelCompoundTag.getTagList("TileEntities", 10),
-            world);
+            world,
+            chunk);
         List<ConversionInfo> conversionInfoList = output.first();
         NBTTagList tileEntities = output.second();
 
@@ -116,7 +117,8 @@ public class ChunkFixerUtility {
         }
     }
 
-    private static Pair<List<ConversionInfo>, NBTTagList> adjustTileEntities(NBTTagList tileEntities, World world) {
+    private static Pair<List<ConversionInfo>, NBTTagList> adjustTileEntities(NBTTagList tileEntities, World world,
+        Chunk chunk) {
         List<ConversionInfo> conversionInfo = new ArrayList<>();
 
         NBTTagList tileEntitiesCopy = new NBTTagList();
@@ -126,7 +128,7 @@ public class ChunkFixerUtility {
             String tileEntityId = tileEntity.getString("id");
 
             // Check if we have a transformer registered for this tile entity ID
-            BiFunction<NBTTagCompound, World, BlockInfo> transformationFunction = TileEntityReplacementManager
+            TriFunction<NBTTagCompound, World, Chunk, BlockInfo> transformationFunction = TileEntityReplacementManager
                 .getTileEntityToNormalBlockTransformerFunction(tileEntityId);
 
             if (transformationFunction != null) {
@@ -134,7 +136,7 @@ public class ChunkFixerUtility {
                 int y = tileEntity.getInteger("y");
                 int z = tileEntity.getInteger("z");
 
-                BlockInfo blockInfo = transformationFunction.apply(tileEntity, world);
+                BlockInfo blockInfo = transformationFunction.apply(tileEntity, world, chunk);
                 if (blockInfo == null) {
                     // Do nothing.
                     tileEntitiesCopy.appendTag(tileEntity);
