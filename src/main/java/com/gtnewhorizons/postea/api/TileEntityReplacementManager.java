@@ -9,6 +9,7 @@ import net.minecraft.world.chunk.Chunk;
 
 import com.gtnewhorizons.postea.utility.BlockInfo;
 
+@SuppressWarnings("unused")
 public class TileEntityReplacementManager {
 
     private static final HashMap<String, TriFunction<NBTTagCompound, World, Chunk, BlockInfo>> tileEntityToNormalBlockTransformer = new HashMap<>();
