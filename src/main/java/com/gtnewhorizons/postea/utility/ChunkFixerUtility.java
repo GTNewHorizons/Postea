@@ -128,27 +128,26 @@ public class ChunkFixerUtility {
             String tileEntityId = tileEntity.getString("id");
 
             // Check if we have a transformer registered for this tile entity ID
-            TriFunction<NBTTagCompound, World, Chunk, BlockInfo> transformationFunction = TileEntityReplacementManager
-                .getTileEntityToNormalBlockTransformerFunction(tileEntityId);
+            boolean found = false;
+            for (TriFunction<NBTTagCompound, World, Chunk, BlockInfo> transformationFunction : TileEntityReplacementManager
+                .getTileEntityToNormalBlockTransformerFunction(tileEntityId)) {
 
-            if (transformationFunction != null) {
                 int x = tileEntity.getInteger("x");
                 int y = tileEntity.getInteger("y");
                 int z = tileEntity.getInteger("z");
 
                 BlockInfo blockInfo = transformationFunction.apply(tileEntity, world, chunk);
-                if (blockInfo == null) {
-                    // Do nothing.
-                    tileEntitiesCopy.appendTag(tileEntity);
-                    continue;
-                }
+                if (blockInfo == null) continue;
 
                 if (blockInfo.tileTransformer != null) {
                     tileEntitiesCopy.appendTag(blockInfo.tileTransformer.apply(tileEntity));
                 } // Otherwise they are removed, therefore not appended.
 
                 conversionInfo.add(new ConversionInfo(x, y, z, blockInfo));
-            } else {
+                found = true;
+                break;
+            }
+            if (!found) {
                 // Do nothing.
                 tileEntitiesCopy.appendTag(tileEntity);
             }

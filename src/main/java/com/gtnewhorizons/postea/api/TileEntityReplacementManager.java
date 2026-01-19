@@ -1,18 +1,20 @@
 package com.gtnewhorizons.postea.api;
 
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.function.BiFunction;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 
+import com.google.common.collect.LinkedListMultimap;
 import com.gtnewhorizons.postea.utility.BlockInfo;
 
 @SuppressWarnings("unused")
 public class TileEntityReplacementManager {
 
-    private static final HashMap<String, TriFunction<NBTTagCompound, World, Chunk, BlockInfo>> tileEntityToNormalBlockTransformer = new HashMap<>();
+    private static final LinkedListMultimap<String, TriFunction<NBTTagCompound, World, Chunk, BlockInfo>> tileEntityToNormalBlockTransformer = LinkedListMultimap
+        .create();
 
     /**
      * @deprecated Superseded by {@link #tileEntityTransformer(String, TriFunction)}.
@@ -38,8 +40,8 @@ public class TileEntityReplacementManager {
         tileEntityToNormalBlockTransformer.put(tileEntityId, transformerFunction);
     }
 
-    public static TriFunction<NBTTagCompound, World, Chunk, BlockInfo> getTileEntityToNormalBlockTransformerFunction(
+    public static Collection<TriFunction<NBTTagCompound, World, Chunk, BlockInfo>> getTileEntityToNormalBlockTransformerFunction(
         String tileEntityId) {
-        return tileEntityToNormalBlockTransformer.getOrDefault(tileEntityId, null);
+        return tileEntityToNormalBlockTransformer.get(tileEntityId);
     }
 }

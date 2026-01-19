@@ -1,14 +1,16 @@
 package com.gtnewhorizons.postea.api;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collection;
 import java.util.function.Function;
 
 import net.minecraft.nbt.NBTTagCompound;
 
+import com.google.common.collect.LinkedListMultimap;
+
 public class ItemStackReplacementManager {
 
-    private static final Map<String, Function<NBTTagCompound, NBTTagCompound>> replacementMap = new HashMap<>();
+    private static final LinkedListMultimap<String, Function<NBTTagCompound, NBTTagCompound>> replacementMap = LinkedListMultimap
+        .create();
 
     // Public API for converting ItemStacks.
 
@@ -18,7 +20,7 @@ public class ItemStackReplacementManager {
     }
 
     @SuppressWarnings("unused")
-    public static Function<NBTTagCompound, NBTTagCompound> getItemReplacement(String itemNameInternal) {
+    public static Collection<Function<NBTTagCompound, NBTTagCompound>> getItemReplacement(String itemNameInternal) {
         return replacementMap.get(itemNameInternal);
     }
 }

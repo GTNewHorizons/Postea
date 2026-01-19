@@ -23,11 +23,9 @@ public abstract class ItemFixerUtility {
             String itemNameInternal = GameRegistry.findUniqueIdentifierFor(item).modId + ":"
                 + GameRegistry.findUniqueIdentifierFor(item).name;
 
-            Function<NBTTagCompound, NBTTagCompound> transformer = ItemStackReplacementManager
-                .getItemReplacement(itemNameInternal);
-
-            if (transformer != null) {
-                transformer.apply(tag);
+            for (Function<NBTTagCompound, NBTTagCompound> transformer : ItemStackReplacementManager
+                .getItemReplacement(itemNameInternal)) {
+                if (transformer.apply(tag) != null) break;
             }
         }
     }
