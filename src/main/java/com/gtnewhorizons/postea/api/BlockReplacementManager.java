@@ -1,6 +1,5 @@
 package com.gtnewhorizons.postea.api;
 
-import java.util.HashMap;
 import java.util.function.BiFunction;
 
 import net.minecraft.world.World;
@@ -13,7 +12,6 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 public class BlockReplacementManager {
 
-    private static final HashMap<String, String> dummyMap = new HashMap<>();
     public static final LinkedListMultimap<String, BiFunction<BlockConversionInfo, World, BlockConversionInfo>> blockReplacementMap = LinkedListMultimap
         .create();
     public static final IntOpenHashSet posteaMarkedIDs = new IntOpenHashSet();
@@ -21,19 +19,15 @@ public class BlockReplacementManager {
     @SuppressWarnings("unused")
     public static void addBlockReplacement(String blockNameIn,
         BiFunction<BlockConversionInfo, World, BlockConversionInfo> transformer) {
-        String newName = PosteaMissingMappingHandler.createDummyBlockIfNeeded(blockNameIn);
-        if (!newName.equals(blockNameIn)) {
-            dummyMap.put(newName, blockNameIn);
-        }
-        blockReplacementMap.put(newName, transformer);
+        PosteaMissingMappingHandler.createDummyBlockIfNeeded(blockNameIn);
+        blockReplacementMap.put(blockNameIn, transformer);
     }
 
     public static BlockConversionInfo getBlockReplacement(BlockConversionInfo blockConversionInfo, World world) {
         // auto change the value in case a handler check it, we can't do anything about the block id
         // but hopefully that's never going to be an issue
-        String originalName = blockConversionInfo.blockName;
-        blockConversionInfo.blockName = dummyMap
-            .getOrDefault(blockConversionInfo.blockName, blockConversionInfo.blockName);
+        String originalName = PosteaMissingMappingHandler.getOriginalIDIfIDIsDummyID(blockConversionInfo.blockName);
+        blockConversionInfo.blockName = originalName;
         for (BiFunction<BlockConversionInfo, World, BlockConversionInfo> transformer : blockReplacementMap
             .get(originalName)) {
             BlockConversionInfo result = transformer.apply(blockConversionInfo, world);
