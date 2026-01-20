@@ -14,7 +14,7 @@ public class ItemStackReplacementManager {
     /**
      * Adds a custom transformer for a given id.
      *
-     * @param itemName    The id of the block to transform.
+     * @param itemName    The id of the item to transform.
      * @param transformer The transformer to apply.
      */
     @SuppressWarnings("unused")
