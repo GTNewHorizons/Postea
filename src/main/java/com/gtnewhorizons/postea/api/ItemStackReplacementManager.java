@@ -1,28 +1,25 @@
 package com.gtnewhorizons.postea.api;
 
-import java.util.Collection;
 import java.util.function.Function;
 
 import net.minecraft.nbt.NBTTagCompound;
 
-import com.google.common.collect.LinkedListMultimap;
-import com.gtnewhorizons.postea.PosteaMissingMappingHandler;
+import com.gtnewhorizons.postea.utility.MissingMappingHandler;
+import com.gtnewhorizons.postea.utility.TransformerRegistry;
 
 public class ItemStackReplacementManager {
 
-    private static final LinkedListMultimap<String, Function<NBTTagCompound, NBTTagCompound>> replacementMap = LinkedListMultimap
-        .create();
-
     // Public API for converting ItemStacks.
 
+    /**
+     * Adds a custom transformer for a given id.
+     *
+     * @param itemName    The id of the block to transform.
+     * @param transformer The transformer to apply.
+     */
     @SuppressWarnings("unused")
     public static void addItemReplacement(String itemName, Function<NBTTagCompound, NBTTagCompound> transformer) {
-        PosteaMissingMappingHandler.createDummyItemIfNeeded(itemName);
-        replacementMap.put(itemName, transformer);
-    }
-
-    @SuppressWarnings("unused")
-    public static Collection<Function<NBTTagCompound, NBTTagCompound>> getItemReplacement(String itemNameInternal) {
-        return replacementMap.get(PosteaMissingMappingHandler.getOriginalIDIfIDIsDummyID(itemNameInternal));
+        MissingMappingHandler.createDummyItemIfNeeded(itemName);
+        TransformerRegistry.addItemReplacement(itemName, transformer);
     }
 }

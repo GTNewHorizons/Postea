@@ -6,9 +6,7 @@ import java.util.function.Function;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 
-import com.gtnewhorizons.postea.PosteaMissingMappingHandler;
 import com.gtnewhorizons.postea.api.IDExtenderCompat;
-import com.gtnewhorizons.postea.api.ItemStackReplacementManager;
 
 import cpw.mods.fml.common.registry.GameRegistry;
 
@@ -26,7 +24,7 @@ public abstract class ItemFixerUtility {
             String itemNameInternal = uuid.modId + ":" + uuid.name;
 
             // abort early if no handlers
-            Collection<Function<NBTTagCompound, NBTTagCompound>> handlers = ItemStackReplacementManager
+            Collection<Function<NBTTagCompound, NBTTagCompound>> handlers = TransformerRegistry
                 .getItemReplacement(itemNameInternal);
             if (handlers.isEmpty()) return;
 
@@ -38,7 +36,7 @@ public abstract class ItemFixerUtility {
             }
 
             // if no handler overwrote anything on this stack, and it's a dummy, delete the stack.
-            if (PosteaMissingMappingHandler.isDummyItem(item)) {
+            if (MissingMappingHandler.isDummyItem(item)) {
                 tag.removeTag("id");
                 tag.removeTag("idExt");
             }

@@ -1,4 +1,4 @@
-package com.gtnewhorizons.postea;
+package com.gtnewhorizons.postea.utility;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,12 +10,13 @@ import net.minecraft.block.material.Material;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 
+import com.gtnewhorizons.postea.Postea;
 import com.gtnewhorizons.postea.compat.Compat;
 
 import cpw.mods.fml.common.event.FMLMissingMappingsEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
 
-public abstract class PosteaMissingMappingHandler {
+public abstract class MissingMappingHandler {
 
     enum MappingType {
         /** Tells the mapping logic to register an Item. */
@@ -67,7 +68,7 @@ public abstract class PosteaMissingMappingHandler {
     private static final String DUMMY_ID_PREFIX_END = "d.";
     private static final String DUMMY_ID_PREFIX = DUMMY_ID_PREFIX_START + DUMMY_ID_PREFIX_END;
 
-    static void onLoadCompleted() {
+    public static void onLoadCompleted() {
         for (Map.Entry<String, DummyMapping> kv : DUMMY_TARGET_TYPES.entrySet()) {
             DummyMapping mapping = kv.getValue();
             String originalId = kv.getKey();
@@ -98,7 +99,7 @@ public abstract class PosteaMissingMappingHandler {
         DUMMY_TARGET_TYPES.clear();
     }
 
-    static void onMissingMapping(FMLMissingMappingsEvent event) {
+    public static void onMissingMapping(FMLMissingMappingsEvent event) {
         for (FMLMissingMappingsEvent.MissingMapping mapping : event.getAll()) {
             if (mapping.name.startsWith(DUMMY_ID_PREFIX)) {
                 // for when a migrator ceases being registered, likely due to a removal.

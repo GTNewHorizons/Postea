@@ -1,9 +1,7 @@
 package com.gtnewhorizons.postea;
 
-import static com.gtnewhorizons.postea.api.BlockReplacementManager.blockReplacementMap;
-import static com.gtnewhorizons.postea.api.BlockReplacementManager.posteaMarkedIDs;
-
-import net.minecraft.block.Block;
+import com.gtnewhorizons.postea.utility.MissingMappingHandler;
+import com.gtnewhorizons.postea.utility.TransformerRegistry;
 
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
@@ -29,29 +27,22 @@ public class Postea {
 
     @Mod.EventHandler
     public void onIdMappingsChanged(FMLModIdMappingEvent event) {
-        posteaMarkedIDs.clear();
-        for (String name : blockReplacementMap.keySet()) {
-            Block block = Block.getBlockFromName(name);
-            if (block != null) {
-                int id = Block.getIdFromBlock(block);
-                posteaMarkedIDs.add(id);
-            }
-        }
+        TransformerRegistry.onIdMappingsChanged();
     }
 
     @Mod.EventHandler
     public void onMissingMapping(FMLMissingMappingsEvent event) {
-        PosteaMissingMappingHandler.onMissingMapping(event);
+        MissingMappingHandler.onMissingMapping(event);
     }
 
     @Mod.EventHandler
     public void onLoadCompleted(FMLLoadCompleteEvent event) {
-        PosteaMissingMappingHandler.onLoadCompleted();
+        MissingMappingHandler.onLoadCompleted();
     }
 
     @Mod.EventHandler
     public void onServerStopping(FMLServerStoppingEvent event) {
-        posteaMarkedIDs.clear();
+        TransformerRegistry.onServerStopping();
     }
 
 }

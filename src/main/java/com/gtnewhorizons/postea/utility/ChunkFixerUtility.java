@@ -1,6 +1,5 @@
 package com.gtnewhorizons.postea.utility;
 
-import static com.gtnewhorizons.postea.api.BlockReplacementManager.blockNotConvertible;
 import static com.gtnewhorizons.postea.utility.PosteaUtilities.getModListHash;
 
 import java.util.ArrayList;
@@ -15,8 +14,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
-import com.gtnewhorizons.postea.PosteaMissingMappingHandler;
-import com.gtnewhorizons.postea.api.BlockReplacementManager;
 import com.gtnewhorizons.postea.api.TileEntityReplacementManager;
 import com.gtnewhorizons.postea.api.TriFunction;
 import com.gtnewhorizons.postea.compat.Compat;
@@ -51,7 +48,7 @@ public class ChunkFixerUtility {
                     // Skip air.
                     if (blockId == AIR_ID) continue;
                     // If this block has no registered Postea conversion, skip it.
-                    if (blockNotConvertible(blockId)) continue;
+                    if (TransformerRegistry.blockNotConvertible(blockId)) continue;
 
                     // Cache block names to improve performance, as findUniqueIdentifierFor is expensive.
                     Block block = Block.getBlockById(blockId);
@@ -71,13 +68,12 @@ public class ChunkFixerUtility {
                     blockConversionInfo.y = y + sectionY;
                     blockConversionInfo.z = z + chunkZPos + 1;
 
-                    BlockConversionInfo output = BlockReplacementManager
-                        .getBlockReplacement(blockConversionInfo, world);
+                    BlockConversionInfo output = TransformerRegistry.getBlockReplacement(blockConversionInfo, world);
 
                     if (output != null) {
                         access.setBlockId(x, y, z, output.blockID);
                         access.setMeta(x, y, z, output.metadata);
-                    } else if (PosteaMissingMappingHandler.isDummyBlock(block)) {
+                    } else if (MissingMappingHandler.isDummyBlock(block)) {
                         // clear out the slot if this is an unhandled dummy item.
                         access.setBlockId(x, y, z, 0);
                         access.setMeta(x, y, z, 0);
