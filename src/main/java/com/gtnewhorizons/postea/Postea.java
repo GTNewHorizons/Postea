@@ -37,6 +37,7 @@ public class Postea {
 
     @Mod.EventHandler
     public void onLoadCompleted(FMLLoadCompleteEvent event) {
+        TransformerRegistry.onLoadCompleted();
         MissingMappingHandler.onLoadCompleted();
     }
 

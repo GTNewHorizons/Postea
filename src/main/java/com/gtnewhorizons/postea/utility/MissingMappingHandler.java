@@ -1,7 +1,9 @@
 package com.gtnewhorizons.postea.utility;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -17,6 +19,7 @@ import cpw.mods.fml.common.event.FMLMissingMappingsEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
 
 public abstract class MissingMappingHandler {
+
 
     enum MappingType {
         /** Tells the mapping logic to register an Item. */
@@ -59,6 +62,7 @@ public abstract class MissingMappingHandler {
         }
     }
 
+    private static final Set<String> MISSING_IDS_TO_IGNORE = new HashSet<>();
     private static final HashMap<String, Item> MISSING_ITEM_MAPPINGS = new HashMap<>();
     private static final HashMap<String, Block> MISSING_BLOCK_MAPPINGS = new HashMap<>();
     private static final HashMap<String, DummyMapping> DUMMY_TARGET_TYPES = new HashMap<>();
@@ -101,8 +105,8 @@ public abstract class MissingMappingHandler {
 
     public static void onMissingMapping(FMLMissingMappingsEvent event) {
         for (FMLMissingMappingsEvent.MissingMapping mapping : event.getAll()) {
-            if (mapping.name.startsWith(DUMMY_ID_PREFIX)) {
-                // for when a migrator ceases being registered, likely due to a removal.
+            // ignore things that can be ignored safely, and our own dummy items for when a handler is removed.
+            if (MISSING_IDS_TO_IGNORE.contains(mapping.name) || mapping.name.startsWith(DUMMY_ID_PREFIX)) {
                 mapping.ignore();
                 continue;
             }
@@ -126,9 +130,6 @@ public abstract class MissingMappingHandler {
                 }
             }
         }
-        // no longer needed free what ever used to be in there
-        MISSING_BLOCK_MAPPINGS.clear();
-        MISSING_ITEM_MAPPINGS.clear();
     }
 
     private static void onMappingAdded(String originalId, MappingType mappingType) {
@@ -148,6 +149,18 @@ public abstract class MissingMappingHandler {
                 DUMMY_TARGET_TYPES.put(originalId, new DummyMapping(mappingType, registerAs, dummyFullId));
             }
         }
+    }
+
+    public static void addSimpleReplacement(String originalId, Item item) {
+        MISSING_ITEM_MAPPINGS.put(originalId, item);
+    }
+
+    public static void addSimpleReplacement(String originalId, Block block) {
+        MISSING_BLOCK_MAPPINGS.put(originalId, block);
+    }
+
+    public static void addIgnore(String originalId) {
+        MISSING_IDS_TO_IGNORE.add(originalId);
     }
 
     public static void createDummyBlockIfNeeded(String originalId) {
