@@ -15,6 +15,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
+import com.gtnewhorizons.postea.PosteaMissingMappingHandler;
 import com.gtnewhorizons.postea.api.BlockReplacementManager;
 import com.gtnewhorizons.postea.api.TileEntityReplacementManager;
 import com.gtnewhorizons.postea.api.TriFunction;
@@ -76,6 +77,10 @@ public class ChunkFixerUtility {
                     if (output != null) {
                         access.setBlockId(x, y, z, output.blockID);
                         access.setMeta(x, y, z, output.metadata);
+                    } else if (PosteaMissingMappingHandler.isDummyBlock(block)) {
+                        // clear out the slot if this is an unhandled dummy item.
+                        access.setBlockId(x, y, z, 0);
+                        access.setMeta(x, y, z, 0);
                     }
                 }
             }

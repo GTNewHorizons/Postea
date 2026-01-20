@@ -3,9 +3,11 @@ package com.gtnewhorizons.postea;
 import static com.gtnewhorizons.postea.api.BlockReplacementManager.blockReplacementMap;
 import static com.gtnewhorizons.postea.api.BlockReplacementManager.posteaMarkedIDs;
 
+import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import net.minecraft.block.Block;
 
 import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.event.FMLMissingMappingsEvent;
 import cpw.mods.fml.common.event.FMLModIdMappingEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStoppingEvent;
@@ -35,6 +37,15 @@ public class Postea {
                 posteaMarkedIDs.add(id);
             }
         }
+    }
+
+    @Mod.EventHandler
+    public void onMissingMapping(FMLMissingMappingsEvent event) {
+        PosteaMissingMappingHandler.onMissingMapping(event);
+    }
+
+    public void onLoadCompleted(FMLLoadCompleteEvent event) {
+        PosteaMissingMappingHandler.onLoadCompleted();
     }
 
     @Mod.EventHandler

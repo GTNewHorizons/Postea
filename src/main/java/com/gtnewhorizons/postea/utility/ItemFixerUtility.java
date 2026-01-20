@@ -1,10 +1,12 @@
 package com.gtnewhorizons.postea.utility;
 
+import java.util.Collection;
 import java.util.function.Function;
 
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 
+import com.gtnewhorizons.postea.PosteaMissingMappingHandler;
 import com.gtnewhorizons.postea.api.IDExtenderCompat;
 import com.gtnewhorizons.postea.api.ItemStackReplacementManager;
 
@@ -20,12 +22,25 @@ public abstract class ItemFixerUtility {
             int id = IDExtenderCompat.getItemStackID(tag);
             Item item = Item.getItemById(id);
             if (item == null) return;
-            String itemNameInternal = GameRegistry.findUniqueIdentifierFor(item).modId + ":"
-                + GameRegistry.findUniqueIdentifierFor(item).name;
+            GameRegistry.UniqueIdentifier uuid = GameRegistry.findUniqueIdentifierFor(item);
+            String itemNameInternal = uuid.modId + ":" + uuid.name;
 
-            for (Function<NBTTagCompound, NBTTagCompound> transformer : ItemStackReplacementManager
-                .getItemReplacement(itemNameInternal)) {
-                if (transformer.apply(tag) != null) break;
+            // abort early if no handlers
+            Collection<Function<NBTTagCompound, NBTTagCompound>> handlers = ItemStackReplacementManager
+                .getItemReplacement(itemNameInternal);
+            if (handlers.isEmpty()) return;
+
+            // apply handlers
+            for (Function<NBTTagCompound, NBTTagCompound> transformer : handlers) {
+                if (transformer.apply(tag) != null) {
+                    return;
+                }
+            }
+
+            // if no handler overwrote anything on this stack, and it's a dummy, delete the stack.
+            if (PosteaMissingMappingHandler.isDummyItem(item)) {
+                tag.removeTag("id");
+                tag.removeTag("idExt");
             }
         }
     }
