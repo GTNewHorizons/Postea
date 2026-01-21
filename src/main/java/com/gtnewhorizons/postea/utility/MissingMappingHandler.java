@@ -20,7 +20,6 @@ import cpw.mods.fml.common.registry.GameRegistry;
 
 public abstract class MissingMappingHandler {
 
-
     enum MappingType {
         /** Tells the mapping logic to register an Item. */
         Item,
