@@ -127,6 +127,32 @@ public class ItemStackReplacementManager {
         addItemReplacement(originalId, OreDictionary.WILDCARD_VALUE, item, newMeta, skipBlockRemap);
     }
 
+    // item -> stack
+
+    /**
+     * Adds a mapping to remap stacks of a given item to another item with a given damage/meta value. This also adds a
+     * matching block replacement if this item happens to be an ItemBlock.
+     *
+     * @param originalId The id of the item to remap.
+     * @param stack       The item to remap to.
+     */
+    @SuppressWarnings("unused")
+    public static void addItemReplacement(@Nonnull String originalId, @Nonnull ItemStack stack) {
+        addItemReplacement(originalId, OreDictionary.WILDCARD_VALUE, stack.getItem(), Items.feather.getDamage(stack), false);
+    }
+
+    /**
+     * Adds a mapping to remap stacks of a given item to another item with a given damage/meta value.
+     *
+     * @param originalId     The id of the item to remap.
+     * @param stack          A stack of the item to replace to.
+     * @param skipBlockRemap Set to true to skip auto-adding a block remapper if the item happens to be an ItemBlock.
+     */
+    @SuppressWarnings("unused")
+    public static void addItemReplacement(@Nonnull String originalId, @Nonnull ItemStack stack, boolean skipBlockRemap) {
+        addItemReplacement(originalId, OreDictionary.WILDCARD_VALUE, stack.getItem(), Items.feather.getDamage(stack), skipBlockRemap);
+    }
+
     // item+meta -> stack
 
     /**
