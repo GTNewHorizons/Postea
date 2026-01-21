@@ -1,7 +1,12 @@
 package com.gtnewhorizons.postea.api;
 
+import static com.gtnewhorizons.postea.Postea.LOG;
+
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.function.BiFunction;
+
+import javax.annotation.Nullable;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
@@ -33,13 +38,25 @@ public class TileEntityReplacementManager {
      * @param tileEntityId        ID of the tile entity to be transformed
      * @param transformerFunction Callback function to transforms the tile entity
      */
+    @SuppressWarnings("unused")
     public static void tileEntityTransformer(String tileEntityId,
         TriFunction<NBTTagCompound, World, Chunk, BlockInfo> transformerFunction) {
-        tileEntityToNormalBlockTransformer.put(tileEntityId, transformerFunction);
+        Objects.requireNonNull(tileEntityId, "tileEntityId must not be null");
+        Objects.requireNonNull(transformerFunction, "transformerFunction must not be null");
+
+        TriFunction<NBTTagCompound, World, Chunk, BlockInfo> existing = tileEntityToNormalBlockTransformer
+            .putIfAbsent(tileEntityId, transformerFunction);
+
+        if (existing != null) {
+            throw new IllegalStateException(
+                "Postea TileEntity transformer already registered for '" + tileEntityId + "'.");
+        }
+
+        LOG.info("TileEntity replacement registered successfully for {}", tileEntityId);
     }
 
-    public static TriFunction<NBTTagCompound, World, Chunk, BlockInfo> getTileEntityToNormalBlockTransformerFunction(
+    public static @Nullable TriFunction<NBTTagCompound, World, Chunk, BlockInfo> getTileEntityToNormalBlockTransformerFunction(
         String tileEntityId) {
-        return tileEntityToNormalBlockTransformer.getOrDefault(tileEntityId, null);
+        return tileEntityToNormalBlockTransformer.get(tileEntityId);
     }
 }

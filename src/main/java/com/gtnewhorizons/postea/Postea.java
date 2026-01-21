@@ -5,6 +5,9 @@ import static com.gtnewhorizons.postea.api.BlockReplacementManager.posteaMarkedI
 
 import net.minecraft.block.Block;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLModIdMappingEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -21,6 +24,8 @@ public class Postea {
 
     public static final String MODID = "postea";
     public static final String MODNAME = "Postea";
+
+    public static final Logger LOG = LogManager.getLogger(MODID);
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {}

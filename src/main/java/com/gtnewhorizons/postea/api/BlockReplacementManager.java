@@ -1,8 +1,13 @@
 package com.gtnewhorizons.postea.api;
 
+import static com.gtnewhorizons.postea.Postea.LOG;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
+
+import javax.annotation.Nullable;
 
 import net.minecraft.world.World;
 
@@ -16,12 +21,20 @@ public class BlockReplacementManager {
     public static final IntOpenHashSet posteaMarkedIDs = new IntOpenHashSet();
 
     @SuppressWarnings("unused")
-    public static void addBlockReplacement(String blockNameIn,
+    public static void addBlockReplacement(String blockName,
         BiFunction<BlockConversionInfo, World, BlockConversionInfo> transformer) {
-        blockReplacementMap.put(blockNameIn, transformer);
+        Objects.requireNonNull(blockName, "blockName must not be null");
+        Objects.requireNonNull(transformer, "transformer must not be null");
+
+        if (blockReplacementMap.putIfAbsent(blockName, transformer) != null) {
+            throw new IllegalStateException("Postea block replacement already registered for '" + blockName + "'.");
+        }
+
+        LOG.info("Block replacement registered successfully for {}", blockName);
     }
 
-    public static BlockConversionInfo getBlockReplacement(BlockConversionInfo blockConversionInfo, World world) {
+    public static @Nullable BlockConversionInfo getBlockReplacement(BlockConversionInfo blockConversionInfo,
+        World world) {
 
         BiFunction<BlockConversionInfo, World, BlockConversionInfo> transformer = blockReplacementMap
             .getOrDefault(blockConversionInfo.blockName, null);
