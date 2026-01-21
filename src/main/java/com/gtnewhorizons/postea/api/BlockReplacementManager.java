@@ -49,6 +49,7 @@ public class BlockReplacementManager {
 
     /**
      * Suppresses any missing mapping warning for the given id.
+     * 
      * @param originalId The id of the block or item to suppress the warning for.
      */
     @SuppressWarnings("unused")

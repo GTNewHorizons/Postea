@@ -51,6 +51,7 @@ public class ItemStackReplacementManager {
 
     /**
      * Suppresses any missing mapping warning for the given id.
+     * 
      * @param originalId The id of the block or item to suppress the warning for.
      */
     @SuppressWarnings("unused")
@@ -134,11 +135,16 @@ public class ItemStackReplacementManager {
      * matching block replacement if this item happens to be an ItemBlock.
      *
      * @param originalId The id of the item to remap.
-     * @param stack       The item to remap to.
+     * @param stack      The item to remap to.
      */
     @SuppressWarnings("unused")
     public static void addItemReplacement(@Nonnull String originalId, @Nonnull ItemStack stack) {
-        addItemReplacement(originalId, OreDictionary.WILDCARD_VALUE, stack.getItem(), Items.feather.getDamage(stack), false);
+        addItemReplacement(
+            originalId,
+            OreDictionary.WILDCARD_VALUE,
+            stack.getItem(),
+            Items.feather.getDamage(stack),
+            false);
     }
 
     /**
@@ -149,8 +155,14 @@ public class ItemStackReplacementManager {
      * @param skipBlockRemap Set to true to skip auto-adding a block remapper if the item happens to be an ItemBlock.
      */
     @SuppressWarnings("unused")
-    public static void addItemReplacement(@Nonnull String originalId, @Nonnull ItemStack stack, boolean skipBlockRemap) {
-        addItemReplacement(originalId, OreDictionary.WILDCARD_VALUE, stack.getItem(), Items.feather.getDamage(stack), skipBlockRemap);
+    public static void addItemReplacement(@Nonnull String originalId, @Nonnull ItemStack stack,
+        boolean skipBlockRemap) {
+        addItemReplacement(
+            originalId,
+            OreDictionary.WILDCARD_VALUE,
+            stack.getItem(),
+            Items.feather.getDamage(stack),
+            skipBlockRemap);
     }
 
     // item+meta -> stack
