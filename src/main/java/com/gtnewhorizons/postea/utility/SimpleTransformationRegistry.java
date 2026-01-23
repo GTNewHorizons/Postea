@@ -91,8 +91,7 @@ public class SimpleTransformationRegistry {
      * @implNote With these simple transformers, it doesn't matter how many transformations are registered to a single
      *           id, only a single handler will be registered per id during the FMLLoadCompleted event. Replacements
      *           are by using hash-table lookups so the execution of the transformation should be constant-time
-     *           regardless
-     *           of how many handlers were registered to a single id.
+     *           regardless of how many handlers were registered to a single id.
      *
      * @param originalId     The original namespaced id of the block to replace.
      * @param originalMeta   The meta value of the block to replace. OreDictionary.WILDCARD_VALUE acts as a wildcard
@@ -143,8 +142,7 @@ public class SimpleTransformationRegistry {
      * @implNote With these simple transformers, it doesn't matter how many transformations are registered to a single
      *           id, only a single handler will be registered per id during the FMLLoadCompleted event. Replacements
      *           are by using hash-table lookups so the execution of the transformation should be constant-time
-     *           regardless
-     *           of how many handlers were registered to a single id.
+     *           regardless of how many handlers were registered to a single id.
      *
      * @param originalId     The original namespaced id of the item to replace.
      * @param originalMeta   The meta/damage value of the item to replace. OreDictionary.WILDCARD_VALUE acts as a
