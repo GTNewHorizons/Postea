@@ -41,11 +41,11 @@ public class TransformerRegistry {
     public static final Int2IntOpenHashMap REMAPPED_IDS = new Int2IntOpenHashMap();
 
     /**
-     * Stores simple item transformations (eg if old id is # with meta # then turn into item with id # with meta #.
+     * Stores simple item transformations (eg if old id is # with meta # then turn into item with id # with meta #.)
      */
     public static final SimpleTransformationMap<Pair<Integer, Short>> SIMPLE_ITEM_TRANSFORMATION_MAP = new SimpleTransformationMap<>();
     /**
-     * Stores simple block transformations (eg if old id is # with meta # then turn into item with id # with meta #.
+     * Stores simple block transformations (eg if old id is # with meta # then turn into item with id # with meta #.)
      */
     public static final SimpleTransformationMap<Pair<Integer, Short>> SIMPLE_BLOCK_TRANSFORMATION_MAP = new SimpleTransformationMap<>();
 

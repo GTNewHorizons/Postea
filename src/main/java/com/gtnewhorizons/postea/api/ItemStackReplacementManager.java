@@ -160,8 +160,7 @@ public class ItemStackReplacementManager {
      *          </ul>
      *
      * @implNote For performance reasons, Postea assumes that the tag that was passed to the handler hasn't been
-     *           modified
-     *           if you return a null value. This isn't enforced though since returning a null value after doing some
+     *           modified if you return false. This isn't enforced though since returning false after doing some
      *           modifications has a couple niche uses. eg: having separate handlers for different migrations of a
      *           single thing that can be sunset at different times down the line.
      *
