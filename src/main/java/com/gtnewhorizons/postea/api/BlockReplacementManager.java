@@ -11,6 +11,7 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import com.gtnewhorizons.postea.utility.BlockConversionInfo;
 import com.gtnewhorizons.postea.utility.MissingMappingHandler;
+import com.gtnewhorizons.postea.utility.SimpleTransformationRegistry;
 import com.gtnewhorizons.postea.utility.TransformerRegistry;
 
 public class BlockReplacementManager {
@@ -43,8 +44,9 @@ public class BlockReplacementManager {
      */
     @Deprecated
     @SuppressWarnings("unused")
-    public static void addBlockReplacement(@Nonnull String originalId,
-        @Nonnull BiFunction<BlockConversionInfo, World, BlockConversionInfo> transformer) {
+    public static void addBlockReplacement(String originalId,
+        BiFunction<BlockConversionInfo, World, BlockConversionInfo> transformer) {
+        if (transformer == null) throw new IllegalArgumentException("transformer is null");
         addTransformationHandler(originalId, info -> transformer.apply(info, info.world) != null);
     }
 
@@ -73,8 +75,7 @@ public class BlockReplacementManager {
      * @param transformer The transformer to apply.
      */
     @SuppressWarnings("unused")
-    public static void addTransformationHandler(@Nonnull String originalId,
-        @Nonnull Function<BlockConversionInfo, Boolean> transformer) {
+    public static void addTransformationHandler(String originalId, Function<BlockConversionInfo, Boolean> transformer) {
         if (originalId == null) throw new IllegalArgumentException("original id is null");
         if (transformer == null) throw new IllegalArgumentException("transformer is null");
         TransformerRegistry.addBlockReplacement(originalId, transformer);
@@ -93,7 +94,7 @@ public class BlockReplacementManager {
      * @param block      The block to remap to.
      */
     @SuppressWarnings("unused")
-    public static void replaceMissingBlockWithNewBlock(@Nonnull String originalId, @Nonnull Block block) {
+    public static void replaceMissingBlockWithNewBlock(String originalId, Block block) {
         if (originalId == null) throw new IllegalArgumentException("original id is null");
         if (block == null) throw new IllegalArgumentException("block is null");
         MissingMappingHandler.addSimpleReplacement(originalId, block);
@@ -239,10 +240,10 @@ public class BlockReplacementManager {
      * @param skipStackRemap Set to true to skip auto-adding an item stack remapper.
      */
     @SuppressWarnings("unused")
-    public static void addBlockReplacement(@Nonnull String originalId, int originalMeta, @Nonnull Block block,
-        int newMeta, boolean skipStackRemap) {
+    public static void addBlockReplacement(String originalId, int originalMeta, Block block, int newMeta,
+        boolean skipStackRemap) {
         if (originalId == null) throw new IllegalArgumentException("original id is null");
         if (block == null) throw new IllegalArgumentException("block is null");
-        TransformerRegistry.addSimpleTransformer(originalId, originalMeta, block, newMeta, skipStackRemap);
+        SimpleTransformationRegistry.addSimpleTransformer(originalId, originalMeta, block, newMeta, skipStackRemap);
     }
 }

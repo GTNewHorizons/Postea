@@ -1,9 +1,9 @@
 package com.gtnewhorizons.postea.api;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -12,109 +12,17 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.oredict.OreDictionary;
 
 import com.gtnewhorizons.postea.utility.MissingMappingHandler;
+import com.gtnewhorizons.postea.utility.SimpleTransformationRegistry;
 import com.gtnewhorizons.postea.utility.TransformerRegistry;
 
 public class ItemStackReplacementManager {
 
     // Public API for converting ItemStacks.
 
-    // spotless:off
-    /**
-     * Fetches the original registration name of a given item id. Use this to get the actual name of an item when migrating
-     * an item that no longer exists.
-     *
-     * @apiNote This only works for items that have been registered for Postea transformations, and should not be used
-     *          outside a Postea transformer function.
-     *          <pre>{@code
-     *          public static class Example {
-     *              public static void postLoad() {
-     *                  ItemStackReplacementManager.addTransformationHandler("removedmod:item1", Example::transform);
-     *                  ItemStackReplacementManager.addTransformationHandler("removedmod:item2", Example::transform);
-     *                  ItemStackReplacementManager.addTransformationHandler("removedmod:item3", Example::transform);
-     *              }
-     *
-     *              public static boolean transform(NBTTagCompound tag) {
-     *                  // consider using the other addItemReplacement functions without a function
-     *                  // They create very fast transformers that run in constant time
-     *                  // regardless of how many transformations you register to a single id
-     *                  short meta = tag.getShort("Damage");
-     *                  switch (ItemStackReplacementManager.getOriginalItemName(tag)) {
-     *                      int meta = 0;
-     *                      case "removedmod:item1":
-     *                          if (meta != 0) return false;
-     *                          meta = 1;
-     *                          break;
-     *                      case "removedmod:item2":
-     *                          meta = 2;
-     *                          break;
-     *                  }
-     *                  IDExtenderCompat.setItemStackID(tag, Items.getIdFromItem(MyItems.item1));
-     *                  tag.setShort("Damage", meta);
-     *                  return true;
-     *              }
-     *          }
-     *          }<pre/>
-     *
-     * @param tag The NBT tag that was passed to your handler.
-     * @return The original namespaced name of the item being transformed.
-     */
-    // spotless:on
-    @SuppressWarnings("unused")
-    public static @Nullable String getOriginalItemName(NBTTagCompound tag) {
-        return TransformerRegistry.getMappedItemName(IDExtenderCompat.getItemStackID(tag));
-    }
-
-    // spotless:off
-    /**
-     * Fetches the original registration name of a given item id. Use this to get the actual name of an item when
-     * migrating an item that no longer exists.
-     *
-     * @apiNote This only works for items that have been registered for Postea transformations, and should not be used
-     *          outside a Postea transformer function.
-     *          <pre>{@code
-     *          public static class Example {
-     *              public static void postLoad() {
-     *                  ItemStackReplacementManager.addTransformationHandler("removedmod:item1", Example::transform);
-     *                  ItemStackReplacementManager.addTransformationHandler("removedmod:item2", Example::transform);
-     *                  ItemStackReplacementManager.addTransformationHandler("removedmod:item3", Example::transform);
-     *              }
-     *
-     *              public static boolean transform(NBTTagCompound tag) {
-     *                  // consider using the other addItemReplacement functions without a function
-     *                  // They create very fast transformers that run in constant time
-     *                  // regardless of how many transformations you register to a single id
-     *                  short meta = tag.getShort("Damage");
-     *                  int id = IDExtenderCompat.getItemStackID(tag);
-     *                  switch (ItemStackReplacementManager.getOriginalItemName(id)) {
-     *                      int meta = 0;
-     *                      case "removedmod:item1":
-     *                          if (meta != 0) return false;
-     *                          meta = 1;
-     *                          break;
-     *                      case "removedmod:item2":
-     *                          meta = 2;
-     *                          break;
-     *                  }
-     *                  IDExtenderCompat.setItemStackID(tag, Items.getIdFromItem(MyItems.item1));
-     *                  tag.setShort("Damage", meta);
-     *                  return true;
-     *              }
-     *          }
-     *          }<pre/>
-     *
-     * @param itemId The numeric id of the item that was passed to your transformation handler.
-     * @return The original namespaced name of the item being transformed.
-     */
-    // spotless:on
-    @SuppressWarnings("unused")
-    public static @Nullable String getOriginalItemName(int itemId) {
-        return TransformerRegistry.getMappedItemName(itemId);
-    }
-
     /**
      * Adds a custom transformer for a given id.
      *
-     * @deprecated Use {@link #addTransformationHandler(String, Function)} instead.
+     * @deprecated Use {@link #addTransformationHandler(String, BiFunction)} instead.
      *
      * @apiNote When the transformer function passed to this function returns a null, value Postea will assume that
      *          the transformer has failed to identify and run the handler on any other handler function registered
@@ -139,9 +47,9 @@ public class ItemStackReplacementManager {
      */
     @Deprecated
     @SuppressWarnings("unused")
-    public static void addItemReplacement(@Nonnull String originalId,
-        @Nonnull Function<NBTTagCompound, NBTTagCompound> transformer) {
-        addTransformationHandler(originalId, tag -> transformer.apply(tag) != null);
+    public static void addItemReplacement(String originalId, Function<NBTTagCompound, NBTTagCompound> transformer) {
+        if (transformer == null) throw new IllegalArgumentException("transformer is null");
+        addTransformationHandler(originalId, (_originalId, tag) -> transformer.apply(tag) != null);
     }
 
     /**
@@ -168,8 +76,8 @@ public class ItemStackReplacementManager {
      * @param transformer The transformer to apply.
      */
     @SuppressWarnings("unused")
-    public static void addTransformationHandler(@Nonnull String originalId,
-        @Nonnull Function<NBTTagCompound, Boolean> transformer) {
+    public static void addTransformationHandler(String originalId,
+        BiFunction<String, NBTTagCompound, Boolean> transformer) {
         if (originalId == null) throw new IllegalArgumentException("original id is null");
         if (transformer == null) throw new IllegalArgumentException("transformer is null");
         TransformerRegistry.addItemReplacement(originalId, transformer);
@@ -187,7 +95,7 @@ public class ItemStackReplacementManager {
      * @param item       The item to remap to.
      */
     @SuppressWarnings("unused")
-    public static void replaceMissingItemWithNewItem(@Nonnull String originalId, @Nonnull Item item) {
+    public static void replaceMissingItemWithNewItem(String originalId, Item item) {
         if (originalId == null) throw new IllegalArgumentException("original id is null");
         if (item == null) throw new IllegalArgumentException("item is null");
         MissingMappingHandler.addSimpleReplacement(originalId, item);
@@ -289,6 +197,8 @@ public class ItemStackReplacementManager {
     /**
      * Adds a mapping to remap stacks of a given item to another item with a given damage/meta value. This also adds a
      * matching block replacement if this item happens to be an ItemBlock.
+     * <br>
+     * DOES NOT COPY NBT FROM STACK.
      *
      * @implNote All transformations registered using this handler are executed in constant time regardless of how many
      *           transformations are registered to a single id.
@@ -308,6 +218,8 @@ public class ItemStackReplacementManager {
 
     /**
      * Adds a mapping to remap stacks of a given item to another item with a given damage/meta value.
+     * <br>
+     * DOES NOT COPY NBT FROM STACK.
      *
      * @implNote All transformations registered using this handler are executed in constant time regardless of how many
      *           transformations are registered to a single id.
@@ -368,6 +280,8 @@ public class ItemStackReplacementManager {
     /**
      * Adds a mapping to remap all stacks of a given item and damage/meta value to another item with a
      * given damage/meta value. This also adds a matching block replacement if this item happens to be an ItemBlock.
+     * <br>
+     * DOES NOT COPY NBT FROM STACK.
      *
      * @implNote All transformations registered using this handler are executed in constant time regardless of how many
      *           transformations are registered to a single id.
@@ -384,6 +298,8 @@ public class ItemStackReplacementManager {
     /**
      * Adds a mapping to remap all stacks of a given item and damage/meta value to another item with a
      * given damage/meta value.
+     * <br>
+     * DOES NOT COPY NBT FROM STACK.
      *
      * @implNote All transformations registered using this handler are executed in constant time regardless of how many
      *           transformations are registered to a single id.
@@ -434,10 +350,10 @@ public class ItemStackReplacementManager {
      * @param skipBlockRemap Set to true to skip auto-adding a item remapper if the .
      */
     @SuppressWarnings("unused")
-    public static void addItemReplacement(@Nonnull String originalId, int originalMeta, @Nonnull Item item, int newMeta,
+    public static void addItemReplacement(String originalId, int originalMeta, Item item, int newMeta,
         boolean skipBlockRemap) {
         if (originalId == null) throw new IllegalArgumentException("original id is null");
         if (item == null) throw new IllegalArgumentException("item is null");
-        TransformerRegistry.addSimpleTransformer(originalId, originalMeta, item, newMeta, skipBlockRemap);
+        SimpleTransformationRegistry.addSimpleTransformer(originalId, originalMeta, item, newMeta, skipBlockRemap);
     }
 }

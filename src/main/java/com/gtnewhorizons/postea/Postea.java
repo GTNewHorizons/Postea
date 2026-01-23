@@ -1,6 +1,7 @@
 package com.gtnewhorizons.postea;
 
 import com.gtnewhorizons.postea.utility.MissingMappingHandler;
+import com.gtnewhorizons.postea.utility.SimpleTransformationRegistry;
 import com.gtnewhorizons.postea.utility.TransformerRegistry;
 
 import cpw.mods.fml.common.Mod;
@@ -27,7 +28,8 @@ public class Postea {
 
     @Mod.EventHandler
     public void onIdMappingsChanged(FMLModIdMappingEvent event) {
-        TransformerRegistry.onIdMappingsChanged(event);
+        SimpleTransformationRegistry.onIdMappingsChanged();
+        TransformerRegistry.onIdMappingsChanged();
     }
 
     @Mod.EventHandler
@@ -37,7 +39,7 @@ public class Postea {
 
     @Mod.EventHandler
     public void onLoadCompleted(FMLLoadCompleteEvent event) {
-        TransformerRegistry.onLoadCompleted();
+        SimpleTransformationRegistry.onLoadCompleted();
         MissingMappingHandler.onLoadCompleted();
     }
 
