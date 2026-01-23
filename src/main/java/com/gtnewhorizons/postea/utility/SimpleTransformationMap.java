@@ -1,6 +1,5 @@
 package com.gtnewhorizons.postea.utility;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -8,9 +7,12 @@ import javax.annotation.Nullable;
 
 import net.minecraftforge.oredict.OreDictionary;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+
 public class SimpleTransformationMap<T> {
 
-    private final Map<String, Map<Integer, T>> registry = new HashMap<>();
+    private final Map<String, Map<Integer, T>> registry = new Object2ObjectOpenHashMap<>();
 
     /**
      * Puts a mapping in this registry.
@@ -21,7 +23,7 @@ public class SimpleTransformationMap<T> {
      */
     public void put(String originalId, int originalMeta, T data) {
         if (originalMeta == -1) originalMeta = OreDictionary.WILDCARD_VALUE;
-        this.registry.computeIfAbsent(originalId, k -> new HashMap<>())
+        this.registry.computeIfAbsent(originalId, k -> new Int2ObjectOpenHashMap<>())
             .put(originalMeta, data);
     }
 

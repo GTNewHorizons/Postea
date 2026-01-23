@@ -27,7 +27,7 @@ public class Postea {
 
     @Mod.EventHandler
     public void onIdMappingsChanged(FMLModIdMappingEvent event) {
-        TransformerRegistry.onIdMappingsChanged();
+        TransformerRegistry.onIdMappingsChanged(event);
     }
 
     @Mod.EventHandler

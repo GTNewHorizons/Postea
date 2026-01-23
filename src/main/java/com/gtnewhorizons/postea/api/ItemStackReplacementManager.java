@@ -3,6 +3,7 @@ package com.gtnewhorizons.postea.api;
 import java.util.function.Function;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -17,15 +18,159 @@ public class ItemStackReplacementManager {
 
     // Public API for converting ItemStacks.
 
+    // spotless:off
+    /**
+     * Fetches the original registration name of a given item id. Use this to get the actual name of an item when migrating
+     * an item that no longer exists.
+     *
+     * @apiNote This only works for items that have been registered for Postea transformations, and should not be used
+     *          outside a Postea transformer function.
+     *          <pre>{@code
+     *          public static class Example {
+     *              public static void postLoad() {
+     *                  ItemStackReplacementManager.addTransformationHandler("removedmod:item1", Example::transform);
+     *                  ItemStackReplacementManager.addTransformationHandler("removedmod:item2", Example::transform);
+     *                  ItemStackReplacementManager.addTransformationHandler("removedmod:item3", Example::transform);
+     *              }
+     *
+     *              public static boolean transform(NBTTagCompound tag) {
+     *                  // consider using the other addItemReplacement functions without a function
+     *                  // They create very fast transformers that run in constant time
+     *                  // regardless of how many transformations you register to a single id
+     *                  short meta = tag.getShort("Damage");
+     *                  switch (ItemStackReplacementManager.getOriginalItemName(tag)) {
+     *                      int meta = 0;
+     *                      case "removedmod:item1":
+     *                          if (meta != 0) return false;
+     *                          meta = 1;
+     *                          break;
+     *                      case "removedmod:item2":
+     *                          meta = 2;
+     *                          break;
+     *                  }
+     *                  IDExtenderCompat.setItemStackID(tag, Items.getIdFromItem(MyItems.item1));
+     *                  tag.setShort("Damage", meta);
+     *                  return true;
+     *              }
+     *          }
+     *          }<pre/>
+     *
+     * @param tag The NBT tag that was passed to your handler.
+     * @return The original namespaced name of the item being transformed.
+     */
+    // spotless:on
+    @SuppressWarnings("unused")
+    public static @Nullable String getOriginalItemName(NBTTagCompound tag) {
+        return TransformerRegistry.getMappedItemName(IDExtenderCompat.getItemStackID(tag));
+    }
+
+    // spotless:off
+    /**
+     * Fetches the original registration name of a given item id. Use this to get the actual name of an item when
+     * migrating an item that no longer exists.
+     *
+     * @apiNote This only works for items that have been registered for Postea transformations, and should not be used
+     *          outside a Postea transformer function.
+     *          <pre>{@code
+     *          public static class Example {
+     *              public static void postLoad() {
+     *                  ItemStackReplacementManager.addTransformationHandler("removedmod:item1", Example::transform);
+     *                  ItemStackReplacementManager.addTransformationHandler("removedmod:item2", Example::transform);
+     *                  ItemStackReplacementManager.addTransformationHandler("removedmod:item3", Example::transform);
+     *              }
+     *
+     *              public static boolean transform(NBTTagCompound tag) {
+     *                  // consider using the other addItemReplacement functions without a function
+     *                  // They create very fast transformers that run in constant time
+     *                  // regardless of how many transformations you register to a single id
+     *                  short meta = tag.getShort("Damage");
+     *                  int id = IDExtenderCompat.getItemStackID(tag);
+     *                  switch (ItemStackReplacementManager.getOriginalItemName(id)) {
+     *                      int meta = 0;
+     *                      case "removedmod:item1":
+     *                          if (meta != 0) return false;
+     *                          meta = 1;
+     *                          break;
+     *                      case "removedmod:item2":
+     *                          meta = 2;
+     *                          break;
+     *                  }
+     *                  IDExtenderCompat.setItemStackID(tag, Items.getIdFromItem(MyItems.item1));
+     *                  tag.setShort("Damage", meta);
+     *                  return true;
+     *              }
+     *          }
+     *          }<pre/>
+     *
+     * @param itemId The numeric id of the item that was passed to your transformation handler.
+     * @return The original namespaced name of the item being transformed.
+     */
+    // spotless:on
+    @SuppressWarnings("unused")
+    public static @Nullable String getOriginalItemName(int itemId) {
+        return TransformerRegistry.getMappedItemName(itemId);
+    }
+
     /**
      * Adds a custom transformer for a given id.
+     *
+     * @deprecated Use {@link #addTransformationHandler(String, Function)} instead.
+     *
+     * @apiNote When the transformer function passed to this function returns a null, value Postea will assume that
+     *          the transformer has failed to identify and run the handler on any other handler function registered
+     *          to the given ID.
+     *          <p>
+     *          If you need to perform a simple transformations consider using the following methods instead:
+     *          <ul>
+     *          <li>item -> item (with same meta): {@link #addItemReplacement(String, Item)}</li>
+     *          <li>item -> item with specific meta: {@link #addItemReplacement(String, Item, int)}</li>
+     *          <li>item with meta -> item (with same meta): {@link #addItemReplacement(String, int, Item)}</li>
+     *          <li>item with meta -> item with specific meta: {@link #addItemReplacement(String, int, Item, int)}</li>
+     *          </ul>
+     *
+     * @implNote For performance reasons, Postea assumes that the tag that was passed to the handler hasn't been
+     *           modified
+     *           if you return a null value. This isn't enforced though since returning a null value after doing some
+     *           modifications has a couple niche uses. eg: having separate handlers for different migrations of a
+     *           single thing that can be sunset at different times down the line.
+     *
+     * @param originalId  The id of the item to transform.
+     * @param transformer The transformer to apply.
+     */
+    @Deprecated
+    @SuppressWarnings("unused")
+    public static void addItemReplacement(@Nonnull String originalId,
+        @Nonnull Function<NBTTagCompound, NBTTagCompound> transformer) {
+        addTransformationHandler(originalId, tag -> transformer.apply(tag) != null);
+    }
+
+    /**
+     * Adds a custom transformer for a given id.
+     *
+     * @apiNote When the transformer function passed to this function returns a null, value Postea will assume that
+     *          the transformer has failed to identify and run the handler on any other handler function registered
+     *          to the given ID.
+     *          <p>
+     *          If you need to perform a simple transformations consider using the following methods instead:
+     *          <ul>
+     *          <li>item -> item (with same meta): {@link #addItemReplacement(String, Item)}</li>
+     *          <li>item -> item with specific meta: {@link #addItemReplacement(String, Item, int)}</li>
+     *          <li>item with meta -> item (with same meta): {@link #addItemReplacement(String, int, Item)}</li>
+     *          <li>item with meta -> item with specific meta: {@link #addItemReplacement(String, int, Item, int)}</li>
+     *          </ul>
+     *
+     * @implNote For performance reasons, Postea assumes that the tag that was passed to the handler hasn't been
+     *           modified
+     *           if you return a null value. This isn't enforced though since returning a null value after doing some
+     *           modifications has a couple niche uses. eg: having separate handlers for different migrations of a
+     *           single thing that can be sunset at different times down the line.
      *
      * @param originalId  The id of the item to transform.
      * @param transformer The transformer to apply.
      */
     @SuppressWarnings("unused")
-    public static void addItemReplacement(@Nonnull String originalId,
-        @Nonnull Function<NBTTagCompound, NBTTagCompound> transformer) {
+    public static void addTransformationHandler(@Nonnull String originalId,
+        @Nonnull Function<NBTTagCompound, Boolean> transformer) {
         if (originalId == null) throw new IllegalArgumentException("original id is null");
         if (transformer == null) throw new IllegalArgumentException("transformer is null");
         TransformerRegistry.addItemReplacement(originalId, transformer);
@@ -51,7 +196,7 @@ public class ItemStackReplacementManager {
 
     /**
      * Suppresses any missing mapping warning for the given id.
-     * 
+     *
      * @param originalId The id of the block or item to suppress the warning for.
      */
     @SuppressWarnings("unused")
@@ -69,6 +214,9 @@ public class ItemStackReplacementManager {
      *          mappings,
      *          (e.g.: Transforming a removed item into a stick)
      *
+     * @implNote All transformations registered using this handler are executed in constant time regardless of how many
+     *           transformations are registered to a single id.
+     *
      * @param originalId The id of the item to remap.
      * @param item       The item to remap to.
      */
@@ -83,6 +231,9 @@ public class ItemStackReplacementManager {
      * @apiNote Use this if you are replacing an item with something that was already registered to a world's id
      *          mappings,
      *          (e.g.: Transforming a removed item into a stick)
+     *
+     * @implNote All transformations registered using this handler are executed in constant time regardless of how many
+     *           transformations are registered to a single id.
      *
      * @param originalId     The id of the item to remap.
      * @param item           The item to remap to.
@@ -104,6 +255,9 @@ public class ItemStackReplacementManager {
      * Adds a mapping to remap stacks of a given item to another item with a given damage/meta value. This also adds a
      * matching block replacement if this item happens to be an ItemBlock.
      *
+     * @implNote All transformations registered using this handler are executed in constant time regardless of how many
+     *           transformations are registered to a single id.
+     *
      * @param originalId The id of the item to remap.
      * @param item       The item to remap to.
      * @param newMeta    The meta of the item to remap to. OreDictionary.WILDCARD_VALUE maintains the existing value.
@@ -115,6 +269,9 @@ public class ItemStackReplacementManager {
 
     /**
      * Adds a mapping to remap stacks of a given item to another item with a given damage/meta value.
+     *
+     * @implNote All transformations registered using this handler are executed in constant time regardless of how many
+     *           transformations are registered to a single id.
      *
      * @param originalId     The id of the item to remap.
      * @param item           The item to remap to.
@@ -134,6 +291,9 @@ public class ItemStackReplacementManager {
      * Adds a mapping to remap stacks of a given item to another item with a given damage/meta value. This also adds a
      * matching block replacement if this item happens to be an ItemBlock.
      *
+     * @implNote All transformations registered using this handler are executed in constant time regardless of how many
+     *           transformations are registered to a single id.
+     *
      * @param originalId The id of the item to remap.
      * @param stack      The item to remap to.
      */
@@ -150,6 +310,9 @@ public class ItemStackReplacementManager {
     /**
      * Adds a mapping to remap stacks of a given item to another item with a given damage/meta value.
      *
+     * @implNote All transformations registered using this handler are executed in constant time regardless of how many
+     *           transformations are registered to a single id.
+     *
      * @param originalId     The id of the item to remap.
      * @param stack          A stack of the item to replace to.
      * @param skipBlockRemap Set to true to skip auto-adding a block remapper if the item happens to be an ItemBlock.
@@ -165,11 +328,50 @@ public class ItemStackReplacementManager {
             skipBlockRemap);
     }
 
+    // item+meta -> item
+
+    /**
+     * Adds a mapping to remap all stacks of a given item and damage/meta value to another item, whilst maintaining its
+     * damage/meta value. This also adds a matching block replacement if this item happens to be an ItemBlock.
+     *
+     * @implNote All transformations registered using this handler are executed in constant time regardless of how many
+     *           transformations are registered to a single id.
+     *
+     * @param originalId   The id of the item to remap.
+     * @param originalMeta The meta of the item to remap. OreDictionary.WILDCARD_VALUE acts as a wildcard.
+     * @param item         The item to remap to.
+     */
+    @SuppressWarnings("unused")
+    public static void addItemReplacement(@Nonnull String originalId, int originalMeta, @Nonnull Item item) {
+        addItemReplacement(originalId, originalMeta, item, OreDictionary.WILDCARD_VALUE, false);
+    }
+
+    /**
+     * Adds a mapping to remap all stacks of a given item and damage/meta value to another item, whilst maintaining its
+     * damage/meta value.
+     *
+     * @implNote All transformations registered using this handler are executed in constant time regardless of how many
+     *           transformations are registered to a single id.
+     *
+     * @param originalId     The id of the item to remap.
+     * @param originalMeta   The meta of the item to remap. OreDictionary.WILDCARD_VALUE acts as a wildcard.
+     * @param item           The item to remap to.
+     * @param skipBlockRemap Set to true to skip auto-adding a item remapper if the .
+     */
+    @SuppressWarnings("unused")
+    public static void addItemReplacement(@Nonnull String originalId, int originalMeta, @Nonnull Item item,
+        boolean skipBlockRemap) {
+        addItemReplacement(originalId, originalMeta, item, OreDictionary.WILDCARD_VALUE, skipBlockRemap);
+    }
+
     // item+meta -> stack
 
     /**
      * Adds a mapping to remap all stacks of a given item and damage/meta value to another item with a
      * given damage/meta value. This also adds a matching block replacement if this item happens to be an ItemBlock.
+     *
+     * @implNote All transformations registered using this handler are executed in constant time regardless of how many
+     *           transformations are registered to a single id.
      *
      * @param originalId   The id of the item to remap.
      * @param originalMeta The meta of the item to remap. OreDictionary.WILDCARD_VALUE acts as a wildcard.
@@ -183,6 +385,9 @@ public class ItemStackReplacementManager {
     /**
      * Adds a mapping to remap all stacks of a given item and damage/meta value to another item with a
      * given damage/meta value.
+     *
+     * @implNote All transformations registered using this handler are executed in constant time regardless of how many
+     *           transformations are registered to a single id.
      *
      * @param originalId     The id of the item to remap.
      * @param originalMeta   The meta of the item to remap. OreDictionary.WILDCARD_VALUE acts as a wildcard.
@@ -201,6 +406,9 @@ public class ItemStackReplacementManager {
      * Adds a mapping to remap all stacks of a given item and damage/meta value to another item with a
      * given damage/meta value. This also adds a matching block replacement if this item happens to be an ItemBlock.
      *
+     * @implNote All transformations registered using this handler are executed in constant time regardless of how many
+     *           transformations are registered to a single id.
+     *
      * @param originalId   The id of the item to remap.
      * @param originalMeta The meta of the item to remap. OreDictionary.WILDCARD_VALUE acts as a wildcard.
      * @param item         The item to remap to.
@@ -216,6 +424,9 @@ public class ItemStackReplacementManager {
      * Adds a mapping to remap all stacks of a given item and damage/meta value to another item with a
      * given damage/meta value.
      *
+     * @implNote All transformations registered using this handler are executed in constant time regardless of how many
+     *           transformations are registered to a single id.
+     *
      * @param originalId     The id of the item to remap.
      * @param originalMeta   The meta of the item to remap. OreDictionary.WILDCARD_VALUE acts as a wildcard.
      * @param item           The item to remap to.
@@ -224,7 +435,7 @@ public class ItemStackReplacementManager {
      * @param skipBlockRemap Set to true to skip auto-adding a item remapper if the .
      */
     @SuppressWarnings("unused")
-    public static void addItemReplacement(String originalId, int originalMeta, Item item, int newMeta,
+    public static void addItemReplacement(@Nonnull String originalId, int originalMeta, @Nonnull Item item, int newMeta,
         boolean skipBlockRemap) {
         if (originalId == null) throw new IllegalArgumentException("original id is null");
         if (item == null) throw new IllegalArgumentException("item is null");

@@ -17,6 +17,7 @@ import com.gtnewhorizons.postea.compat.Compat;
 
 import cpw.mods.fml.common.event.FMLMissingMappingsEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 public abstract class MissingMappingHandler {
 
@@ -65,7 +66,10 @@ public abstract class MissingMappingHandler {
     private static final HashMap<String, Item> MISSING_ITEM_MAPPINGS = new HashMap<>();
     private static final HashMap<String, Block> MISSING_BLOCK_MAPPINGS = new HashMap<>();
     private static final HashMap<String, DummyMapping> DUMMY_TARGET_TYPES = new HashMap<>();
-    private static final HashMap<String, String> REVERSE_DUMMY_ID_LOOKUP = new HashMap<>();
+    private static final HashMap<String, String> DUMMY_ID_TO_ORIGINAL_ID_LOOKUP = new HashMap<>();
+    private static final HashMap<String, String> ORIGINAL_ID_TO_DUMMY_ID_LOOKUP = new HashMap<>();
+
+    private static final IntOpenHashSet DUMMY_IDS = new IntOpenHashSet();
 
     private static final String DUMMY_ID_PREFIX_START = Postea.MODID + ":";
     private static final String DUMMY_ID_PREFIX_END = "d.";
@@ -96,7 +100,8 @@ public abstract class MissingMappingHandler {
                 MISSING_ITEM_MAPPINGS.put(originalId, dummy);
                 Compat.hideItemFromNEI(dummy);
             }
-            REVERSE_DUMMY_ID_LOOKUP.put(mapping.id, originalId);
+            DUMMY_ID_TO_ORIGINAL_ID_LOOKUP.put(mapping.id, originalId);
+            ORIGINAL_ID_TO_DUMMY_ID_LOOKUP.put(originalId, mapping.id);
         }
         // no longer needed free what ever used to be in there
         DUMMY_TARGET_TYPES.clear();
@@ -176,7 +181,11 @@ public abstract class MissingMappingHandler {
     }
 
     public static String getOriginalIDIfIDIsDummyID(String originalId) {
-        return REVERSE_DUMMY_ID_LOOKUP.getOrDefault(originalId, originalId);
+        return DUMMY_ID_TO_ORIGINAL_ID_LOOKUP.getOrDefault(originalId, originalId);
+    }
+
+    public static String getDummyIdIfMissing(String originalId) {
+        return ORIGINAL_ID_TO_DUMMY_ID_LOOKUP.getOrDefault(originalId, originalId);
     }
 
     private static @Nullable String[] splitItemId(String itemId) {

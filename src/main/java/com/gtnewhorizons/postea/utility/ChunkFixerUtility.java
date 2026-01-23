@@ -1,13 +1,12 @@
 package com.gtnewhorizons.postea.utility;
 
 import static com.gtnewhorizons.postea.utility.PosteaUtilities.getModListHash;
+import static com.gtnewhorizons.postea.utility.TransformerRegistry.getBlockReplacement;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
@@ -20,7 +19,6 @@ import com.gtnewhorizons.postea.compat.Compat;
 import com.gtnewhorizons.postea.compat.SubChunkAccess;
 
 import akka.japi.Pair;
-import cpw.mods.fml.common.registry.GameRegistry;
 
 public class ChunkFixerUtility {
 
@@ -28,7 +26,6 @@ public class ChunkFixerUtility {
     public static final int POSTEA_UPDATE_CODE = getModListHash();
 
     private static final int AIR_ID = 0;
-    private static final HashMap<Block, String> loadedBlocks = new HashMap<>();
 
     public static void transformNormalBlocks(Chunk chunk, ExtendedBlockStorage ebs, World world) {
 
@@ -47,36 +44,18 @@ public class ChunkFixerUtility {
 
                     // Skip air.
                     if (blockId == AIR_ID) continue;
-                    // If this block has no registered Postea conversion, skip it.
-                    if (TransformerRegistry.blockNotConvertible(blockId)) continue;
 
-                    // Cache block names to improve performance, as findUniqueIdentifierFor is expensive.
-                    Block block = Block.getBlockById(blockId);
-                    String blockName = loadedBlocks.computeIfAbsent(
-                        block,
-                        b -> GameRegistry.findUniqueIdentifierFor(b)
-                            .toString());
-
-                    BlockConversionInfo blockConversionInfo = new BlockConversionInfo();
-                    blockConversionInfo.blockName = blockName;
-                    blockConversionInfo.blockID = blockId;
-                    blockConversionInfo.metadata = (byte) metadata; // Updated
-
-                    blockConversionInfo.world = world;
-
-                    blockConversionInfo.x = x + chunkXPos + 1;
-                    blockConversionInfo.y = y + sectionY;
-                    blockConversionInfo.z = z + chunkZPos + 1;
-
-                    BlockConversionInfo output = TransformerRegistry.getBlockReplacement(blockConversionInfo, world);
+                    BlockConversionInfo output = getBlockReplacement(
+                        blockId,
+                        (byte) metadata,
+                        world,
+                        x + chunkXPos + 1,
+                        y + sectionY,
+                        z + chunkZPos + 1);
 
                     if (output != null) {
                         access.setBlockId(x, y, z, output.blockID);
                         access.setMeta(x, y, z, output.metadata);
-                    } else if (MissingMappingHandler.isDummyBlock(block)) {
-                        // clear out the slot if this is an unhandled dummy item.
-                        access.setBlockId(x, y, z, 0);
-                        access.setMeta(x, y, z, 0);
                     }
                 }
             }
