@@ -1,6 +1,7 @@
 package com.gtnewhorizons.postea.utility;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -28,8 +29,8 @@ public class TransformerRegistry {
         .create();
     public static final IntOpenHashSet POSTEA_MARKED_IDS = new IntOpenHashSet();
 
-    public static final SimpleTransformationMap SIMPLE_ITEM_TRANSFORMATION_MAP = new SimpleTransformationMap();
-    public static final SimpleTransformationMap SIMPLE_BLOCK_TRANSFORMATION_MAP = new SimpleTransformationMap();
+    public static final SimpleTransformationMap<Pair<Integer, Short>> SIMPLE_ITEM_TRANSFORMATION_MAP = new SimpleTransformationMap<>();
+    public static final SimpleTransformationMap<Pair<Integer, Short>> SIMPLE_BLOCK_TRANSFORMATION_MAP = new SimpleTransformationMap<>();
 
     public static void addBlockReplacement(String originalId,
         BiFunction<BlockConversionInfo, World, BlockConversionInfo> transformer) {
@@ -44,37 +45,43 @@ public class TransformerRegistry {
 
     public static void addSimpleTransformer(String originalId, int originalMeta, Block newBlock, int newMeta,
         boolean skipStackRemap) {
-        SIMPLE_BLOCK_TRANSFORMATION_MAP.put(originalId, originalMeta, Block.getIdFromBlock(newBlock), newMeta);
+        if (newMeta == -1) newMeta = OreDictionary.WILDCARD_VALUE;
+        SIMPLE_BLOCK_TRANSFORMATION_MAP
+            .put(originalId, originalMeta, Pair.of(Block.getIdFromBlock(newBlock), (short) newMeta));
         if (!skipStackRemap) {
             Item item = Item.getItemFromBlock(newBlock);
             if (item != null) {
-                SIMPLE_ITEM_TRANSFORMATION_MAP.put(originalId, originalMeta, Item.getIdFromItem(item), newMeta);
+                SIMPLE_ITEM_TRANSFORMATION_MAP
+                    .put(originalId, originalMeta, Pair.of(Item.getIdFromItem(item), (short) newMeta));
             }
         }
     }
 
     public static void addSimpleTransformer(String originalId, int originalMeta, Item newItem, int newMeta,
         boolean skipBlockRemap) {
+        if (newMeta == -1) newMeta = OreDictionary.WILDCARD_VALUE;
         if (!skipBlockRemap && newItem instanceof ItemBlock ib) {
             SIMPLE_BLOCK_TRANSFORMATION_MAP
-                .put(originalId, originalMeta, Block.getIdFromBlock(ib.field_150939_a), newMeta);
+                .put(originalId, originalMeta, Pair.of(Block.getIdFromBlock(ib.field_150939_a), (short) newMeta));
         }
-        SIMPLE_ITEM_TRANSFORMATION_MAP.put(originalId, originalMeta, Item.getIdFromItem(newItem), newMeta);
+        SIMPLE_ITEM_TRANSFORMATION_MAP
+            .put(originalId, originalMeta, Pair.of(Item.getIdFromItem(newItem), (short) newMeta));
     }
 
     public static void onLoadCompleted() {
-        for (String originalId : SIMPLE_BLOCK_TRANSFORMATION_MAP.keySet()) {
-            MissingMappingHandler.createDummyBlockIfNeeded(originalId);
-            BLOCK_REPLACEMENT_MAP.put(originalId, TransformerRegistry::simpleBlockTransformer);
+        for (Map.Entry<String, Map<Integer, Pair<Integer, Short>>> kv : SIMPLE_BLOCK_TRANSFORMATION_MAP.entrySet()) {
+            MissingMappingHandler.createDummyBlockIfNeeded(kv.getKey());
+            BLOCK_REPLACEMENT_MAP.put(kv.getKey(), (info, world) -> simpleBlockTransformer(info, world, kv.getValue()));
         }
-        for (String originalId : SIMPLE_ITEM_TRANSFORMATION_MAP.keySet()) {
-            MissingMappingHandler.createDummyItemIfNeeded(originalId);
-            ITEM_REPLACEMENT_MAP.put(originalId, tag -> simpleItemStackTransformer(tag, originalId));
+        for (Map.Entry<String, Map<Integer, Pair<Integer, Short>>> kv : SIMPLE_ITEM_TRANSFORMATION_MAP.entrySet()) {
+            MissingMappingHandler.createDummyItemIfNeeded(kv.getKey());
+            ITEM_REPLACEMENT_MAP.put(kv.getKey(), tag -> simpleItemStackTransformer(tag, kv.getValue()));
         }
     }
 
-    private static @Nullable BlockConversionInfo simpleBlockTransformer(BlockConversionInfo info, World world) {
-        Pair<Integer, Short> mapping = SIMPLE_BLOCK_TRANSFORMATION_MAP.get(info.blockName, info.metadata);
+    private static @Nullable BlockConversionInfo simpleBlockTransformer(BlockConversionInfo info, World world,
+        Map<Integer, Pair<Integer, Short>> metaMap) {
+        Pair<Integer, Short> mapping = SimpleTransformationMap.getFromSubmap(metaMap, info.metadata);
         if (mapping == null) return null;
         info.blockID = mapping.getKey();
         if (mapping.getValue() != OreDictionary.WILDCARD_VALUE) {
@@ -83,9 +90,10 @@ public class TransformerRegistry {
         return info;
     }
 
-    private static @Nullable NBTTagCompound simpleItemStackTransformer(NBTTagCompound tag, String originalId) {
-        short damage = tag.getShort("Damage");
-        Pair<Integer, Short> mapping = SIMPLE_ITEM_TRANSFORMATION_MAP.get(originalId, damage);
+    private static @Nullable NBTTagCompound simpleItemStackTransformer(NBTTagCompound tag,
+        Map<Integer, Pair<Integer, Short>> metaMap) {
+        short meta = tag.getShort("Damage");
+        Pair<Integer, Short> mapping = SimpleTransformationMap.getFromSubmap(metaMap, meta);
         if (mapping == null) return null;
         IDExtenderCompat.setItemStackID(tag, mapping.getKey());
         if (mapping.getValue() != OreDictionary.WILDCARD_VALUE) {
