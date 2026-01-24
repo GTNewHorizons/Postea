@@ -80,7 +80,7 @@ public class ItemStackReplacementManager {
         BiFunction<String, NBTTagCompound, Boolean> transformer) {
         if (originalId == null) throw new IllegalArgumentException("original id is null");
         if (transformer == null) throw new IllegalArgumentException("transformer is null");
-        TransformerRegistry.addItemReplacement(originalId, transformer);
+        TransformerRegistry.addStackTransformer(originalId, transformer);
     }
 
     /**

@@ -78,7 +78,7 @@ public class BlockReplacementManager {
     public static void addTransformationHandler(String originalId, Function<BlockConversionInfo, Boolean> transformer) {
         if (originalId == null) throw new IllegalArgumentException("original id is null");
         if (transformer == null) throw new IllegalArgumentException("transformer is null");
-        TransformerRegistry.addBlockReplacement(originalId, transformer);
+        TransformerRegistry.addBlockTransformer(originalId, transformer);
     }
 
     /**

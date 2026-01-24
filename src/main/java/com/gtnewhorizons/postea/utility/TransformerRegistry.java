@@ -60,7 +60,7 @@ public class TransformerRegistry {
      * @param originalId  The namespaced id of the block to transform.
      * @param transformer The transformation handler that will execute a transformation on the block.
      */
-    public static void addBlockReplacement(String originalId, Function<BlockConversionInfo, Boolean> transformer) {
+    public static void addBlockTransformer(String originalId, Function<BlockConversionInfo, Boolean> transformer) {
         MissingMappingHandler.createDummyBlockIfNeeded(originalId);
         BLOCK_REPLACEMENT_MAP.put(originalId, transformer);
     }
@@ -78,7 +78,7 @@ public class TransformerRegistry {
      * @param originalId  The namespaced id of the block to transform.
      * @param transformer The transformation handler that will execute a transformation on the block.
      */
-    public static void addItemReplacement(String originalId, BiFunction<String, NBTTagCompound, Boolean> transformer) {
+    public static void addStackTransformer(String originalId, BiFunction<String, NBTTagCompound, Boolean> transformer) {
         MissingMappingHandler.createDummyItemIfNeeded(originalId);
         ITEM_REPLACEMENT_MAP.put(originalId, transformer);
     }

@@ -47,13 +47,13 @@ public class SimpleTransformationRegistry {
         // add handlers for simple block remaps
         for (Map.Entry<String, Map<Integer, Pair<Block, Short>>> kv : SIMPLE_BLOCK_TRANSFORMATION_MAP.entrySet()) {
             Map<Integer, Pair<Block, Short>> subMap = kv.getValue();
-            TransformerRegistry.addBlockReplacement(kv.getKey(), info -> simpleBlockTransformer(info, subMap));
+            TransformerRegistry.addBlockTransformer(kv.getKey(), info -> simpleBlockTransformer(info, subMap));
         }
         // add handlers for simple item remaps
         for (Map.Entry<String, Map<Integer, Pair<Item, Short>>> kv : SIMPLE_ITEM_TRANSFORMATION_MAP.entrySet()) {
             Map<Integer, Pair<Item, Short>> subMap = kv.getValue();
             TransformerRegistry
-                .addItemReplacement(kv.getKey(), (originalId, tag) -> simpleItemStackTransformer(tag, subMap));
+                .addStackTransformer(kv.getKey(), (originalId, tag) -> simpleItemStackTransformer(tag, subMap));
         }
     }
 
