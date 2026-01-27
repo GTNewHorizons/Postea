@@ -131,7 +131,8 @@ public class ChunkFixerUtility {
                 if (blockInfo == null) continue;
 
                 NBTTagCompound newTag;
-                if (blockInfo.tileTransformer != null && (newTag = blockInfo.tileTransformer.apply(tileEntity)) != null) {
+                if (blockInfo.tileTransformer != null
+                    && (newTag = blockInfo.tileTransformer.apply(tileEntity)) != null) {
                     ((IMixinNBTTagList) tileEntities).Postea$replaceCompoundTagAt(i, newTag);
                 } else {
                     tileEntities.removeTag(i--);
