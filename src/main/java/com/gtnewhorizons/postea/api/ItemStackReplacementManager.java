@@ -1,6 +1,7 @@
 package com.gtnewhorizons.postea.api;
 
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.annotation.Nonnull;
@@ -11,13 +12,21 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.oredict.OreDictionary;
 
+import com.gtnewhorizons.postea.utility.IDRegistry;
 import com.gtnewhorizons.postea.utility.MissingMappingHandler;
 import com.gtnewhorizons.postea.utility.SimpleTransformationRegistry;
 import com.gtnewhorizons.postea.utility.TransformerRegistry;
 
-public class ItemStackReplacementManager {
+/**
+ * Public API used to register item stack transformers via postea's handler system.<br>
+ * <br>
+ * Item stack transformers are applied when something tries to convert any NBT that has an "id" field into an item
+ * stack.
+ */
+@SuppressWarnings("unused")
+public abstract class ItemStackReplacementManager {
 
-    // Public API for converting ItemStacks.
+    // region custom transformer registration
 
     /**
      * Adds a custom transformer for a given id.
@@ -30,10 +39,11 @@ public class ItemStackReplacementManager {
      *          <p>
      *          If you need to perform a simple transformations consider using the following methods instead:
      *          <ul>
-     *          <li>item -> item (with same meta): {@link #addItemReplacement(String, Item)}</li>
-     *          <li>item -> item with specific meta: {@link #addItemReplacement(String, Item, int)}</li>
-     *          <li>item with meta -> item (with same meta): {@link #addItemReplacement(String, int, Item)}</li>
-     *          <li>item with meta -> item with specific meta: {@link #addItemReplacement(String, int, Item, int)}</li>
+     *          <li>item -> item (with same meta): {@link #addSimpleReplacement(String, Item)}</li>
+     *          <li>item -> item with specific meta: {@link #addSimpleReplacement(String, Item, int)}</li>
+     *          <li>item with meta -> item (with same meta): {@link #addSimpleReplacement(String, int, Item)}</li>
+     *          <li>item with meta -> item with specific meta:
+     *          {@link #addSimpleReplacement(String, int, Item, int)}</li>
      *          </ul>
      *
      * @implNote For performance reasons, Postea assumes that the tag that was passed to the handler hasn't been
@@ -61,10 +71,11 @@ public class ItemStackReplacementManager {
      *          <p>
      *          If you need to perform a simple transformations consider using the following methods instead:
      *          <ul>
-     *          <li>item -> item (with same meta): {@link #addItemReplacement(String, Item)}</li>
-     *          <li>item -> item with specific meta: {@link #addItemReplacement(String, Item, int)}</li>
-     *          <li>item with meta -> item (with same meta): {@link #addItemReplacement(String, int, Item)}</li>
-     *          <li>item with meta -> item with specific meta: {@link #addItemReplacement(String, int, Item, int)}</li>
+     *          <li>item -> item (with same meta): {@link #addSimpleReplacement(String, Item)}</li>
+     *          <li>item -> item with specific meta: {@link #addSimpleReplacement(String, Item, int)}</li>
+     *          <li>item with meta -> item (with same meta): {@link #addSimpleReplacement(String, int, Item)}</li>
+     *          <li>item with meta -> item with specific meta:
+     *          {@link #addSimpleReplacement(String, int, Item, int)}</li>
      *          </ul>
      *
      * @implNote For performance reasons, Postea assumes that the tag that was passed to the handler hasn't been
@@ -83,12 +94,47 @@ public class ItemStackReplacementManager {
         TransformerRegistry.addStackTransformer(originalId, transformer);
     }
 
+    // endregion custom transformer registration
+
+    // region id resolving
+
     /**
-     * Adds a mapping to remap stacks of a specific removed item to the given item.
-     * <p>
+     * Registers a callback function that will be provided the numeric ID of the given namespaced ID when a world is
+     * first loaded. Since forge doesn't discard stacks associated with missing IDs when loading a world for
+     * performance reasons, instead opting to null the result of the nbt data read, you can store that value into a
+     * static field, and use it to compare against an id provided to you during the execution of a transformation
+     * handler.<br>
+     * <br>
+     * This function is mostly intended to speed up larger transformer handlers since resolving the string id of a
+     * removed id inside a transformer will be slower than simply matching for it. Regular item transformers are
+     * already provided the string ID of the item they are transforming so, there is no reason not to do a switch case
+     * on those. This also overcomes the need to create dummy blocks and items in order to identify
+     * items inside a custom stack transformer.<br>
+     * <br>
+     * For compatibility reasons, it's better not to register dummies to take the place of dummy items. If one mod was
+     * to only convert blocks with a specific meta while another handled the rest, the other mod would either need
+     * additional work to detect your own dummy blocks or even worst, fail to identify the original blocks as it's not
+     * aware of your dummy blocks.
+     *
+     * @param originalId The namespaced ID of a block you wish to identify in one of your transformers.
+     * @param resolver   The callback executed to provide the numeric ID of the given namespaced ID.
+     */
+    @SuppressWarnings("unused")
+    public static void registerIDResolver(String originalId, Consumer<Integer> resolver) {
+        if (originalId == null) throw new NullPointerException("originalId cannot be null");
+        if (resolver == null) throw new NullPointerException("resolver cannot be null");
+        IDRegistry.registerItemIDResolver(originalId, resolver);
+    }
+
+    // endregion id resolving
+
+    // region missing mapping replacements
+    /**
+     * Adds a mapping to remap stacks of a specific removed item to the given item.<br>
+     * <br>
      * <b><u>IMPORTANT: This only works if the world does not have an existing id set for the target item. If you need
      * to transform a missing item into something that was previously given an id (e.g.: Transforming a removed item
-     * into a stick), use {@link #addItemReplacement(String, int, Item, int)} with both meta values set to
+     * into a stick), use {@link #addSimpleReplacement(String, int, Item, int)} with both meta values set to
      * OreDictionary.WILDCARD_VALUE.</u></b>
      *
      * @param originalId The id of the item to remap.
@@ -98,7 +144,7 @@ public class ItemStackReplacementManager {
     public static void replaceMissingItemWithNewItem(String originalId, Item item) {
         if (originalId == null) throw new IllegalArgumentException("original id is null");
         if (item == null) throw new IllegalArgumentException("item is null");
-        MissingMappingHandler.addSimpleReplacement(originalId, item);
+        MissingMappingHandler.addItemMapping(originalId, item);
     }
 
     /**
@@ -110,6 +156,10 @@ public class ItemStackReplacementManager {
     public static void ignoreMissingMapping(@Nonnull String originalId) {
         MissingMappingHandler.addIgnore(originalId);
     }
+
+    // endregion missing mapping replacements
+
+    // region simple replacements
 
     // item -> item
 
@@ -128,8 +178,8 @@ public class ItemStackReplacementManager {
      * @param item       The item to remap to.
      */
     @SuppressWarnings("unused")
-    public static void addItemReplacement(@Nonnull String originalId, @Nonnull Item item) {
-        addItemReplacement(originalId, OreDictionary.WILDCARD_VALUE, item, OreDictionary.WILDCARD_VALUE, false);
+    public static void addSimpleReplacement(@Nonnull String originalId, @Nonnull Item item) {
+        addSimpleReplacement(originalId, OreDictionary.WILDCARD_VALUE, item, OreDictionary.WILDCARD_VALUE, false);
     }
 
     /**
@@ -147,8 +197,8 @@ public class ItemStackReplacementManager {
      * @param skipBlockRemap Set to true to skip auto-adding a block remapper if the item happens to be an ItemBlock.
      */
     @SuppressWarnings("unused")
-    public static void addItemReplacement(@Nonnull String originalId, @Nonnull Item item, boolean skipBlockRemap) {
-        addItemReplacement(
+    public static void addSimpleReplacement(@Nonnull String originalId, @Nonnull Item item, boolean skipBlockRemap) {
+        addSimpleReplacement(
             originalId,
             OreDictionary.WILDCARD_VALUE,
             item,
@@ -170,8 +220,8 @@ public class ItemStackReplacementManager {
      * @param newMeta    The meta of the item to remap to. OreDictionary.WILDCARD_VALUE maintains the existing value.
      */
     @SuppressWarnings("unused")
-    public static void addItemReplacement(@Nonnull String originalId, @Nonnull Item item, int newMeta) {
-        addItemReplacement(originalId, OreDictionary.WILDCARD_VALUE, item, newMeta, false);
+    public static void addSimpleReplacement(@Nonnull String originalId, @Nonnull Item item, int newMeta) {
+        addSimpleReplacement(originalId, OreDictionary.WILDCARD_VALUE, item, newMeta, false);
     }
 
     /**
@@ -187,9 +237,9 @@ public class ItemStackReplacementManager {
      * @param skipBlockRemap Set to true to skip auto-adding a block remapper if the item happens to be an ItemBlock.
      */
     @SuppressWarnings("unused")
-    public static void addItemReplacement(@Nonnull String originalId, @Nonnull Item item, int newMeta,
+    public static void addSimpleReplacement(@Nonnull String originalId, @Nonnull Item item, int newMeta,
         boolean skipBlockRemap) {
-        addItemReplacement(originalId, OreDictionary.WILDCARD_VALUE, item, newMeta, skipBlockRemap);
+        addSimpleReplacement(originalId, OreDictionary.WILDCARD_VALUE, item, newMeta, skipBlockRemap);
     }
 
     // item -> stack
@@ -207,8 +257,8 @@ public class ItemStackReplacementManager {
      * @param stack      The item to remap to.
      */
     @SuppressWarnings("unused")
-    public static void addItemReplacement(@Nonnull String originalId, @Nonnull ItemStack stack) {
-        addItemReplacement(
+    public static void addSimpleReplacement(@Nonnull String originalId, @Nonnull ItemStack stack) {
+        addSimpleReplacement(
             originalId,
             OreDictionary.WILDCARD_VALUE,
             stack.getItem(),
@@ -229,9 +279,9 @@ public class ItemStackReplacementManager {
      * @param skipBlockRemap Set to true to skip auto-adding a block remapper if the item happens to be an ItemBlock.
      */
     @SuppressWarnings("unused")
-    public static void addItemReplacement(@Nonnull String originalId, @Nonnull ItemStack stack,
+    public static void addSimpleReplacement(@Nonnull String originalId, @Nonnull ItemStack stack,
         boolean skipBlockRemap) {
-        addItemReplacement(
+        addSimpleReplacement(
             originalId,
             OreDictionary.WILDCARD_VALUE,
             stack.getItem(),
@@ -253,8 +303,8 @@ public class ItemStackReplacementManager {
      * @param item         The item to remap to.
      */
     @SuppressWarnings("unused")
-    public static void addItemReplacement(@Nonnull String originalId, int originalMeta, @Nonnull Item item) {
-        addItemReplacement(originalId, originalMeta, item, OreDictionary.WILDCARD_VALUE, false);
+    public static void addSimpleReplacement(@Nonnull String originalId, int originalMeta, @Nonnull Item item) {
+        addSimpleReplacement(originalId, originalMeta, item, OreDictionary.WILDCARD_VALUE, false);
     }
 
     /**
@@ -270,9 +320,9 @@ public class ItemStackReplacementManager {
      * @param skipBlockRemap Set to true to skip auto-adding a item remapper if the .
      */
     @SuppressWarnings("unused")
-    public static void addItemReplacement(@Nonnull String originalId, int originalMeta, @Nonnull Item item,
+    public static void addSimpleReplacement(@Nonnull String originalId, int originalMeta, @Nonnull Item item,
         boolean skipBlockRemap) {
-        addItemReplacement(originalId, originalMeta, item, OreDictionary.WILDCARD_VALUE, skipBlockRemap);
+        addSimpleReplacement(originalId, originalMeta, item, OreDictionary.WILDCARD_VALUE, skipBlockRemap);
     }
 
     // item+meta -> stack
@@ -291,8 +341,8 @@ public class ItemStackReplacementManager {
      * @param stack        A stack of the item to replace to.
      */
     @SuppressWarnings("unused")
-    public static void addItemReplacement(@Nonnull String originalId, int originalMeta, @Nonnull ItemStack stack) {
-        addItemReplacement(originalId, originalMeta, stack, false);
+    public static void addSimpleReplacement(@Nonnull String originalId, int originalMeta, @Nonnull ItemStack stack) {
+        addSimpleReplacement(originalId, originalMeta, stack, false);
     }
 
     /**
@@ -310,9 +360,9 @@ public class ItemStackReplacementManager {
      * @param skipBlockRemap Set to true to skip auto-adding a block remapper if the item happens to be an ItemBlock.
      */
     @SuppressWarnings("unused")
-    public static void addItemReplacement(@Nonnull String originalId, int originalMeta, @Nonnull ItemStack stack,
+    public static void addSimpleReplacement(@Nonnull String originalId, int originalMeta, @Nonnull ItemStack stack,
         boolean skipBlockRemap) {
-        addItemReplacement(originalId, originalMeta, stack.getItem(), Items.feather.getDamage(stack), skipBlockRemap);
+        addSimpleReplacement(originalId, originalMeta, stack.getItem(), Items.feather.getDamage(stack), skipBlockRemap);
     }
 
     // item+meta -> item+meta
@@ -330,9 +380,9 @@ public class ItemStackReplacementManager {
      * @param newMeta      The meta of the item to remap to. OreDictionary.WILDCARD_VALUE maintains the existing value.
      */
     @SuppressWarnings("unused")
-    public static void addItemReplacement(@Nonnull String originalId, int originalMeta, @Nonnull Item item,
+    public static void addSimpleReplacement(@Nonnull String originalId, int originalMeta, @Nonnull Item item,
         int newMeta) {
-        addItemReplacement(originalId, originalMeta, item, newMeta, false);
+        addSimpleReplacement(originalId, originalMeta, item, newMeta, false);
     }
 
     /**
@@ -350,10 +400,12 @@ public class ItemStackReplacementManager {
      * @param skipBlockRemap Set to true to skip auto-adding a item remapper if the .
      */
     @SuppressWarnings("unused")
-    public static void addItemReplacement(String originalId, int originalMeta, Item item, int newMeta,
+    public static void addSimpleReplacement(String originalId, int originalMeta, Item item, int newMeta,
         boolean skipBlockRemap) {
         if (originalId == null) throw new IllegalArgumentException("original id is null");
         if (item == null) throw new IllegalArgumentException("item is null");
         SimpleTransformationRegistry.addSimpleTransformer(originalId, originalMeta, item, newMeta, skipBlockRemap);
     }
+
+    // endregion simple replacements
 }

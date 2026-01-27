@@ -1,6 +1,5 @@
 package com.gtnewhorizons.postea.utility;
 
-import static com.gtnewhorizons.postea.utility.PosteaUtilities.getModListHash;
 import static com.gtnewhorizons.postea.utility.TransformerRegistry.getBlockReplacement;
 
 import java.util.ArrayList;
@@ -13,21 +12,72 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
-import com.gtnewhorizons.postea.api.TileEntityReplacementManager;
 import com.gtnewhorizons.postea.api.TriFunction;
 import com.gtnewhorizons.postea.compat.Compat;
 import com.gtnewhorizons.postea.compat.SubChunkAccess;
-
-import akka.japi.Pair;
+import com.gtnewhorizons.postea.mixins.interfaces.IChunkMixin;
+import com.gtnewhorizons.postea.mixins.interfaces.IMixinNBTTagList;
 
 public class ChunkFixerUtility {
 
     // This will not change between runs, unless a mod is updated or added.
-    public static final int POSTEA_UPDATE_CODE = getModListHash();
+    public static final int POSTEA_UPDATE_CODE = PosteaUtilities.getModListHash();
+
+    public static boolean hasChunkBeenUpdated(long chunkHash) {
+        // We are in a dev env.
+        if (POSTEA_UPDATE_CODE == -1) return false;
+        return chunkHash == POSTEA_UPDATE_CODE;
+    }
 
     private static final int AIR_ID = 0;
 
-    public static void transformNormalBlocks(Chunk chunk, ExtendedBlockStorage ebs, World world) {
+    public static void onChunkRead(Chunk chunk, World world, NBTTagCompound tag) {
+        IChunkMixin chunkMixin = (IChunkMixin) chunk;
+        chunkMixin.Postea$setPosteaCode(-1);
+        if (tag.hasKey("POSTEA", 4)) {
+            chunkMixin.Postea$setPosteaCode(tag.getLong("POSTEA"));
+        }
+        // This checks if the chunk has been run with the current POSTEA_UPDATE_CODE and skips it if so.
+        if (hasChunkBeenUpdated(chunkMixin.Postea$getPosteaCode())) return;
+        List<ConversionInfo> conversionInfoList = adjustTileEntities(tag.getTagList("TileEntities", 10), world, chunk);
+
+        for (ExtendedBlockStorage ebs : chunk.getBlockStorageArray()) {
+            if (ebs == null) continue;
+            int sectionY = ebs.getYLocation();
+
+            List<ConversionInfo> filteredList = conversionInfoList.stream()
+                .filter(info -> info.y >= sectionY && info.y < (sectionY + 16))
+                .collect(Collectors.toList());
+
+            for (ConversionInfo info : filteredList) {
+                int localX = info.x & 15;
+                int localY = info.y & 15;
+                int localZ = info.z & 15;
+                ebs.func_150818_a(localX, localY, localZ, info.blockInfo.block);
+                ebs.setExtBlockMetadata(localX, localY, localZ, info.blockInfo.metadata);
+            }
+
+            transformNormalBlocksInSubChunk(chunk, ebs, world);
+        }
+        chunkMixin.Postea$setPosteaCode(ChunkFixerUtility.POSTEA_UPDATE_CODE);
+    }
+
+    public static void onChunkLoaded(Chunk chunk) {
+        if (chunk instanceof IChunkMixin iChunkMixin) {
+            if (!hasChunkBeenUpdated(iChunkMixin.Postea$getPosteaCode())) {
+                iChunkMixin.Postea$setPosteaCode(ChunkFixerUtility.POSTEA_UPDATE_CODE);
+                chunk.setChunkModified();
+            }
+        }
+    }
+
+    public static void onChunkWrite(Chunk chunk, NBTTagCompound tag) {
+        if (chunk instanceof IChunkMixin iChunkMixin) {
+            tag.setLong("POSTEA", iChunkMixin.Postea$getPosteaCode());
+        }
+    }
+
+    public static void transformNormalBlocksInSubChunk(Chunk chunk, ExtendedBlockStorage ebs, World world) {
 
         int chunkXPos = chunk.xPosition * 16;
         int chunkZPos = chunk.zPosition * 16;
@@ -62,54 +112,15 @@ public class ChunkFixerUtility {
         }
     }
 
-    public static void transformTileEntities(NBTTagCompound levelCompoundTag, Chunk chunk, World world) {
-
-        Pair<List<ConversionInfo>, NBTTagList> output = adjustTileEntities(
-            levelCompoundTag.getTagList("TileEntities", 10),
-            world,
-            chunk);
-        List<ConversionInfo> conversionInfoList = output.first();
-        NBTTagList tileEntities = output.second();
-
-        if (tileEntities.tagCount() > 0) {
-            levelCompoundTag.setTag("TileEntities", tileEntities);
-        }
-
-        for (ExtendedBlockStorage ebs : chunk.getBlockStorageArray()) {
-            if (ebs == null) continue;
-            processSection(ebs, conversionInfoList);
-        }
-    }
-
-    private static void processSection(ExtendedBlockStorage ebs, List<ConversionInfo> conversionInfoList) {
-        int sectionY = ebs.getYLocation();
-
-        List<ConversionInfo> filteredList = conversionInfoList.stream()
-            .filter(info -> info.y >= sectionY && info.y < (sectionY + 16))
-            .collect(Collectors.toList());
-
-        for (ConversionInfo info : filteredList) {
-            int localX = info.x & 15;
-            int localY = info.y & 15;
-            int localZ = info.z & 15;
-            ebs.func_150818_a(localX, localY, localZ, info.blockInfo.block);
-            ebs.setExtBlockMetadata(localX, localY, localZ, info.blockInfo.metadata);
-        }
-    }
-
-    private static Pair<List<ConversionInfo>, NBTTagList> adjustTileEntities(NBTTagList tileEntities, World world,
-        Chunk chunk) {
+    private static List<ConversionInfo> adjustTileEntities(NBTTagList tileEntities, World world, Chunk chunk) {
         List<ConversionInfo> conversionInfo = new ArrayList<>();
-
-        NBTTagList tileEntitiesCopy = new NBTTagList();
 
         for (int i = 0; i < tileEntities.tagCount(); i++) {
             NBTTagCompound tileEntity = tileEntities.getCompoundTagAt(i);
             String tileEntityId = tileEntity.getString("id");
 
             // Check if we have a transformer registered for this tile entity ID
-            boolean found = false;
-            for (TriFunction<NBTTagCompound, World, Chunk, BlockInfo> transformationFunction : TileEntityReplacementManager
+            for (TriFunction<NBTTagCompound, World, Chunk, BlockInfo> transformationFunction : TransformerRegistry
                 .getTileEntityToNormalBlockTransformerFunction(tileEntityId)) {
 
                 int x = tileEntity.getInteger("x");
@@ -119,21 +130,18 @@ public class ChunkFixerUtility {
                 BlockInfo blockInfo = transformationFunction.apply(tileEntity, world, chunk);
                 if (blockInfo == null) continue;
 
-                if (blockInfo.tileTransformer != null) {
-                    tileEntitiesCopy.appendTag(blockInfo.tileTransformer.apply(tileEntity));
-                } // Otherwise they are removed, therefore not appended.
+                if (blockInfo.tileTransformer == null) {
+                    tileEntities.removeTag(i--);
+                } else {
+                    ((IMixinNBTTagList) tileEntities)
+                        .Postea$replaceCompoundTagAt(i, blockInfo.tileTransformer.apply(tileEntity));
+                }
 
                 conversionInfo.add(new ConversionInfo(x, y, z, blockInfo));
-                found = true;
-                break;
-            }
-            if (!found) {
-                // Do nothing.
-                tileEntitiesCopy.appendTag(tileEntity);
             }
         }
 
-        return new Pair<>(conversionInfo, tileEntitiesCopy);
+        return conversionInfo;
     }
 
     private static class ConversionInfo {

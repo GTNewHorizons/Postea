@@ -1,5 +1,9 @@
 package com.gtnewhorizons.postea;
 
+import net.minecraftforge.event.world.ChunkEvent;
+
+import com.gtnewhorizons.postea.utility.ChunkFixerUtility;
+import com.gtnewhorizons.postea.utility.IDRegistry;
 import com.gtnewhorizons.postea.utility.MissingMappingHandler;
 import com.gtnewhorizons.postea.utility.SimpleTransformationRegistry;
 import com.gtnewhorizons.postea.utility.TransformerRegistry;
@@ -9,7 +13,6 @@ import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import cpw.mods.fml.common.event.FMLMissingMappingsEvent;
 import cpw.mods.fml.common.event.FMLModIdMappingEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.event.FMLServerStoppingEvent;
 
 @Mod(
     modid = Postea.MODID,
@@ -27,9 +30,15 @@ public class Postea {
     public void preInit(FMLPreInitializationEvent event) {}
 
     @Mod.EventHandler
+    public void chunkLoaded(ChunkEvent.Load event) {
+        ChunkFixerUtility.onChunkLoaded(event.getChunk());
+    }
+
+    @Mod.EventHandler
     public void onIdMappingsChanged(FMLModIdMappingEvent event) {
         SimpleTransformationRegistry.onIdMappingsChanged();
         TransformerRegistry.onIdMappingsChanged();
+        IDRegistry.onMappingUpdated();
     }
 
     @Mod.EventHandler
@@ -40,12 +49,6 @@ public class Postea {
     @Mod.EventHandler
     public void onLoadCompleted(FMLLoadCompleteEvent event) {
         SimpleTransformationRegistry.onLoadCompleted();
-        MissingMappingHandler.onLoadCompleted();
-    }
-
-    @Mod.EventHandler
-    public void onServerStopping(FMLServerStoppingEvent event) {
-        TransformerRegistry.onServerStopping();
     }
 
 }

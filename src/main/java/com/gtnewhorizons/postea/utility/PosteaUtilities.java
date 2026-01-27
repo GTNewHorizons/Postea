@@ -3,6 +3,7 @@ package com.gtnewhorizons.postea.utility;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import net.minecraft.launchwrapper.Launch;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -30,6 +31,9 @@ public abstract class PosteaUtilities {
     }
 
     public static int getModListHash() {
+        // when in a dev env allow mutations to happen every time a chunk is loaded for testing purposes.
+        final Object deobfEnv = Launch.blackboard != null ? Launch.blackboard.get("fml.deobfuscatedEnvironment") : null;
+        if (deobfEnv != null && (boolean) deobfEnv) return -1;
 
         // We iterate over every mod, get its version and put it into a giant list.
         // This is done so we can see if our mods have actually changed, if so, we

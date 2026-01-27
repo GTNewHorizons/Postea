@@ -1,6 +1,8 @@
 package com.gtnewhorizons.postea.utility;
 
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -8,11 +10,7 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.oredict.OreDictionary;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import com.gtnewhorizons.postea.api.IDExtenderCompat;
-
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 /**
  * A registry for simple item and block transformations. A common use case is mod removal, replacements or deprecations.
@@ -30,49 +28,47 @@ public class SimpleTransformationRegistry {
     /**
      * Stores simple block transformations (eg: if old id is # with meta # then turn into item with id # with meta #.)
      */
-    public static final SimpleTransformationMap<Pair<Block, Short>> SIMPLE_BLOCK_TRANSFORMATION_MAP = new SimpleTransformationMap<>();
-    public static final Object2IntOpenHashMap<Block> RUNTIME_BLOCK_ID_LOOKUP = new Object2IntOpenHashMap<>();
+    private static final SimpleTransformationMap<Block> SIMPLE_BLOCK_TRANSFORMATION_MAP = new SimpleTransformationMap<>();
     /**
      * Stores simple item transformations (eg: if old id is # with meta # then turn into item with id # with meta #.)
      */
-    public static final SimpleTransformationMap<Pair<Item, Short>> SIMPLE_ITEM_TRANSFORMATION_MAP = new SimpleTransformationMap<>();
-    public static final Object2IntOpenHashMap<Item> RUNTIME_ITEM_ID_LOOKUP = new Object2IntOpenHashMap<>();
+    private static final SimpleTransformationMap<Item> SIMPLE_ITEM_TRANSFORMATION_MAP = new SimpleTransformationMap<>();
 
     // region FML Life Cycle handlers
     /**
      * Registers 1 handler per targeted ID to minimize the number of handlers. The meta-map is captured to reduce
-     * the execution time of the handlers.
+     * the execution time of the handlers. This is done at the load completed to hopefully always register these
+     * handlers last, allowing all other user made transformers to execute first.
      */
     public static void onLoadCompleted() {
         // add handlers for simple block remaps
-        for (Map.Entry<String, Map<Integer, Pair<Block, Short>>> kv : SIMPLE_BLOCK_TRANSFORMATION_MAP.entrySet()) {
-            Map<Integer, Pair<Block, Short>> subMap = kv.getValue();
-            TransformerRegistry.addBlockTransformer(kv.getKey(), info -> simpleBlockTransformer(info, subMap));
+        for (Map.Entry<String, Map<Integer, SimpleTransformationMap.Value<Block>>> kv : SIMPLE_BLOCK_TRANSFORMATION_MAP
+            .entrySet()) {
+            TransformerRegistry.addBlockTransformer(kv.getKey(), new SimpleBlockTransformationHandler(kv.getValue()));
         }
         // add handlers for simple item remaps
-        for (Map.Entry<String, Map<Integer, Pair<Item, Short>>> kv : SIMPLE_ITEM_TRANSFORMATION_MAP.entrySet()) {
-            Map<Integer, Pair<Item, Short>> subMap = kv.getValue();
-            TransformerRegistry
-                .addStackTransformer(kv.getKey(), (originalId, tag) -> simpleItemStackTransformer(tag, subMap));
+        for (Map.Entry<String, Map<Integer, SimpleTransformationMap.Value<Item>>> kv : SIMPLE_ITEM_TRANSFORMATION_MAP
+            .entrySet()) {
+            TransformerRegistry.addStackTransformer(kv.getKey(), new SimpleItemTransformationHandler(kv.getValue()));
         }
     }
 
     /**
-     * Pre-caches updated block and item IDs for any simple transformation to speed-up the handlers.
+     * Pre-caches updated block and item numeric IDs for any simple transformation to speed up the handlers.
      */
     public static void onIdMappingsChanged() {
-        RUNTIME_ITEM_ID_LOOKUP.clear();
-        RUNTIME_BLOCK_ID_LOOKUP.clear();
-        for (Map.Entry<String, Map<Integer, Pair<Block, Short>>> kv : SIMPLE_BLOCK_TRANSFORMATION_MAP.entrySet()) {
-            for (Pair<Block, Short> mapping : kv.getValue()
+        for (Map.Entry<String, Map<Integer, SimpleTransformationMap.Value<Block>>> kv : SIMPLE_BLOCK_TRANSFORMATION_MAP
+            .entrySet()) {
+            for (SimpleTransformationMap.Value<Block> mapping : kv.getValue()
                 .values()) {
-                RUNTIME_BLOCK_ID_LOOKUP.computeIfAbsent(mapping.getKey(), Block::getIdFromBlock);
+                mapping.targetRuntimeId = Block.getIdFromBlock(mapping.target);
             }
         }
-        for (Map.Entry<String, Map<Integer, Pair<Item, Short>>> kv : SIMPLE_ITEM_TRANSFORMATION_MAP.entrySet()) {
-            for (Pair<Item, Short> mapping : kv.getValue()
+        for (Map.Entry<String, Map<Integer, SimpleTransformationMap.Value<Item>>> kv : SIMPLE_ITEM_TRANSFORMATION_MAP
+            .entrySet()) {
+            for (SimpleTransformationMap.Value<Item> mapping : kv.getValue()
                 .values()) {
-                RUNTIME_ITEM_ID_LOOKUP.computeIfAbsent(mapping.getKey(), Item::getIdFromItem);
+                mapping.targetRuntimeId = Item.getIdFromItem(mapping.target);
             }
         }
     }
@@ -104,11 +100,11 @@ public class SimpleTransformationRegistry {
     public static void addSimpleTransformer(String originalId, int originalMeta, Block newBlock, int newMeta,
         boolean skipStackRemap) {
         if (newMeta == -1) newMeta = OreDictionary.WILDCARD_VALUE;
-        SIMPLE_BLOCK_TRANSFORMATION_MAP.put(originalId, originalMeta, Pair.of(newBlock, (short) newMeta));
+        SIMPLE_BLOCK_TRANSFORMATION_MAP.put(originalId, originalMeta, newBlock, (short) newMeta);
         if (!skipStackRemap) {
             Item item = Item.getItemFromBlock(newBlock);
             if (item != null) {
-                SIMPLE_ITEM_TRANSFORMATION_MAP.put(originalId, originalMeta, Pair.of(item, (short) newMeta));
+                SIMPLE_ITEM_TRANSFORMATION_MAP.put(originalId, originalMeta, item, (short) newMeta);
             }
         }
     }
@@ -118,14 +114,25 @@ public class SimpleTransformationRegistry {
      *
      * @implNote This implementation has constant-time runtime.
      */
-    private static boolean simpleBlockTransformer(BlockConversionInfo info, Map<Integer, Pair<Block, Short>> metaMap) {
-        Pair<Block, Short> mapping = SimpleTransformationMap.getFromSubmap(metaMap, info.metadata);
-        if (mapping == null) return false;
-        info.blockID = RUNTIME_BLOCK_ID_LOOKUP.computeIfAbsent(mapping.getKey(), Block::getIdFromBlock);
-        if (mapping.getValue() != OreDictionary.WILDCARD_VALUE) {
-            info.metadata = mapping.getValue();
+    private static class SimpleBlockTransformationHandler implements Function<BlockConversionInfo, Boolean> {
+
+        private final Map<Integer, SimpleTransformationMap.Value<Block>> metaMap;
+
+        SimpleBlockTransformationHandler(Map<Integer, SimpleTransformationMap.Value<Block>> metaMap) {
+            this.metaMap = metaMap;
         }
-        return true;
+
+        @Override
+        public Boolean apply(BlockConversionInfo info) {
+            SimpleTransformationMap.Value<Block> mapping = SimpleTransformationMap
+                .getFromSubMap(metaMap, info.metadata);
+            if (mapping == null || mapping.targetRuntimeId <= -1) return false;
+            info.blockID = mapping.targetRuntimeId;
+            if (mapping.targetMeta != OreDictionary.WILDCARD_VALUE) {
+                info.metadata = mapping.targetMeta;
+            }
+            return true;
+        }
     }
     // endregion block transformations
 
@@ -159,9 +166,9 @@ public class SimpleTransformationRegistry {
         boolean skipBlockRemap) {
         if (newMeta == -1) newMeta = OreDictionary.WILDCARD_VALUE;
         if (!skipBlockRemap && newItem instanceof ItemBlock ib) {
-            SIMPLE_BLOCK_TRANSFORMATION_MAP.put(originalId, originalMeta, Pair.of(ib.field_150939_a, (short) newMeta));
+            SIMPLE_BLOCK_TRANSFORMATION_MAP.put(originalId, originalMeta, ib.field_150939_a, (short) newMeta);
         }
-        SIMPLE_ITEM_TRANSFORMATION_MAP.put(originalId, originalMeta, Pair.of(newItem, (short) newMeta));
+        SIMPLE_ITEM_TRANSFORMATION_MAP.put(originalId, originalMeta, newItem, (short) newMeta);
     }
 
     /**
@@ -169,16 +176,25 @@ public class SimpleTransformationRegistry {
      *
      * @implNote This implementation has constant-time runtime.
      */
-    private static boolean simpleItemStackTransformer(NBTTagCompound tag, Map<Integer, Pair<Item, Short>> metaMap) {
-        short meta = tag.getShort("Damage");
-        Pair<Item, Short> mapping = SimpleTransformationMap.getFromSubmap(metaMap, meta);
-        if (mapping == null) return false;
-        IDExtenderCompat
-            .setItemStackID(tag, RUNTIME_ITEM_ID_LOOKUP.computeIfAbsent(mapping.getKey(), Item::getIdFromItem));
-        if (mapping.getValue() != OreDictionary.WILDCARD_VALUE) {
-            tag.setShort("Damage", mapping.getValue());
+    private static class SimpleItemTransformationHandler implements BiFunction<String, NBTTagCompound, Boolean> {
+
+        private final Map<Integer, SimpleTransformationMap.Value<Item>> metaMap;
+
+        SimpleItemTransformationHandler(Map<Integer, SimpleTransformationMap.Value<Item>> metaMap) {
+            this.metaMap = metaMap;
         }
-        return true;
+
+        @Override
+        public Boolean apply(String originalId, NBTTagCompound tag) {
+            short meta = tag.getShort("Damage");
+            SimpleTransformationMap.Value<Item> mapping = SimpleTransformationMap.getFromSubMap(metaMap, meta);
+            if (mapping == null || mapping.targetRuntimeId <= -1) return false;
+            IDExtenderCompat.setItemStackID(tag, mapping.targetRuntimeId);
+            if (mapping.targetMeta != OreDictionary.WILDCARD_VALUE) {
+                tag.setShort("Damage", mapping.targetMeta);
+            }
+            return true;
+        }
     }
     // endregion item transformations
 }
