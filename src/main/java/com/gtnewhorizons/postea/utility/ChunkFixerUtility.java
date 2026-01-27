@@ -130,11 +130,11 @@ public class ChunkFixerUtility {
                 BlockInfo blockInfo = transformationFunction.apply(tileEntity, world, chunk);
                 if (blockInfo == null) continue;
 
-                if (blockInfo.tileTransformer == null) {
-                    tileEntities.removeTag(i--);
+                NBTTagCompound newTag;
+                if (blockInfo.tileTransformer != null && (newTag = blockInfo.tileTransformer.apply(tileEntity)) != null) {
+                    ((IMixinNBTTagList) tileEntities).Postea$replaceCompoundTagAt(i, newTag);
                 } else {
-                    ((IMixinNBTTagList) tileEntities)
-                        .Postea$replaceCompoundTagAt(i, blockInfo.tileTransformer.apply(tileEntity));
+                    tileEntities.removeTag(i--);
                 }
 
                 conversionInfo.add(new ConversionInfo(x, y, z, blockInfo));
