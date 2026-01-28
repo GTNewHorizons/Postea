@@ -269,7 +269,7 @@ public abstract class BlockReplacementManager {
      * @param block      The block to remap to.
      */
     @SuppressWarnings("unused")
-    public static void replaceMissingBlockWithNewBlock(String originalId, Block block) {
+    public static void replaceMissingMapping(String originalId, Block block) {
         if (originalId == null) throw new IllegalArgumentException("original id is null");
         if (block == null) throw new IllegalArgumentException("block is null");
         MissingMappingHandler.addBlockMapping(originalId, block);

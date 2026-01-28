@@ -141,7 +141,7 @@ public abstract class ItemStackReplacementManager {
      * @param item       The item to remap to.
      */
     @SuppressWarnings("unused")
-    public static void replaceMissingItemWithNewItem(String originalId, Item item) {
+    public static void replaceMissingMapping(String originalId, Item item) {
         if (originalId == null) throw new IllegalArgumentException("original id is null");
         if (item == null) throw new IllegalArgumentException("item is null");
         MissingMappingHandler.addItemMapping(originalId, item);
