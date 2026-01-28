@@ -451,7 +451,7 @@ Postea provides a few API endpoints to quickly register re-mappings for any give
 
 > [!NOTE]
 >
-> It's generally more advisable to use the simple item transformers instead as they will create less overhead in the
+> It's generally more advisable to use the simple transformers instead as they will create less overhead in the
 > long term.
 
 > [!CAUTION]
