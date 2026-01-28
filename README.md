@@ -293,7 +293,8 @@ public abstract class SimpleTransformationExample {
         //
         // remap all compressed cobble to oak planks
         //
-        // When using a stack as a target the passed stack size is ignored, only the contained item and meta value are kept.
+        // When using a stack as a target the passed stack size is ignored,
+        // only the contained item and meta value are kept.
         ItemStackReplacementManager.addSimpleReplacement("ExtraUtilities:cobblestone_compressed", 0, new ItemStack(Blocks.planks, 0, 0));
 
         // block only with meta -> block with specific meta value.
@@ -307,16 +308,17 @@ public abstract class SimpleTransformationExample {
 
         // Block/Item with any Meta/Damage -> Block/Item with specific Meta/Damage value.
         //
-        // Using OreDictionary.WILDCARD_VALUE will tell postea to use this mapping as a fallback when there is no
-        // transformer targeting the specific meta/damage value of the block/item.
+        // Using OreDictionary.WILDCARD_VALUE will tell postea to use this mapping as a fallback when
+        // there is no transformer targeting the specific meta/damage value of the block/item.
         //
         // remap all other instances of compressed blocks to endstone
         BlockReplacementManager.addSimpleReplacement("ExtraUtilities:cobblestone_compressed", OreDictionary.WILDCARD_VALUE, Blocks.end_stone, 0);
 
         // Block/Item with any Meta/Damage -> Block/Item, preserving the Meta/Damage value.
         //
-        // When passing OreDictionary.WILDCARD_VALUE as the target Meta/Damage value, Postea will preserve any existing
-        // Meta/Damage value. This is also the default value when you don't specify a target meta value.
+        // When passing OreDictionary.WILDCARD_VALUE as the target Meta/Damage value, Postea will
+        // preserve any existing Meta/Damage value. This is also the default value when you don't
+        // specify a target meta value.
         //
         // remap all other instances of compressed blocks to endstone
         BlockReplacementManager.addSimpleReplacement(
@@ -441,7 +443,7 @@ Postea provides a few API endpoints to quickly register re-mappings for any give
 > (eg: remapping to a block of dirt), or something from your own mod that has existed for a while, FML will throw an
 > error when it loads the world and tell you that your world is corrupted.
 >
-> Simple Transformers are generally safer in that regard and do not care if an thing has ever existed in a world before.
+> Simple Transformers are generally safer in that regard and do not care if a thing has ever existed in a world before.
 > Therefore we generally recommend using them instead of FML re-mappings.
 
 Code example:
@@ -457,11 +459,12 @@ public abstract class FMLReMappingExample {
 
     public static void postLoad() {
         // this only works when the thing you're replacing with has never been registered to a world's
-        // id map. If you try to run this with a block that already exists (eg good old dirt), FML error out and
-        // you that your world is corrupted beyond repair, and advise you to undo what ever you just did.
+        // id map. If you try to run this with a block that already exists (eg good old dirt), FML
+        // error out and you that your world is corrupted beyond repair, and advise you to undo what
+        // ever you just did.
         //
-        // Postea Simple Transformers don't have that issue and are more lag friendly in the long term. Consider
-        // using them when ever possible, instead of FML mappings.
+        // Postea Simple Transformers don't have that issue and are more lag friendly in the long term.
+        // Consider using them when ever possible, instead of FML mappings.
         Item item = new Item();
         GameRegistry.registerItem(item, "my_item");
         ItemStackReplacementManager.replaceMissingMapping("IC2:itemFertilizer", item);
