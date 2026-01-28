@@ -1,56 +1,63 @@
 # TileEntityReplacementManager API
 
-This API provides a suite of tools for transforming blocks and items in the game, allowing developers to replace or modify game elements based on specific conditions.
+This library provides a suite of tools for transforming any existing tile entities, blocks and items the world at
+runtime. Allowing developers to replace, migrate or modify game elements based on specific conditions.
 
 ## Features
 
-1. **Tile Entity Transformation**: Replace or modify tile entities.
-2. **Block Replacement**: Replace normal blocks with another normal block.
-3. **ItemStack Replacement**: Modify or replace items.
-4. **Simple Migrations**: An API to register large amounts of simple stack and block transformations which can even
-replace things from a removed mod.
-5. **Missing Mapping Replacement API**: An API to register transformations that can be resolved at the
-FMLMissingMapping event.
-6. **Numeric ID Identification for Removed Content**: A way to identify content that has ceased to exist and is in need of a transformation.
+1. **Tile Entity Transformers**: Replace or modify tile entities.
+2. **Block Transformers**: Replace normal blocks with another normal block.
+3. **ItemStack Transformers**: Replace or Modify items.
+4. **Simple Replacement API**: Efficiently replace or remap large amounts of blocks and items at scale without incurring any noticeable performance impact.
+5. **Missing Mapping Replacement API**: A set of API endpoints to register actions to be taken when FML detects a missing mapping for a given ID.
+6. **Numeric ID Identification for Removed Content**: A way to identify the Id of any content that has ceased to exist.
 
 ## Examples
 
 ### 1. Tile Entity to Regular Block Transformation
 
-The `TileEntityReplacementManager` class can be used to register tile entity transformer functions for specific tile
-entities. In this example, we look for any tile entity with the ID of `GT_TileEntity_Ores` and replace it with are
-regular block with no tile entities. This is specified by returning a `BlockInfo` that has no nbt transformation
-function.
+The `TileEntityReplacementManager` class can be used to register tile entity transformers for any tile entities with
+the given ID. These transformers usually perform one of 3 types of interactions: Block replacements, NBT transformations
+and full-on replacements.
+
+When doing a block replacement, you simply just return a `BlockInfo` without specifying an NBT transformer (the third
+argument of the constructor). This will replace the existing block and erase the presence of the tile entity being
+transformed.
 
 > [!NOTE]
 >
 > Tile entity transformers are always applied before any block transformers.
 
-> [!CAUTION]
+> [!TIP]
 >
-> These transformers are executed as the chunk data is being read and so the world being passed isn't fully loaded.
-> If you try to perform any kind of block access using it, it will throw an error.
->
-> If you need to perform any kind of block access inside of tile entity transformer, Use the endpoints provided by
-> `BlockAccessCompat`. These endpoints will fetch the ID and meta value of the block where your tile entity is located.
-> You can then compare it to a value obtained from a callback registered using `BlockReplacementManager.registerIDResolver`
-> to match the block in question.
->
-> If you try to use the chunk, to get a value, you may get an incorrect value if the block that was previously located
-> at the location of the tile entity no longer exists. previously mentioned API endpoints are able to overcome this
-> issue and will allow you to content that no longer exists without the use of a FMLMissingMapping remap.
+> Tile entity and block transformers are only ran once per chunk until a player's mod list changes. This behaviour is
+> disabled if you are in a dev environment; Allowing you to test your transformers simply by leaving and rejoining your
+> test world.
 
 > [!CAUTION]
 >
-> It's considered bad practice to try to access any other block than the one at the location of the tile entity being
-> transformed. This is because the block you're trying to access may not be in the chunk passed to the transformer or
-> the subchunk currently being processed, will result in an error when you try to access it.
+> Tile entity and block transformers are executed as the chunk data is being read and so the world being passed isn't
+> fully loaded. **If you try to perform any kind of block access using the world parameter, forge will throw an error.**
+>
+> **If you need to perform any kind of block access on the block located at the same place as the tile entity being
+> transformed use the `BlockAccessCompat`**. These endpoints will fetch the ID and meta value of that block without
+> causing any errors. You can then compare it to a value obtained from a callback registered using
+> `BlockReplacementManager.registerIDResolver` to match the block in question.
+>
+> If you try to use the chunk, to get a value, you may get an incorrect value if the block that was previously located
+> at the location of the tile entity no longer exists. The `BlockAccessCompat` endpoints are able to overcome this
+> issue and will allow you to identify block ids linked to content that no longer exists without the use of a
+> FMLMissingMapping remap.
 
 Code example:
 ```java
 public abstract class TEToBlockExample {
     public static void postLoad() {
+        // In this example, we look for any tile entity with the ID of `GT_TileEntity_Ores` and
+        // replace it with are regular block with no tile entities. This is specified by returning
+        // a `BlockInfo` that has no nbt transformation function.
         TileEntityReplacementManager.tileEntityTransformer("GT_TileEntity_Ores", (tag, world, chunk) -> {
+            // yes, it's in great shame that we admit that Gregtech ores used to be tile entities.
             if (world.provider.dimensionId == -1) {
                 //  nether gets orange wool
                 return new BlockInfo(Blocks.wool, 1);
@@ -65,28 +72,31 @@ public abstract class TEToBlockExample {
     }
 }
 ```
-### 2. Tile Entity Transformations
+### 2. Tile Entity NBT Transformations
 
-If you just need to edit an existing tile entity, Postea can also do this. Postea is only ran once per chunk so it's
-technically more efficient to use postea to do data migrations since your TE's own code won't have to do extra checks
-every time it reads its own NBT data. This can be achieved by modifying the data in the transformation lambda and
-returning a `null` value from the transformer lambda.
+If you need to edit an existing tile entity without replacing it, simply perform the modification as usual inside the
+main transformer function and return a `null` value instead of a `BlockInfo`. This will tell Postea that you haven't
+done any replacements and that any other handler targeting this tile entity type should also be able to perform their
+tasks.
 
 > [!NOTE]
 >
 > Technically you can also return a `BlockInfo` with the same block and meta value, and a pass though function for the
-> NBT transformer, _**but this is considered bad practice for pure NBT transformations**_. Returning `null` tells Postea
-> that your transformer didn't modify the block, and that any other transformers also targetting that tile entity should
-> also be applied to it.
+> NBT transformer, _**but this is considered bad practice for pure NBT transformations**_.
 >
->You should also note that when multiple tile entity transformers are registered to a single tile entity ID, they will
+> You should also note that when multiple tile entity transformers are registered to a single tile entity ID, they will
 > always be executed in order of their registrations.
+
+> [!TIP]
+>
+> It's technically more efficient to use Postea to do data migrations since your TE's own code won't have to do extra
+> checks every time it reads its own NBT data.
 
 > [!IMPORTANT]
 >
 > Remember that unlike items, tile entities manually store every tag of their NBT data individually, meaning that any
-> additional tags will be discarded and cannot be used to store additional data unless it is already a part of the new
-> tile entity.
+> additional tags will be discarded if the tile entity doesn't read it when it reads it's reloads it's state by
+> reading it's stored NBT data.
 
 Code example:
 ```java
@@ -154,9 +164,14 @@ public abstract class TEModifyExample {
 
 ### 3. Full Tile Entity Replacements
 
-If you need to fully replace a tile entity with another one, your tile entity transformer should return a `BlockInfo`
-that includes an NBT transformation callback. When you're not doing a full replacement, doing NBT outside the NBT
-transformation callback is fine, but if you're doing a full replacement it's considered bad practice to do so.
+If you need to fully replace a tile entity, your tile entity transformer should return a `BlockInfo` that includes an
+NBT transformation callback.
+
+> [!CAUTION]
+>
+> When you're doing a full replacement, changing the NBT parameter outside the NBT transformation callback is considered
+> to be bad practice. It's only acceptable, (and even reccomended to do so) if you're performing a pure NBT
+> transformation like in the last example.
 
 > [!TIP]
 >
@@ -228,29 +243,31 @@ public abstract class TEFullReplacementExample {
 
 ### 4. Simple Block and Item Replacements
 
-If you need to transform an existing block or item into something else, Postea now features a set of API end points that
-let you register "Simple Transformations". When applicable, we recommend using these endpoints as they will generally
-result in a faster execution time than if you were to implement your own handler for any given item. Another advantage
-is that multiple, completely distinct, mods can now target the same item id for a simple transformation with zero impact
-to compatibility.
+If you need to transform an existing block or item into something else, Postea now features a set of API endpoints that
+let you register "Simple Transformations".
+
+When applicable, we recommend using these endpoints as they will generally result in a faster execution time than if you
+were to implement your own handler. Another advantage is that multiple, completely distinct, mods can now target the
+same item id for a simple transformation with zero impact to compatibility.
 
 Simple Transformers can be used to perform one of 4 types of transformations:
-1. Block/Item with any meta/damage value -> some Block/Item, preserving the meta or damage value.
+1. Some block or item with any meta or damage value -> some block or item, preserving the meta or damage value.
    - Behaves similarly to an FMLMissingMapping remap, but is more effective in the long term as it doesn't cause an ID
    aliasing.
-2. Block/Item with any meta/damage value -> some Block/Item with a specific meta or damage value.
-3. Block/Item with a specific meda/damage value -> some Block/Item, preserving the meta or damage value.
-4. Block/Item with a specific meta/damage value -> some Block/Item, with a specific meta/damage value.
+2. Some block or item with any meta or damage value -> some block or item with a specific meta or damage value.
+3. Some block or item with a specific meda or damage value -> some block or item, preserving the meta or damage value.
+4. Some block or item with a specific meta or damage value -> some block or item, with a specific meta or damage value.
 
 > [!TIP]
 >
 > These simple transformers can be used to target blocks and items that no longer exist in the world due to a content
-> or mod removal. Postea can Identify the numeric ID of any content that was once registered to a world's ID map. Even
+> or mod removal. Postea can identify the numeric ID of any content that was once registered to a world's ID map. Even
 > if postea wasn't installed when those mods were installed or removed.
 >
-> This also applies to the `BlockReplacementManager.registerIDResolver` and
-> `ItemStackReplacementManager.registerIDResolver` functions. The callbacks registered by these function will return
-> with a value of -1 which is impossible to get from the `BlockAccessCompat` functions that return block IDs.
+> This also applies to the `BlockReplacementManager.registerIDResolver` and `ItemStackReplacementManager.registerIDResolver`
+> functions. The callbacks registered by these function will return with a value of -1 which is impossible to get from
+> the `BlockAccessCompat` functions that return block IDs, (they return 0 (air) when encountering something which isn't
+> in the known ID map as a failsafe.)
 >
 > This means that technically it's better to use simple transformation to migrate removed content as it removes the
 > need for forge to create any kind of ID aliases which usually need to be resolved at runtime.
@@ -259,20 +276,20 @@ Simple Transformers can be used to perform one of 4 types of transformations:
 >
 > `OreDictionary.WILDCARD_VALUE` has a meaning when registering simple transformations:
 >
-> When used as the **source** Meta/Damage value, Postea will use the transformation being specified as a **fallback** if nothing
-> has specified a Meta/Damage transformation for the Block/Item's current Meta/Damage value.
+> When used as the **source** meta or damage value; Postea will use the transformation being specified as a **fallback**
+> if nothing has specified a meta or damage transformation for the block or item's current meta or damage value.
 >
-> When used as the **target** Meta/Damage value, Postea will **preserve the existing value** instead of over-writing it.
+> When used as the **target** meta or damage value; Postea will **preserve the existing value** instead of over-writing it.
 
 > [!TIP]
 >
-> When registering block or item conversions, Postea will automatically detect if the given Item or Block has a Block or
-> Item counterpart (respectively). You can disable this behaviour by adding a `false` argument to end of all simple
-> transformation endpoints.
+> When registering block or item conversions, Postea will automatically detect if the given item or block has a block or
+> item counterpart (respectively) and register an appropriate simple transformation. You can disable this behaviour by
+> adding a `false` argument to end of all simple transformation endpoints.
 
 > [!NOTE]
 >
-> Simple transformations are usually executed last.
+> Simple transformations are usually executed after all other complex transformers.
 
 Code example
 ```java
@@ -439,9 +456,9 @@ Postea provides a few API endpoints to quickly register re-mappings for any give
 
 > [!CAUTION]
 >
-> If you try to remap something to a block that already has ever existed at a prior date inside a world,
-> (eg: remapping to a block of dirt), or something from your own mod that has existed for a while, FML will throw an
-> error when it loads the world and tell you that your world is corrupted.
+> If you try to remap something to a block or item that already has ever existed at a prior date inside a world,
+> (eg: remapping to a block of dirt or stick, or something from your own mod that has existed for a while) FML will
+> throw an error when it loads the world and tell you that your world is corrupted.
 >
 > Simple Transformers are generally safer in that regard and do not care if a thing has ever existed in a world before.
 > Therefore we generally recommend using them instead of FML re-mappings.
@@ -481,6 +498,11 @@ public abstract class FMLReMappingExample {
 
 Postea provides a few API endpoints that let you tell FML to hide any missing mapping warnings regarding that ID when
 loading a world.
+
+> [!NOTE]
+>
+> You should only register an ignore mapping when you know that your transformers fully replace what ever used to be
+> associated with the given ID.
 
 Code example:
 ```java
