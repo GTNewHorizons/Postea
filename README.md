@@ -481,7 +481,7 @@ loading a world.
 
 Code example:
 ```java
-public static abstract class FMLIgnoreMissingMappingExample {
+public abstract class FMLIgnoreMissingMappingExample {
     public static void postLoad() {
         // It doesn't really matter which one you use, they both do the same thing under the hood.
         ItemStackReplacementManager.ignoreMissingMapping("IC2:itemFertilizer");
