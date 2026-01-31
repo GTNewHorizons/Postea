@@ -2,7 +2,6 @@ package com.gtnewhorizons.postea.api;
 
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import javax.annotation.Nonnull;
 
@@ -27,40 +26,6 @@ import com.gtnewhorizons.postea.utility.TransformerRegistry;
 public abstract class ItemStackReplacementManager {
 
     // region custom transformer registration
-
-    /**
-     * Adds a custom transformer for a given id.
-     *
-     * @deprecated Use {@link #addTransformationHandler(String, BiFunction)} instead.
-     *
-     * @apiNote When the transformer function passed to this function returns a null, value Postea will assume that
-     *          the transformer has failed to identify and run the handler on any other handler function registered
-     *          to the given ID.
-     *          <p>
-     *          If you need to perform a simple transformations consider using the following methods instead:
-     *          <ul>
-     *          <li>item -> item (with same meta): {@link #addSimpleReplacement(String, Item)}</li>
-     *          <li>item -> item with specific meta: {@link #addSimpleReplacement(String, Item, int)}</li>
-     *          <li>item with meta -> item (with same meta): {@link #addSimpleReplacement(String, int, Item)}</li>
-     *          <li>item with meta -> item with specific meta:
-     *          {@link #addSimpleReplacement(String, int, Item, int)}</li>
-     *          </ul>
-     *
-     * @implNote For performance reasons, Postea assumes that the tag that was passed to the handler hasn't been
-     *           modified
-     *           if you return a null value. This isn't enforced though since returning a null value after doing some
-     *           modifications has a couple niche uses. eg: having separate handlers for different migrations of a
-     *           single thing that can be sunset at different times down the line.
-     *
-     * @param originalId  The id of the item to transform.
-     * @param transformer The transformer to apply.
-     */
-    @Deprecated
-    @SuppressWarnings("unused")
-    public static void addItemReplacement(String originalId, Function<NBTTagCompound, NBTTagCompound> transformer) {
-        if (transformer == null) throw new IllegalArgumentException("transformer is null");
-        addTransformationHandler(originalId, (_originalId, tag) -> transformer.apply(tag) != null);
-    }
 
     /**
      * Adds a custom transformer for a given id.

@@ -1,13 +1,11 @@
 package com.gtnewhorizons.postea.api;
 
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.annotation.Nonnull;
 
 import net.minecraft.block.Block;
-import net.minecraft.world.World;
 import net.minecraftforge.oredict.OreDictionary;
 
 import com.gtnewhorizons.postea.utility.BlockConversionInfo;
@@ -24,40 +22,6 @@ import com.gtnewhorizons.postea.utility.TransformerRegistry;
 public abstract class BlockReplacementManager {
 
     // region custom transformer registration
-
-    /**
-     * Adds a custom transformer for a given id.
-     *
-     * @deprecated Use {@link #addTransformationHandler(String, Function)}
-     *
-     * @apiNote When the transformer function passed to this function returns a null, value Postea will assume that
-     *          the transformer has failed to identify and run the handler on any other handler function registered
-     *          to the given ID.
-     *          <br>
-     *          If you need to perform a simple transformations consider using the following methods instead:
-     *          <ul>
-     *          <li>block -> block (with same meta): {@link #addSimpleReplacement(String, Block)}</li>
-     *          <li>block -> block with specific meta: {@link #addSimpleReplacement(String, Block, int)}</li>
-     *          <li>block with meta -> block (with same meta): {@link #addSimpleReplacement(String, int, Block)}</li>
-     *          <li>block with meta -> block with specific meta:
-     *          {@link #addSimpleReplacement(String, int, Block, int)}</li>
-     *          </ul>
-     *
-     * @implNote For performance reasons, Postea assumes that the BlockConversionInfo that was passed to the handler
-     *           hasn't been modified if you return a null value. This isn't enforced though since returning a null
-     *           value after doing some modifications has a couple niche uses. eg: having separate handlers for
-     *           different migrations of a single thing that can be sunset at different times down the line.
-     *
-     * @param originalId  The id of the block to transform.
-     * @param transformer The transformer to apply.
-     */
-    @Deprecated
-    @SuppressWarnings("unused")
-    public static void addBlockReplacement(String originalId,
-        BiFunction<BlockConversionInfo, World, BlockConversionInfo> transformer) {
-        if (transformer == null) throw new IllegalArgumentException("transformer is null");
-        addTransformationHandler(originalId, info -> transformer.apply(info, info.world) != null);
-    }
 
     /**
      * Adds a custom transformer for a given id.

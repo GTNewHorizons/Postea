@@ -1,6 +1,5 @@
 package com.gtnewhorizons.postea.api;
 
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import net.minecraft.nbt.NBTTagCompound;
@@ -18,16 +17,6 @@ import com.gtnewhorizons.postea.utility.TransformerRegistry;
  */
 @SuppressWarnings("unused")
 public abstract class TileEntityReplacementManager {
-
-    /**
-     * @deprecated Superseded by {@link #tileEntityTransformer(String, TriFunction)}.
-     */
-    @Deprecated
-    public static void tileEntityTransformer(String tileEntityId,
-        BiFunction<NBTTagCompound, World, BlockInfo> transformerFunction) {
-        if (transformerFunction == null) throw new NullPointerException("transformer is null");
-        tileEntityTransformer(tileEntityId, (tag, world, chunk) -> transformerFunction.apply(tag, world));
-    }
 
     /**
      * Register a callback function to transform a tile entity before it's loaded.
