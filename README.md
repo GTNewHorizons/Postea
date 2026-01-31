@@ -285,7 +285,7 @@ Simple Transformers can be used to perform one of 4 types of transformations:
 >
 > When registering block or item conversions, Postea will automatically detect if the given item or block has a block or
 > item counterpart (respectively) and register an appropriate simple transformation. You can disable this behaviour by
-> adding a `false` argument to end of all simple transformation endpoints.
+> adding a `true` argument to end of all simple transformation endpoints.
 
 > [!NOTE]
 >
