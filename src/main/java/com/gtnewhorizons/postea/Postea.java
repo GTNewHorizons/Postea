@@ -12,6 +12,7 @@ import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import cpw.mods.fml.common.event.FMLMissingMappingsEvent;
 import cpw.mods.fml.common.event.FMLModIdMappingEvent;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 
 @Mod(
@@ -28,6 +29,11 @@ public class Postea {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {}
+
+    @Mod.EventHandler
+    public void postsLoad(FMLPostInitializationEvent event) {
+        // TestUIEMigrator.postLoad();
+    }
 
     @Mod.EventHandler
     public void chunkLoaded(ChunkEvent.Load event) {
