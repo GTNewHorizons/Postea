@@ -10,7 +10,7 @@ runtime. Allowing developers to replace, migrate or modify game elements based o
 3. **ItemStack Transformers**: Replace or Modify items.
 4. **Simple Replacement API**: Efficiently replace or remap large amounts of blocks and items at scale without incurring any noticeable performance impact.
 5. **Missing Mapping Replacement API**: A set of API endpoints to register actions to be taken when FML detects a missing mapping for a given ID.
-6. **Numeric ID Identification for Removed Content**: A way to identify the Id of any content that has ceased to exist.
+6. **Numeric ID Identification for Removed Content**: A way to identify the ID of any content that has ceased to exist.
 
 ## Examples
 
@@ -248,7 +248,7 @@ let you register "Simple Transformations".
 
 When applicable, we recommend using these endpoints as they will generally result in a faster execution time than if you
 were to implement your own handler. Another advantage is that multiple, completely distinct, mods can now target the
-same item id for a simple transformation with zero impact to compatibility.
+same item ID for a simple transformation with zero impact to compatibility.
 
 Simple Transformers can be used to perform one of 4 types of transformations:
 1. Some block or item with any meta or damage value -> some block or item, preserving the meta or damage value.
@@ -476,7 +476,7 @@ public abstract class FMLReMappingExample {
 
     public static void postLoad() {
         // this only works when the thing you're replacing with has never been registered to a world's
-        // id map. If you try to run this with a block that already exists (eg good old dirt), FML
+        // ID map. If you try to run this with a block that already exists (eg good old dirt), FML
         // error out and you that your world is corrupted beyond repair, and advise you to undo what
         // ever you just did.
         //
