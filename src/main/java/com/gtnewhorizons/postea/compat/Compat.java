@@ -1,17 +1,23 @@
 package com.gtnewhorizons.postea.compat;
 
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraftforge.oredict.OreDictionary;
 
 import com.falsepattern.endlessids.mixin.helpers.SubChunkBlockHook;
 import com.gtnewhorizons.neid.mixins.interfaces.IExtendedBlockStorageMixin;
+
+import codechicken.nei.api.API;
 
 public class Compat {
 
     private static Boolean chunkapi = null;
     private static Boolean endlessids = null;
     private static Boolean neid = null;
+    private static Boolean nei = null;
 
     public static boolean chunkapiPresent() {
         if (chunkapi == null) {
@@ -45,6 +51,17 @@ public class Compat {
             neid = present;
         }
         return neid;
+    }
+
+    public static boolean neiPresent() {
+        if (nei == null) {
+            boolean present = false;
+            try {
+                present = Launch.classLoader.getClassBytes("codechicken.nei.api.API") != null;
+            } catch (Throwable ignored) {}
+            nei = present;
+        }
+        return nei;
     }
 
     public static SubChunkAccess getSubChunkAccess(ExtendedBlockStorage subChunk) {
@@ -159,6 +176,18 @@ public class Compat {
                     metaArray[toIndex(x, y, z)] = (short) meta;
                 }
             };
+        }
+    }
+
+    public static void hideItemFromNEI(Item item) {
+        if (!neiPresent()) return;
+        NEICompat.hideItem(item);
+    }
+
+    private static class NEICompat {
+
+        public static void hideItem(Item item) {
+            API.hideItem(new ItemStack(item, 1, OreDictionary.WILDCARD_VALUE));
         }
     }
 
