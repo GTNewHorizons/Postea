@@ -1,8 +1,6 @@
 package com.gtnewhorizons.postea.utility;
 
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -10,7 +8,9 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.oredict.OreDictionary;
 
+import com.gtnewhorizons.postea.api.IBlockTransformationHandler;
 import com.gtnewhorizons.postea.api.IDExtenderCompat;
+import com.gtnewhorizons.postea.api.IItemStackTransformationHandler;
 
 /**
  * A registry for simple item and block transformations. A common use case is mod removal, replacements or deprecations.
@@ -114,7 +114,7 @@ public class SimpleTransformationRegistry {
      *
      * @implNote This implementation has constant-time runtime.
      */
-    private static class SimpleBlockTransformationHandler implements Function<BlockConversionInfo, Boolean> {
+    private static class SimpleBlockTransformationHandler implements IBlockTransformationHandler {
 
         private final Map<Integer, SimpleTransformationMap.Value<Block>> metaMap;
 
@@ -123,7 +123,7 @@ public class SimpleTransformationRegistry {
         }
 
         @Override
-        public Boolean apply(BlockConversionInfo info) {
+        public boolean apply(BlockConversionInfo info) {
             SimpleTransformationMap.Value<Block> mapping = SimpleTransformationMap
                 .getFromSubMap(metaMap, info.metadata);
             if (mapping == null || mapping.targetRuntimeId <= -1) return false;
@@ -176,7 +176,7 @@ public class SimpleTransformationRegistry {
      *
      * @implNote This implementation has constant-time runtime.
      */
-    private static class SimpleItemTransformationHandler implements BiFunction<String, NBTTagCompound, Boolean> {
+    private static class SimpleItemTransformationHandler implements IItemStackTransformationHandler {
 
         private final Map<Integer, SimpleTransformationMap.Value<Item>> metaMap;
 
@@ -185,7 +185,7 @@ public class SimpleTransformationRegistry {
         }
 
         @Override
-        public Boolean apply(String originalId, NBTTagCompound tag) {
+        public boolean apply(String originalId, NBTTagCompound tag) {
             short meta = tag.getShort("Damage");
             SimpleTransformationMap.Value<Item> mapping = SimpleTransformationMap.getFromSubMap(metaMap, meta);
             if (mapping == null || mapping.targetRuntimeId <= -1) return false;

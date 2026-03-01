@@ -1,6 +1,5 @@
 package com.gtnewhorizons.postea.api;
 
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
@@ -8,7 +7,6 @@ import javax.annotation.Nonnull;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.oredict.OreDictionary;
 
 import com.gtnewhorizons.postea.utility.IDRegistry;
@@ -52,8 +50,7 @@ public abstract class ItemStackReplacementManager {
      * @param transformer The transformer to apply.
      */
     @SuppressWarnings("unused")
-    public static void addTransformationHandler(String originalId,
-        BiFunction<String, NBTTagCompound, Boolean> transformer) {
+    public static void addTransformationHandler(String originalId, IItemStackTransformationHandler transformer) {
         if (originalId == null) throw new IllegalArgumentException("original id is null");
         if (transformer == null) throw new IllegalArgumentException("transformer is null");
         TransformerRegistry.addStackTransformer(originalId, transformer);
