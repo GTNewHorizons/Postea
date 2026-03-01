@@ -2,8 +2,6 @@ package com.gtnewhorizons.postea.utility;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -15,7 +13,9 @@ import net.minecraft.world.chunk.Chunk;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.collect.LinkedListMultimap;
+import com.gtnewhorizons.postea.api.IBlockTransformationHandler;
 import com.gtnewhorizons.postea.api.IDExtenderCompat;
+import com.gtnewhorizons.postea.api.IItemStackTransformationHandler;
 import com.gtnewhorizons.postea.api.TriFunction;
 
 import cpw.mods.fml.common.Loader;
@@ -27,9 +27,9 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  */
 public class TransformerRegistry {
 
-    private static final LinkedListMultimap<String, BiFunction<String, NBTTagCompound, Boolean>> ITEM_REPLACEMENT_MAP = LinkedListMultimap
+    private static final LinkedListMultimap<String, IItemStackTransformationHandler> ITEM_REPLACEMENT_MAP = LinkedListMultimap
         .create();
-    public static final LinkedListMultimap<String, Function<BlockConversionInfo, Boolean>> BLOCK_REPLACEMENT_MAP = LinkedListMultimap
+    public static final LinkedListMultimap<String, IBlockTransformationHandler> BLOCK_REPLACEMENT_MAP = LinkedListMultimap
         .create();
     private static final LinkedListMultimap<String, TriFunction<NBTTagCompound, World, Chunk, BlockInfo>> TILE_ENTITY_REPLACEMENT_MAP = LinkedListMultimap
         .create();
@@ -38,13 +38,13 @@ public class TransformerRegistry {
      * Pivoting on the id is faster than pivoting on the strings so this should help with perf a bit.
      * Generated during the mapping update event whilst entering/loading a world.
      */
-    private static final Int2ObjectOpenHashMap<Pair<String, List<BiFunction<String, NBTTagCompound, Boolean>>>> RUNTIME_ITEM_REPLACEMENT_MAP = new Int2ObjectOpenHashMap<>();
+    private static final Int2ObjectOpenHashMap<Pair<String, List<IItemStackTransformationHandler>>> RUNTIME_ITEM_REPLACEMENT_MAP = new Int2ObjectOpenHashMap<>();
     /**
      * Map of blockIO -> originalName+transformationHandler.
      * Pivoting on the id is faster than pivoting on the strings so this should help with perf a bit.
      * Generated during the mapping update event whilst entering/loading a world.
      */
-    private static final Int2ObjectOpenHashMap<Pair<String, List<Function<BlockConversionInfo, Boolean>>>> RUNTIME_BLOCK_REPLACEMENT_MAP = new Int2ObjectOpenHashMap<>();
+    private static final Int2ObjectOpenHashMap<Pair<String, List<IBlockTransformationHandler>>> RUNTIME_BLOCK_REPLACEMENT_MAP = new Int2ObjectOpenHashMap<>();
 
     // region FML Life Cycle handlers
     /**
@@ -94,7 +94,7 @@ public class TransformerRegistry {
      * @param transformer The transformation handler that will execute a transformation on the block.
      */
     public static void addBlockTransformer(@Nonnull String originalId,
-        @Nonnull Function<BlockConversionInfo, Boolean> transformer) {
+        @Nonnull IBlockTransformationHandler transformer) {
         BLOCK_REPLACEMENT_MAP.put(originalId, transformer);
     }
 
@@ -112,7 +112,7 @@ public class TransformerRegistry {
      * @param transformer The transformation handler that will execute a transformation on the block.
      */
     public static void addStackTransformer(@Nonnull String originalId,
-        @Nonnull BiFunction<String, NBTTagCompound, Boolean> transformer) {
+        @Nonnull IItemStackTransformationHandler transformer) {
         ITEM_REPLACEMENT_MAP.put(originalId, transformer);
     }
 
@@ -137,7 +137,7 @@ public class TransformerRegistry {
     // region transformation handlers
     public static @Nullable BlockConversionInfo getBlockReplacement(int blockId, byte metadata, World world, int x,
         int y, int z) {
-        Pair<String, List<Function<BlockConversionInfo, Boolean>>> data = RUNTIME_BLOCK_REPLACEMENT_MAP.get(blockId);
+        Pair<String, List<IBlockTransformationHandler>> data = RUNTIME_BLOCK_REPLACEMENT_MAP.get(blockId);
         if (data == null) return null;
         BlockConversionInfo blockConversionInfo = new BlockConversionInfo(
             // transparently maps the id to the original id if it's a dummy id
@@ -148,7 +148,7 @@ public class TransformerRegistry {
             y,
             z,
             world);
-        for (Function<BlockConversionInfo, Boolean> transformer : data.getValue()) {
+        for (IBlockTransformationHandler transformer : data.getValue()) {
             if (transformer.apply(blockConversionInfo)) {
                 return blockConversionInfo;
             }
@@ -161,12 +161,12 @@ public class TransformerRegistry {
         if (tag.hasNoTags() || !tag.hasKey("id")) return;
         // get handler
         int id = IDExtenderCompat.getItemStackID(tag);
-        Pair<String, List<BiFunction<String, NBTTagCompound, Boolean>>> data = RUNTIME_ITEM_REPLACEMENT_MAP.get(id);
+        Pair<String, List<IItemStackTransformationHandler>> data = RUNTIME_ITEM_REPLACEMENT_MAP.get(id);
         // abort early if handler not found
         if (data != null && !data.getValue()
             .isEmpty()) {
             // apply handlers
-            for (BiFunction<String, NBTTagCompound, Boolean> transformer : data.getValue()) {
+            for (IItemStackTransformationHandler transformer : data.getValue()) {
                 if (transformer.apply(data.getKey(), tag)) {
                     return;
                 }

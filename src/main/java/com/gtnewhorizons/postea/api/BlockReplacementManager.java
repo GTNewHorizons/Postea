@@ -1,14 +1,12 @@
 package com.gtnewhorizons.postea.api;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import javax.annotation.Nonnull;
 
 import net.minecraft.block.Block;
 import net.minecraftforge.oredict.OreDictionary;
 
-import com.gtnewhorizons.postea.utility.BlockConversionInfo;
 import com.gtnewhorizons.postea.utility.IDRegistry;
 import com.gtnewhorizons.postea.utility.MissingMappingHandler;
 import com.gtnewhorizons.postea.utility.SimpleTransformationRegistry;
@@ -48,7 +46,7 @@ public abstract class BlockReplacementManager {
      * @param transformer The transformer to apply.
      */
     @SuppressWarnings("unused")
-    public static void addTransformationHandler(String originalId, Function<BlockConversionInfo, Boolean> transformer) {
+    public static void addTransformationHandler(String originalId, IBlockTransformationHandler transformer) {
         if (originalId == null) throw new IllegalArgumentException("original id is null");
         if (transformer == null) throw new IllegalArgumentException("transformer is null");
         TransformerRegistry.addBlockTransformer(originalId, transformer);
