@@ -29,7 +29,7 @@ public abstract class MixinAnvilChunkLoader {
         ChunkFixerUtility.onChunkLoaded(cir.getReturnValue());
     }
 
-    @Inject(method = "writeChunkToNBT", at = @At("HEAD"))
+    @Inject(method = "writeChunkToNBT", at = @At("HEAD"), order = 900)
     private void postea$writePosteaChunkCode(Chunk chunk, World world, NBTTagCompound nbtTagCompound, CallbackInfo ci) {
         ChunkFixerUtility.onChunkWrite(chunk, nbtTagCompound);
     }
