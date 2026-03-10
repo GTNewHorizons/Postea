@@ -7,8 +7,6 @@ import java.util.Set;
 import com.gtnewhorizon.gtnhmixins.ILateMixinLoader;
 import com.gtnewhorizon.gtnhmixins.LateMixin;
 
-import cpw.mods.fml.common.Loader;
-
 @LateMixin
 public final class PosteaLateLoadingPlugin implements ILateMixinLoader {
 
@@ -18,9 +16,9 @@ public final class PosteaLateLoadingPlugin implements ILateMixinLoader {
     }
 
     @Override
-    public List<String> getMixins(Set<String> loadedCoreMods) {
+    public List<String> getMixins(Set<String> loadedMods) {
         final List<String> mixins = new ArrayList<>();
-        if (Loader.isModLoaded("chunkapi")) {
+        if (loadedMods.contains("chunkapi")) {
             mixins.add("MixinDataRegistryImpl");
         }
         return mixins;

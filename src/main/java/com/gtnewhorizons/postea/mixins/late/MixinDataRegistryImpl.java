@@ -18,7 +18,6 @@ public abstract class MixinDataRegistryImpl {
         method = "readChunkFromNBT(Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/nbt/NBTTagCompound;)V",
         at = @At("RETURN"),
         require = 1)
-    @SuppressWarnings("unused")
     private static void Postea$chunkReadHook(Chunk chunk, NBTTagCompound chunkNBT, CallbackInfo ci) {
         ChunkFixerUtility.onChunkRead(chunk, chunk.worldObj, chunkNBT);
     }

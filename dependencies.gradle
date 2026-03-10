@@ -5,8 +5,4 @@ dependencies {
     compileOnly('com.falsepattern:chunkapi-mc1.7.10:0.8.2:dev')
     compileOnly('com.falsepattern:endlessids-mc1.7.10:1.7.1:dev')
     compileOnly("com.github.GTNewHorizons:NotEnoughItems:2.8.71-GTNH:dev") { transitive = false }
-
-    // for testing EID compat
-    // runtimeOnly('com.falsepattern:chunkapi-mc1.7.10:0.8.2:dev')
-    // runtimeOnly('com.falsepattern:endlessids-mc1.7.10:1.7.1:dev')
 }
