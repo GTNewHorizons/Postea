@@ -1,5 +1,6 @@
 package com.gtnewhorizons.postea;
 
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkEvent;
 
 import com.gtnewhorizons.postea.utility.ChunkFixerUtility;
@@ -14,6 +15,7 @@ import cpw.mods.fml.common.event.FMLMissingMappingsEvent;
 import cpw.mods.fml.common.event.FMLModIdMappingEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 @Mod(
     modid = Postea.MODID,
@@ -28,14 +30,16 @@ public class Postea {
     public static final String MODNAME = "Postea";
 
     @Mod.EventHandler
-    public void preInit(FMLPreInitializationEvent event) {}
+    public void preInit(FMLPreInitializationEvent event) {
+        MinecraftForge.EVENT_BUS.register(this);
+    }
 
     @Mod.EventHandler
     public void postsLoad(FMLPostInitializationEvent event) {
         // TestUIEMigrator.postLoad();
     }
 
-    @Mod.EventHandler
+    @SubscribeEvent
     public void chunkLoaded(ChunkEvent.Load event) {
         ChunkFixerUtility.onChunkLoaded(event.getChunk());
     }
@@ -56,5 +60,4 @@ public class Postea {
     public void onLoadCompleted(FMLLoadCompleteEvent event) {
         SimpleTransformationRegistry.onLoadCompleted();
     }
-
 }
