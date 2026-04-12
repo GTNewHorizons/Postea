@@ -3,6 +3,7 @@ package com.gtnewhorizons.postea;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkEvent;
 
+import com.gtnewhorizons.postea.compat.StorageDrawerCompat;
 import com.gtnewhorizons.postea.utility.ChunkFixerUtility;
 import com.gtnewhorizons.postea.utility.IDRegistry;
 import com.gtnewhorizons.postea.utility.MissingMappingHandler;
@@ -36,6 +37,7 @@ public class Postea {
 
     @Mod.EventHandler
     public void postsLoad(FMLPostInitializationEvent event) {
+        StorageDrawerCompat.onPostLoad();
         // TestUIEMigrator.postLoad();
     }
 
