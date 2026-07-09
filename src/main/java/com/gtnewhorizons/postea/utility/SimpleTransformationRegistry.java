@@ -100,11 +100,11 @@ public class SimpleTransformationRegistry {
     public static void addSimpleTransformer(String originalId, int originalMeta, Block newBlock, int newMeta,
         boolean skipStackRemap) {
         if (newMeta == -1) newMeta = OreDictionary.WILDCARD_VALUE;
-        SIMPLE_BLOCK_TRANSFORMATION_MAP.put(originalId, originalMeta, newBlock, (short) newMeta);
+        SIMPLE_BLOCK_TRANSFORMATION_MAP.put(originalId, originalMeta, newBlock, newMeta);
         if (!skipStackRemap) {
             Item item = Item.getItemFromBlock(newBlock);
             if (item != null) {
-                SIMPLE_ITEM_TRANSFORMATION_MAP.put(originalId, originalMeta, item, (short) newMeta);
+                SIMPLE_ITEM_TRANSFORMATION_MAP.put(originalId, originalMeta, item, newMeta);
             }
         }
     }
@@ -166,9 +166,9 @@ public class SimpleTransformationRegistry {
         boolean skipBlockRemap) {
         if (newMeta == -1) newMeta = OreDictionary.WILDCARD_VALUE;
         if (!skipBlockRemap && newItem instanceof ItemBlock ib) {
-            SIMPLE_BLOCK_TRANSFORMATION_MAP.put(originalId, originalMeta, ib.field_150939_a, (short) newMeta);
+            SIMPLE_BLOCK_TRANSFORMATION_MAP.put(originalId, originalMeta, ib.field_150939_a, newMeta);
         }
-        SIMPLE_ITEM_TRANSFORMATION_MAP.put(originalId, originalMeta, newItem, (short) newMeta);
+        SIMPLE_ITEM_TRANSFORMATION_MAP.put(originalId, originalMeta, newItem, newMeta);
     }
 
     /**
@@ -191,7 +191,8 @@ public class SimpleTransformationRegistry {
             if (mapping == null || mapping.targetRuntimeId <= -1) return false;
             IDExtenderCompat.setItemStackID(tag, mapping.targetRuntimeId);
             if (mapping.targetMeta != OreDictionary.WILDCARD_VALUE) {
-                tag.setShort("Damage", mapping.targetMeta);
+                // Damage is a vanilla short NBT field, unrelated to EndlessIDs block metadata width.
+                tag.setShort("Damage", (short) mapping.targetMeta);
             }
             return true;
         }
