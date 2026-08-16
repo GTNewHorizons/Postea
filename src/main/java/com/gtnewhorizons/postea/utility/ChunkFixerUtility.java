@@ -97,7 +97,7 @@ public class ChunkFixerUtility {
 
                     BlockConversionInfo output = getBlockReplacement(
                         blockId,
-                        (byte) metadata,
+                        metadata,
                         world,
                         x + chunkXPos + 1,
                         y + sectionY,

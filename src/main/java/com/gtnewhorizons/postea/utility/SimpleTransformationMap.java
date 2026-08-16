@@ -49,13 +49,13 @@ class SimpleTransformationMap<T> {
          * The target meta/damage value for the transformation.
          * If the value is {@link OreDictionary#WILDCARD_VALUE}, It maintains the old meta/damage value.
          */
-        public final short targetMeta;
+        public final int targetMeta;
         /**
          * The numeric id of the target block, updated during the FMLMappingUpdate event
          */
         public int targetRuntimeId;
 
-        public Value(T target, short targetMeta) {
+        public Value(T target, int targetMeta) {
             this.target = target;
             this.targetMeta = targetMeta;
             this.targetRuntimeId = -1;
@@ -73,7 +73,7 @@ class SimpleTransformationMap<T> {
      *                     When querying, the value will be replaced, which will
      *                     be used when ever no other specific meta match is found.
      */
-    public void put(String originalId, int originalMeta, T target, short targetMeta) {
+    public void put(String originalId, int originalMeta, T target, int targetMeta) {
         if (originalMeta == -1) originalMeta = OreDictionary.WILDCARD_VALUE;
         this.registry.computeIfAbsent(originalId, k -> new Int2ObjectOpenHashMap<>())
             .put(originalMeta, new Value<>(target, targetMeta));

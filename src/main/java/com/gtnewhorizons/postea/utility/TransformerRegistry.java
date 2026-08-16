@@ -135,7 +135,7 @@ public class TransformerRegistry {
     }
 
     // region transformation handlers
-    public static @Nullable BlockConversionInfo getBlockReplacement(int blockId, byte metadata, World world, int x,
+    public static @Nullable BlockConversionInfo getBlockReplacement(int blockId, int metadata, World world, int x,
         int y, int z) {
         Pair<String, List<IBlockTransformationHandler>> data = RUNTIME_BLOCK_REPLACEMENT_MAP.get(blockId);
         if (data == null) return null;
