@@ -542,7 +542,8 @@ registered in the running session are carried through untouched, so a temporaril
 > world state beyond the context, and their own state must be safe to read concurrently. As with the other chunk-read
 > passes, `ChunkTransformContext.world()` cannot be used for block access.
 >
-> Changing a block id does not recompute lighting or the height map; Postea flags the chunk for a relight instead.
+> When a transformer changes a block id, Postea recomputes the chunk's height map and flags it for a relight once
+> every transformer has run; nothing is recomputed for metadata-only changes.
 >
 > An exception thrown by a transformer crashes the game, with the key, both versions, and the chunk or player named in
 > the crash report. This is deliberate: a half-transformed chunk stamped at the current version could never be
@@ -598,10 +599,10 @@ public final class VersionedExample implements IVersionedTransformer {
 
 ### 10. Retired Ids
 
-A world records every namespaced block and item name it has mapped to a numeric id, with every id that name held, in
-`<world>/postea/known-ids.json`. This exists because FML drops a name from `level.dat` on the first save after its
-content disappears: from the second session onward the world no longer remembers that the name ever had an id, and a
-transformer keyed on it would silently stop running.
+Whenever a world loads, every block or item name in its saved id map that no registered content answers to is
+recorded, with the id it held, in `<world>/postea/known-ids.json`. This exists because FML drops such a name from
+`level.dat` on the first save after its content disappears: from the second session onward the world no longer
+remembers that the name ever had an id, and a transformer keyed on it would silently stop running.
 
 A retired id is dispatched to that name's transformers only while FML still blocks the id and no live block or item
 occupies it, so a name reclaimed by new content never gets its old transformers. When a name resolves only through
