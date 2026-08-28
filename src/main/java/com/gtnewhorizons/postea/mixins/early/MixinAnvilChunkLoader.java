@@ -12,16 +12,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.gtnewhorizons.postea.utility.ChunkFixerUtility;
-import com.llamalad7.mixinextras.sugar.Local;
 
 @Mixin(value = AnvilChunkLoader.class, priority = 1100)
 public abstract class MixinAnvilChunkLoader {
 
-    // This hook is compatible with Vanilla/NEID/EIDs
-    @Inject(method = "readChunkFromNBT", at = @At("RETURN"), require = 1)
-    private void postea$chunkHook(CallbackInfoReturnable<Chunk> cir, @Local Chunk chunk,
-        @Local(argsOnly = true) World world, @Local(ordinal = 0, argsOnly = true) NBTTagCompound tag) {
-        ChunkFixerUtility.onChunkRead(chunk, world, tag);
+    // Forge-added funnel for sync and async loads; runs after relocation fix-ups and after ChunkAPI's own
+    // readChunkFromNBT replacement, so one hook covers vanilla, NEID, EndlessIDs, and ChunkAPI.
+    @Inject(method = "checkedReadChunkFromNBT__Async", at = @At("RETURN"), remap = false, require = 1)
+    private void postea$chunkHook(CallbackInfoReturnable<Object[]> cir) {
+        Object[] data = cir.getReturnValue();
+        if (data == null) return;
+        Chunk chunk = (Chunk) data[0];
+        ChunkFixerUtility.onChunkRead(chunk, chunk.worldObj, ((NBTTagCompound) data[1]).getCompoundTag("Level"));
     }
 
     @Inject(method = "loadChunk", at = @At("RETURN"))
