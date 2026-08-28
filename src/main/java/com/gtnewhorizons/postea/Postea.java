@@ -3,6 +3,9 @@ package com.gtnewhorizons.postea;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkEvent;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.gtnewhorizons.postea.utility.ChunkFixerUtility;
 import com.gtnewhorizons.postea.utility.IDRegistry;
 import com.gtnewhorizons.postea.utility.MissingMappingHandler;
@@ -28,6 +31,8 @@ public class Postea {
 
     public static final String MODID = "postea";
     public static final String MODNAME = "Postea";
+
+    public static final Logger LOG = LogManager.getLogger(MODNAME);
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {

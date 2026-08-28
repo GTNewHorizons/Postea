@@ -5,4 +5,10 @@ dependencies {
     compileOnly('com.falsepattern:chunkapi-mc1.7.10:0.8.2:dev')
     compileOnly('com.falsepattern:endlessids-mc1.7.10:1.7.1:dev')
     compileOnly("com.github.GTNewHorizons:NotEnoughItems:2.8.75-GTNH:dev") { transitive = false }
+
+    testImplementation(platform('org.junit:junit-bom:5.11.4'))
+    testImplementation('org.junit.jupiter:junit-jupiter')
+    testRuntimeOnly('org.junit.platform:junit-platform-launcher')
+    // fastutil is only on the compile/runtime classpath via the patched Minecraft jar, not the plain test JVM.
+    testRuntimeOnly('it.unimi.dsi:fastutil:8.5.18')
 }
