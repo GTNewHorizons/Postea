@@ -43,8 +43,8 @@ class WorldIdTableTest {
     void mergeRecordsEveryIdANameHeldInObservationOrderAndReportsChanges() {
         WorldIdTable table = new WorldIdTable();
 
-        assertTrue(table.merge(savedIds("\u0001mod:block", 300, "mod:item", 4200)));
-        assertFalse(table.merge(savedIds("\u0001mod:block", 300, "mod:item", 4200)));
+        assertTrue(table.merge(savedIds("\u0001mod:block", 300, "\u0002mod:item", 4200)));
+        assertFalse(table.merge(savedIds("\u0001mod:block", 300, "\u0002mod:item", 4200)));
         assertTrue(table.merge(savedIds("\u0001mod:block", 301)));
 
         assertEquals(ids(300, 301), table.blockIds("mod:block"));
@@ -55,7 +55,7 @@ class WorldIdTableTest {
     @Test
     void saveAndLoadRoundTrip() {
         WorldIdTable table = new WorldIdTable();
-        table.merge(savedIds("\u0001mod:block", 300, "mod:item", 4200));
+        table.merge(savedIds("\u0001mod:block", 300, "\u0002mod:item", 4200));
         table.merge(savedIds("\u0001mod:block", 301));
 
         table.save(file());

@@ -20,9 +20,9 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntLists;
 
 /**
- * Every namespaced block and item name a world has mapped to a numeric id, with every id it held, oldest first.
- * FML drops a missing name from {@code level.dat} on the first save after its content disappears; this table keeps
- * the name so transformers keyed on it keep resolving in later sessions. Persisted as
+ * Every namespaced block and item name whose content was missing when a world loaded, with every id it held,
+ * oldest first. FML drops a missing name from {@code level.dat} on the first save after its content disappears;
+ * this table keeps the name so transformers keyed on it keep resolving in later sessions. Persisted as
  * {@code <world>/postea/known-ids.json}, format version 1:
  *
  * <pre>
@@ -32,6 +32,8 @@ import it.unimi.dsi.fastutil.ints.IntLists;
 public final class WorldIdTable {
 
     static final String FILE_NAME = "known-ids.json";
+    /** FML prefixes block names with this character in a saved id map; items get U+0002. */
+    static final char BLOCK_PREFIX = 1;
     private static final int FORMAT_VERSION = 1;
 
     private final Map<String, IntList> blocks = new TreeMap<>();
@@ -108,16 +110,15 @@ public final class WorldIdTable {
     }
 
     /**
-     * Records a world's saved name-to-id map, in which a name prefixed with U+0001 is a block. Returns whether
-     * any pair was new.
+     * Records entries of a world's saved name-to-id map, whose names FML prefixes with U+0001 for a block and
+     * U+0002 for an item. Returns whether any pair was new.
      */
     public boolean merge(Map<String, Integer> dataList) {
         boolean changed = false;
         for (Map.Entry<String, Integer> entry : dataList.entrySet()) {
             String prefixed = entry.getKey();
-            boolean block = prefixed.charAt(0) == '\u0001';
-            Map<String, IntList> into = block ? blocks : items;
-            IntList ids = into.computeIfAbsent(block ? prefixed.substring(1) : prefixed, name -> new IntArrayList());
+            Map<String, IntList> into = prefixed.charAt(0) == BLOCK_PREFIX ? blocks : items;
+            IntList ids = into.computeIfAbsent(prefixed.substring(1), name -> new IntArrayList());
             if (!ids.contains((int) entry.getValue())) {
                 ids.add((int) entry.getValue());
                 changed = true;

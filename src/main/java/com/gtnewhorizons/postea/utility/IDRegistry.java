@@ -2,6 +2,7 @@ package com.gtnewhorizons.postea.utility;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -11,6 +12,7 @@ import com.gtnewhorizons.postea.Postea;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.LoaderState;
+import cpw.mods.fml.common.registry.FMLControlledNamespacedRegistry;
 import cpw.mods.fml.common.registry.GameData;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -21,7 +23,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 /**
  * Resolves a namespaced id to the numeric ids it holds or held in the active world: the live registry id, the id
  * the world's own saved map assigns it, and the ids recorded in the world's {@link WorldIdTable} for content that
- * has since been removed.
+ * has since been removed. A retired id counts only while FML still blocks it and no live content occupies it.
  */
 public abstract class IDRegistry {
 
@@ -36,10 +38,11 @@ public abstract class IDRegistry {
 
     private static File tableFile;
     private static WorldIdTable table = new WorldIdTable();
+    private static IntSet blockedIds;
 
     /**
      * Opens the retired id table of the world about to load. Until {@link #endWorld()} the saved id map is captured
-     * and merged into it.
+     * and its missing names merged into it.
      */
     public static void beginWorld(File worldDirectory) {
         tableFile = new File(new File(worldDirectory, Postea.MODID), WorldIdTable.FILE_NAME);
@@ -49,6 +52,7 @@ public abstract class IDRegistry {
     public static void endWorld() {
         tableFile = null;
         table = new WorldIdTable();
+        blockedIds = null;
         BLOCK_NAME_TO_ID.clear();
         ITEM_NAME_TO_ID.clear();
     }
@@ -80,9 +84,9 @@ public abstract class IDRegistry {
 
     /**
      * Called by {@link com.gtnewhorizons.postea.mixins.preinit.MixinGameData}, this function captures the world's
-     * saved name-to-id map before FML remaps the live registries onto it, and records it in the world's retired id
-     * table. Ignored outside a server world and off the server thread, since the client side of the FML handshake
-     * also injects a map.
+     * saved name-to-id map before FML remaps the live registries onto it, and records the names no registered
+     * content answers to in the world's retired id table. Ignored outside a server world and off the server thread,
+     * since the client side of the FML handshake also injects a map.
      */
     public static void registerWorldSpecificIDs(Map<String, Integer> map) {
         if (tableFile == null || !FMLCommonHandler.instance()
@@ -90,17 +94,23 @@ public abstract class IDRegistry {
             .isServer()) return;
         BLOCK_NAME_TO_ID.clear();
         ITEM_NAME_TO_ID.clear();
+        blockedIds = null;
+        Map<String, Integer> missing = new LinkedHashMap<>();
         for (Map.Entry<String, Integer> kv : map.entrySet()) {
             String name = kv.getKey()
                 .substring(1);
-            if (kv.getKey()
-                .charAt(0) == '\u0001') {
+            boolean block = kv.getKey()
+                .charAt(0) == WorldIdTable.BLOCK_PREFIX;
+            if (block) {
                 BLOCK_NAME_TO_ID.put(name, (int) kv.getValue());
             } else {
                 ITEM_NAME_TO_ID.put(name, (int) kv.getValue());
             }
+            FMLControlledNamespacedRegistry<?> registry = block ? GameData.getBlockRegistry()
+                : GameData.getItemRegistry();
+            if (registry.getId(name) < 0) missing.put(kv.getKey(), kv.getValue());
         }
-        if (table.merge(map)) table.save(tableFile);
+        if (table.merge(missing)) table.save(tableFile);
     }
 
     /**
@@ -110,7 +120,7 @@ public abstract class IDRegistry {
     public static int getBlockId(String name) {
         int id = liveBlockId(name);
         if (id >= 0) return id;
-        IntList retired = table.blockIds(name);
+        IntList retired = retiredBlockIds(name, id);
         return retired.isEmpty() ? -1 : retired.getInt(retired.size() - 1);
     }
 
@@ -121,50 +131,69 @@ public abstract class IDRegistry {
     public static int getItemId(String name) {
         int id = liveItemId(name);
         if (id >= 0) return id;
-        IntList retired = table.itemIds(name);
+        IntList retired = retiredItemIds(name, id);
         return retired.isEmpty() ? -1 : retired.getInt(retired.size() - 1);
     }
 
     /**
-     * Every block id {@code name} holds or held in this world: the live id, plus retired ids that FML still blocks
-     * and no block occupies. Empty when the world never mapped the name.
+     * Every block id {@code name} holds or held in this world, live id first. Empty when the world never mapped
+     * the name.
      */
     public static IntList getBlockIds(String name) {
         int live = liveBlockId(name);
-        IntList ids = new IntArrayList();
-        if (live >= 0) ids.add(live);
-        IntSet blocked = new IntOpenHashSet(GameData.getBlockedIds());
-        for (int id : table.blockIds(name)) {
-            if (id != live && blocked.contains(id)
-                && GameData.getBlockRegistry()
-                    .getRaw(id) == null) {
-                ids.add(id);
-            }
-        }
-        if (live < 0 && !ids.isEmpty()) {
+        IntList ids = retiredBlockIds(name, live);
+        if (live >= 0) {
+            ids.add(0, live);
+        } else if (!ids.isEmpty()) {
             Postea.LOG.info("Block {} is no longer registered; its transformers target retired id(s) {}", name, ids);
         }
         return ids;
     }
 
     /**
-     * Every item id {@code name} holds or held in this world: the live id, plus retired ids that FML still blocks
-     * and no item occupies. Empty when the world never mapped the name.
+     * Every item id {@code name} holds or held in this world, live id first. Empty when the world never mapped
+     * the name.
      */
     public static IntList getItemIds(String name) {
         int live = liveItemId(name);
+        IntList ids = retiredItemIds(name, live);
+        if (live >= 0) {
+            ids.add(0, live);
+        } else if (!ids.isEmpty()) {
+            Postea.LOG.info("Item {} is no longer registered; its transformers target retired id(s) {}", name, ids);
+        }
+        return ids;
+    }
+
+    private static IntList retiredBlockIds(String name, int live) {
         IntList ids = new IntArrayList();
-        if (live >= 0) ids.add(live);
-        IntSet blocked = new IntOpenHashSet(GameData.getBlockedIds());
+        for (int id : table.blockIds(name)) {
+            if (id != live && blockedIds().contains(id)
+                && GameData.getBlockRegistry()
+                    .getRaw(id) == null) {
+                ids.add(id);
+            }
+        }
+        return ids;
+    }
+
+    private static IntList retiredItemIds(String name, int live) {
+        IntList ids = new IntArrayList();
         for (int id : table.itemIds(name)) {
-            if (id != live && blocked.contains(id)
+            if (id != live && blockedIds().contains(id)
                 && GameData.getItemRegistry()
                     .getRaw(id) == null) {
                 ids.add(id);
             }
         }
-        if (live < 0 && !ids.isEmpty()) {
-            Postea.LOG.info("Item {} is no longer registered; its transformers target retired id(s) {}", name, ids);
+        return ids;
+    }
+
+    private static IntSet blockedIds() {
+        IntSet ids = blockedIds;
+        if (ids == null) {
+            ids = new IntOpenHashSet(GameData.getBlockedIds());
+            blockedIds = ids;
         }
         return ids;
     }
