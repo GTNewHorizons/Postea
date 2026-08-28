@@ -1,4 +1,4 @@
-# TileEntityReplacementManager API
+# Postea
 
 This library provides a suite of tools for transforming any existing tile entities, blocks and items the world at
 runtime. Allowing developers to replace, migrate or modify game elements based on specific conditions.
@@ -11,6 +11,8 @@ runtime. Allowing developers to replace, migrate or modify game elements based o
 4. **Simple Replacement API**: Efficiently replace or remap large amounts of blocks and items at scale without incurring any noticeable performance impact.
 5. **Missing Mapping Replacement API**: A set of API endpoints to register actions to be taken when FML detects a missing mapping for a given ID.
 6. **Numeric ID Identification for Removed Content**: A way to identify the ID of any content that has ceased to exist.
+7. **Versioned Chunk and Player Transformers**: transform a chunk or a player's data exactly once per version of your content, however many sessions it was saved across.
+8. **Retired Id Table**: names of removed content keep resolving in every later session.
 
 ## Examples
 
@@ -30,9 +32,9 @@ transformed.
 
 > [!TIP]
 >
-> Tile entity and block transformers are only ran once per chunk until a player's mod list changes. This behaviour is
-> disabled if you are in a dev environment; Allowing you to test your transformers simply by leaving and rejoining your
-> test world.
+> Tile entity, block, and item transformers run once per chunk until the mod list changes (disabled in a dev
+> environment). For transformations that must run exactly once per version of your own content, use a versioned
+> transformer (§9).
 
 > [!CAUTION]
 >
@@ -513,4 +515,98 @@ public abstract class FMLIgnoreMissingMappingExample {
         BlockReplacementManager.ignoreMissingMapping("IC2:blockCrop");
     }
 }
+```
+
+### 9. Versioned Chunk and Player Transformers
+
+The transformers above answer "this content changed into that content". A versioned transformer answers a different
+question: "the meaning of my own stored values changed, and every chunk and every player must be brought forward
+exactly once per change". Register an `IVersionedTransformer` through `VersionedReplacementManager.register`, during
+mod loading and postInit at the latest.
+
+Postea keeps a `POSTEA_VERSIONS` compound on each chunk's `Level` tag and on each player's root tag: one int per
+registered transformer key. Every chunk and player Postea saves is stamped with each transformer's
+`currentVersion()`, and at read time a transformer is invoked only when the stored stamp differs from its current
+version. A chunk that slept through five sessions of changes is therefore handed the version it was actually saved
+under, once, and a chunk already at the current version is skipped. Stamps belonging to transformers that are not
+registered in the running session are carried through untouched, so a temporarily absent mod does not lose them.
+
+> [!IMPORTANT]
+>
+> Versioned transformers run before every other Postea pass, in registration order, and are never disabled in a dev
+> environment. Data saved before a transformer existed reads as `UNSTAMPED`; the transformer decides what that means.
+
+> [!CAUTION]
+>
+> Chunk transformers may run on a chunk I/O thread, several concurrently for different chunks. They must not touch
+> world state beyond the context, and their own state must be safe to read concurrently. As with the other chunk-read
+> passes, `ChunkTransformContext.world()` cannot be used for block access.
+>
+> Changing a block id does not recompute lighting or the height map; Postea flags the chunk for a relight instead.
+>
+> An exception thrown by a transformer crashes the game, with the key, both versions, and the chunk or player named in
+> the crash report. This is deliberate: a half-transformed chunk stamped at the current version could never be
+> recovered.
+
+Code example:
+```java
+public final class VersionedExample implements IVersionedTransformer {
+
+    public static void postLoad() {
+        VersionedReplacementManager.register(new VersionedExample());
+    }
+
+    @Override
+    public String key() {
+        return "examplemod:gemIndex";
+    }
+
+    // The version the running mod writes gems under; bump it whenever the index assignment changes.
+    @Override
+    public int currentVersion() {
+        return 2;
+    }
+
+    @Override
+    public void transformChunk(ChunkTransformContext ctx) {
+        // Data saved before this transformer existed carries no stamp.
+        if (ctx.storedVersion() == ChunkTransformContext.UNSTAMPED || ctx.storedVersion() == 1) {
+            int gemBlockId = Block.getIdFromBlock(ExampleMod.gemBlock);
+            ctx.forEachBlock((x, y, z, id, meta) -> {
+                if (id == gemBlockId) ctx.setBlock(x, y, z, id, meta + 1);
+            });
+            ctx.forEachItemStackTag(stack -> {
+                if (IDExtenderCompat.getItemStackID(stack) == Item.getIdFromItem(ExampleMod.gemItem)) {
+                    stack.setShort("Damage", (short) (stack.getShort("Damage") + 1));
+                }
+            });
+        }
+    }
+
+    @Override
+    public void transformPlayer(PlayerDataTransformContext ctx) {
+        if (ctx.storedVersion() == PlayerDataTransformContext.UNSTAMPED || ctx.storedVersion() == 1) {
+            ctx.forEachItemStackTag(stack -> {
+                if (IDExtenderCompat.getItemStackID(stack) == Item.getIdFromItem(ExampleMod.gemItem)) {
+                    stack.setShort("Damage", (short) (stack.getShort("Damage") + 1));
+                }
+            });
+        }
+    }
+}
+```
+
+### 10. Retired Ids
+
+A world records every namespaced block and item name it has mapped to a numeric id, with every id that name held, in
+`<world>/postea/known-ids.json`. This exists because FML drops a name from `level.dat` on the first save after its
+content disappears: from the second session onward the world no longer remembers that the name ever had an id, and a
+transformer keyed on it would silently stop running.
+
+A retired id is dispatched to that name's transformers only while FML still blocks the id and no live block or item
+occupies it, so a name reclaimed by new content never gets its old transformers. When a name resolves only through
+retired ids, Postea logs it once per world load:
+
+```
+Block ExtraUtilities:cobblestone_compressed is no longer registered; its transformers target retired id(s) [3402]
 ```
