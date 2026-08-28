@@ -4,7 +4,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ReportedException;
 
-import com.gtnewhorizons.postea.Postea;
 import com.gtnewhorizons.postea.api.IVersionedTransformer;
 import com.gtnewhorizons.postea.api.PlayerDataTransformContext;
 import com.gtnewhorizons.postea.api.VersionedReplacementManager;
@@ -27,12 +26,7 @@ public final class PlayerDataFixerUtility {
             int current = transformer.currentVersion();
             int stored = VersionStamps.stored(stamps, transformer.key());
             if (stored == current) continue;
-            Postea.LOG.debug(
-                "{}: player {} from version {} to {}",
-                transformer.key(),
-                player.getCommandSenderName(),
-                stored,
-                current);
+            VersionedTransformerLog.announce(transformer, stored, current);
             try {
                 transformer.transformPlayer(new PlayerDataTransformContext(player, tag, stored, current));
             } catch (Throwable t) {

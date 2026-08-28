@@ -15,7 +15,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
-import com.gtnewhorizons.postea.Postea;
 import com.gtnewhorizons.postea.api.ChunkTransformContext;
 import com.gtnewhorizons.postea.api.IVersionedTransformer;
 import com.gtnewhorizons.postea.api.TriFunction;
@@ -77,14 +76,7 @@ public class ChunkFixerUtility {
             int stored = VersionStamps.stored(stamps, transformer.key());
             if (stored == current) continue;
             ChunkTransformContext ctx = new ChunkTransformContext(chunk, world, tag, stored, current);
-            Postea.LOG.debug(
-                "{}: chunk {},{} in dimension {} from version {} to {}",
-                transformer.key(),
-                chunk.xPosition,
-                chunk.zPosition,
-                world.provider.dimensionId,
-                stored,
-                current);
+            VersionedTransformerLog.announce(transformer, stored, current);
             try {
                 transformer.transformChunk(ctx);
             } catch (Throwable t) {
@@ -101,11 +93,32 @@ public class ChunkFixerUtility {
             blockIdsChanged |= ctx.blockIdsChanged();
         }
         if (!blockIdsChanged) return;
-        chunk.isLightPopulated = false;
         // A section's block count is what decides whether it is saved at all, and writing through SubChunkAccess
         // bypasses the bookkeeping ExtendedBlockStorage does in its own setters.
         for (ExtendedBlockStorage section : chunk.getBlockStorageArray()) {
             if (section != null) section.removeInvalidBlocks();
+        }
+        regenerateHeightMap(chunk);
+        chunk.isLightPopulated = false;
+    }
+
+    // Chunk.generateHeightMap is client-only and generateSkylightMap reaches into the world, so the height map is
+    // rebuilt here from the chunk's own storage, which is safe on the chunk I/O thread.
+    private static void regenerateHeightMap(Chunk chunk) {
+        int top = chunk.getTopFilledSegment() + 16 - 1;
+        chunk.heightMapMinimum = Integer.MAX_VALUE;
+        for (int x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++) {
+                chunk.precipitationHeightMap[x + (z << 4)] = -999;
+                int y = top;
+                while (y > 0 && chunk.func_150808_b(x, y - 1, z) == 0) {
+                    y--;
+                }
+                if (y > 0) {
+                    chunk.heightMap[z << 4 | x] = y;
+                    chunk.heightMapMinimum = Math.min(chunk.heightMapMinimum, y);
+                }
+            }
         }
     }
 

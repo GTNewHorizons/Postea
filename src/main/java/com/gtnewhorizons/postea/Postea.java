@@ -13,6 +13,7 @@ import com.gtnewhorizons.postea.utility.IDRegistry;
 import com.gtnewhorizons.postea.utility.MissingMappingHandler;
 import com.gtnewhorizons.postea.utility.SimpleTransformationRegistry;
 import com.gtnewhorizons.postea.utility.TransformerRegistry;
+import com.gtnewhorizons.postea.utility.VersionedTransformerLog;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
@@ -67,6 +68,7 @@ public class Postea {
     @Mod.EventHandler
     public void serverStopped(FMLServerStoppedEvent event) {
         IDRegistry.endWorld();
+        VersionedTransformerLog.clear();
     }
 
     @Mod.EventHandler
