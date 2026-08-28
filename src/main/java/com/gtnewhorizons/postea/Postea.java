@@ -1,5 +1,7 @@
 package com.gtnewhorizons.postea;
 
+import java.io.File;
+
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkEvent;
 
@@ -12,12 +14,15 @@ import com.gtnewhorizons.postea.utility.MissingMappingHandler;
 import com.gtnewhorizons.postea.utility.SimpleTransformationRegistry;
 import com.gtnewhorizons.postea.utility.TransformerRegistry;
 
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import cpw.mods.fml.common.event.FMLMissingMappingsEvent;
 import cpw.mods.fml.common.event.FMLModIdMappingEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.event.FMLServerAboutToStartEvent;
+import cpw.mods.fml.common.event.FMLServerStoppedEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 @Mod(
@@ -47,6 +52,21 @@ public class Postea {
     @SubscribeEvent
     public void chunkLoaded(ChunkEvent.Load event) {
         ChunkFixerUtility.onChunkLoaded(event.getChunk());
+    }
+
+    @Mod.EventHandler
+    public void serverAboutToStart(FMLServerAboutToStartEvent event) {
+        IDRegistry.beginWorld(
+            new File(
+                FMLCommonHandler.instance()
+                    .getSavesDirectory(),
+                event.getServer()
+                    .getFolderName()));
+    }
+
+    @Mod.EventHandler
+    public void serverStopped(FMLServerStoppedEvent event) {
+        IDRegistry.endWorld();
     }
 
     @Mod.EventHandler
