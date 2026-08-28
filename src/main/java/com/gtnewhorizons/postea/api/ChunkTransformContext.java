@@ -1,7 +1,5 @@
 package com.gtnewhorizons.postea.api;
 
-import static net.minecraftforge.common.util.Constants.NBT.TAG_COMPOUND;
-
 import java.util.function.Consumer;
 
 import net.minecraft.nbt.NBTTagCompound;
@@ -13,14 +11,15 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import com.gtnewhorizons.postea.compat.Compat;
 import com.gtnewhorizons.postea.compat.SubChunkAccess;
 import com.gtnewhorizons.postea.utility.NbtItemStacks;
+import com.gtnewhorizons.postea.utility.NbtLists;
 import com.gtnewhorizons.postea.utility.VersionStamps;
 
 /**
  * A chunk as handed to {@link IVersionedTransformer#transformChunk}: its block storage and the raw {@code Level}
  * tag as read from disk, before tile entities and entities are parsed. Coordinates are chunk-local
  * ({@code 0..15}, {@code y 0..255}); block ids and metadata are the world's numeric values at full EndlessIDs
- * width. The world is not loaded yet: block access through {@link #world()} is not possible. Changing a block id
- * does not recompute lighting or the height map; Postea flags the chunk for a relight when an id changed.
+ * width. The world is not loaded yet: block access through {@link #world()} is not possible. When a transformer
+ * changed a block id, Postea recomputes the height map and flags the chunk for a relight once all transformers ran.
  */
 public final class ChunkTransformContext {
 
@@ -68,11 +67,11 @@ public final class ChunkTransformContext {
     }
 
     public NBTTagList tileEntityTags() {
-        return levelTag.getTagList("TileEntities", TAG_COMPOUND);
+        return NbtLists.compoundList(levelTag, "TileEntities");
     }
 
     public NBTTagList entityTags() {
-        return levelTag.getTagList("Entities", TAG_COMPOUND);
+        return NbtLists.compoundList(levelTag, "Entities");
     }
 
     /**
