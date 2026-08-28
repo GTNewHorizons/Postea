@@ -9,6 +9,7 @@
     "MixinAnvilChunkLoader",
     "MixinChunk",
     "MixinEntity",
+    "MixinEntityPlayer",
     "MixinItemStack",
     "MixinNBTTagList"
   ],
