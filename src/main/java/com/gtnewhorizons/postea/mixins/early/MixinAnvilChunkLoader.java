@@ -17,7 +17,7 @@ import com.gtnewhorizons.postea.utility.ChunkFixerUtility;
 public abstract class MixinAnvilChunkLoader {
 
     // Forge-added funnel for sync and async loads; runs after relocation fix-ups and after ChunkAPI's own
-    // readChunkFromNBT replacement, so one hook covers vanilla, NEID, EndlessIDs, and ChunkAPI.
+    // readChunkFromNBT replacement, so covers vanilla, NEID, EndlessIDs, and ChunkAPI.
     @Inject(method = "checkedReadChunkFromNBT__Async", at = @At("RETURN"), remap = false, require = 1)
     private void postea$chunkHook(CallbackInfoReturnable<Object[]> cir) {
         Object[] data = cir.getReturnValue();

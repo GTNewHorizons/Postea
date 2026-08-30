@@ -18,7 +18,7 @@ package com.gtnewhorizons.postea.api;
 public interface IVersionedTransformer {
 
     /**
-     * The stamp key, unique across all registered transformers, e.g. {@code "materiallib:idList"}.
+     * The stamp key, unique across all registered transformers, e.g. {@code "examplemod:idList"}.
      */
     String key();
 

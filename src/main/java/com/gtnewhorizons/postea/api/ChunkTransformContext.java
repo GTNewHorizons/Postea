@@ -59,8 +59,8 @@ public final class ChunkTransformContext {
     }
 
     /**
-     * The chunk's {@code Level} tag. Changes to its {@code TileEntities} and {@code Entities} lists are what the
-     * game loads.
+     * The chunk's {@code Level} tag. Changes to its {@code TileEntities} and {@code Entities} lists are loaded by
+     * the game.
      */
     public NBTTagCompound levelTag() {
         return levelTag;

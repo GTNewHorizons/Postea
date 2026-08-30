@@ -519,17 +519,9 @@ public abstract class FMLIgnoreMissingMappingExample {
 
 ### 9. Versioned Chunk and Player Transformers
 
-The transformers above answer "this content changed into that content". A versioned transformer answers a different
-question: "the meaning of my own stored values changed, and every chunk and every player must be brought forward
-exactly once per change". Register an `IVersionedTransformer` through `VersionedReplacementManager.register`, during
-mod loading and postInit at the latest.
-
-Postea keeps a `POSTEA_VERSIONS` compound on each chunk's `Level` tag and on each player's root tag: one int per
-registered transformer key. Every chunk and player Postea saves is stamped with each transformer's
-`currentVersion()`, and at read time a transformer is invoked only when the stored stamp differs from its current
-version. A chunk that slept through five sessions of changes is therefore handed the version it was actually saved
-under, once, and a chunk already at the current version is skipped. Stamps belonging to transformers that are not
-registered in the running session are carried through untouched, so a temporarily absent mod does not lose them.
+Postea provides some API endpoints to allow mods to have versioned changes. The mod declares that it
+expects some version, and if Postea detects that a chunk or player was saved on a previous version, runs a transformer
+to bring them up-to-date. Register an `IVersionedTransformer` through `VersionedReplacementManager.register`.
 
 > [!IMPORTANT]
 >
@@ -599,14 +591,10 @@ public final class VersionedExample implements IVersionedTransformer {
 
 ### 10. Retired Ids
 
-Whenever a world loads, every block or item name in its saved id map that no registered content answers to is
-recorded, with the id it held, in `<world>/postea/known-ids.json`. This exists because FML drops such a name from
-`level.dat` on the first save after its content disappears: from the second session onward the world no longer
-remembers that the name ever had an id, and a transformer keyed on it would silently stop running.
+Whenever a world loads, every block or item name in its saved id map that no longer exists is recorded, with the id it
+held, in `<world>/postea/known-ids.json`. This way, retired objects can still be referenced by transformers.
 
-A retired id is dispatched to that name's transformers only while FML still blocks the id and no live block or item
-occupies it, so a name reclaimed by new content never gets its old transformers. When a name resolves only through
-retired ids, Postea logs it once per world load:
+When a name resolves only through retired ids, Postea logs it once per world load:
 
 ```
 Block ExtraUtilities:cobblestone_compressed is no longer registered; its transformers target retired id(s) [3402]
