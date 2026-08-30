@@ -45,6 +45,8 @@ public final class PosteaLoadingPlugin implements IEarlyMixinLoader, IFMLLoading
         final List<String> mixins = new ArrayList<>();
         mixins.add("MixinItemStack");
         mixins.add("MixinChunk");
+        mixins.add("MixinEntity");
+        mixins.add("MixinEntityPlayer");
         mixins.add("MixinAnvilChunkLoader");
         mixins.add("MixinNBTTagList");
         return mixins;
