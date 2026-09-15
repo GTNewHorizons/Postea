@@ -14,6 +14,9 @@ package com.gtnewhorizons.postea.api;
  * <p>
  * Chunk transformers may run on a chunk I/O thread, several concurrently for different chunks. They must not touch
  * world state beyond the context and their own state must be safe to read concurrently.
+ * <p>
+ * Mods that keep item stacks in their own world storage offer it through {@link CustomDataReplacementManager};
+ * such storage is stamped the same way and reaches the transformer through {@link #transformCustomData}.
  */
 public interface IVersionedTransformer {
 
@@ -37,4 +40,10 @@ public interface IVersionedTransformer {
      * {@link #currentVersion()}.
      */
     default void transformPlayer(PlayerDataTransformContext ctx) {}
+
+    /**
+     * Brings a mod's own world storage stamped at {@link CustomDataTransformContext#storedVersion()} to
+     * {@link #currentVersion()}. Stacks in such storage may carry a string {@code id} instead of a numeric one.
+     */
+    default void transformCustomData(CustomDataTransformContext ctx) {}
 }

@@ -122,7 +122,7 @@ public class ChunkFixerUtility {
         }
     }
 
-    static CrashReport describe(Throwable cause, IVersionedTransformer transformer, int stored, int current,
+    public static CrashReport describe(Throwable cause, IVersionedTransformer transformer, int stored, int current,
         String subjectName, String subject) {
         CrashReport report = CrashReport.makeCrashReport(cause, "Running versioned transformer " + transformer.key());
         CrashReportCategory category = report.makeCategory("Postea versioned transformer");

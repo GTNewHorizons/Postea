@@ -39,6 +39,7 @@ public abstract class IDRegistry {
     private static File tableFile;
     private static WorldIdTable table = new WorldIdTable();
     private static IntSet blockedIds;
+    private static volatile boolean mappingApplied;
 
     /**
      * Opens the retired id table of the world about to load. Until {@link #endWorld()} the saved id map is captured
@@ -53,8 +54,16 @@ public abstract class IDRegistry {
         tableFile = null;
         table = new WorldIdTable();
         blockedIds = null;
+        mappingApplied = false;
         BLOCK_NAME_TO_ID.clear();
         ITEM_NAME_TO_ID.clear();
+    }
+
+    /**
+     * Whether FML has applied the loading world's saved id map in this session.
+     */
+    public static boolean isMappingApplied() {
+        return mappingApplied;
     }
 
     /**
@@ -66,6 +75,7 @@ public abstract class IDRegistry {
         // some space memory we can just ignore adding stuff safely.
         if (!Loader.instance()
             .isInState(LoaderState.SERVER_ABOUT_TO_START)) return;
+        mappingApplied = true;
         for (Map.Entry<String, Collection<Consumer<Integer>>> kv : BLOCK_ID_RESOLVERS.asMap()
             .entrySet()) {
             int id = getBlockId(kv.getKey());

@@ -77,6 +77,24 @@ class NbtItemStacksTest {
         assertEquals(Collections.singletonList(extended), visited(root));
     }
 
+    // Pins the split that keeps chunk and player walks safe: a string id with a Count is a stack only in
+    // string-id mode, which custom data uses and tile entity trees never do.
+    @Test
+    void stringIdStacksAreVisitedOnlyInStringIdMode() {
+        NBTTagCompound quest = new NBTTagCompound();
+        quest.setString("id", "examplemod:gem");
+        quest.setInteger("Count", 3);
+        quest.setShort("Damage", (short) 7);
+        NBTTagCompound root = new NBTTagCompound();
+        root.setTag("requiredItems", quest);
+        List<NBTTagCompound> wide = new ArrayList<>();
+
+        NbtItemStacks.forEach(root, wide::add, true);
+
+        assertEquals(Collections.emptyList(), visited(root));
+        assertEquals(Collections.singletonList(quest), wide);
+    }
+
     @Test
     void aVisitorMayInvalidateTheStackItIsGiven() {
         NBTTagCompound first = stack(5, 1);
