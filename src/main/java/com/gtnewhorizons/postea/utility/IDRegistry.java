@@ -48,6 +48,9 @@ public abstract class IDRegistry {
     public static void beginWorld(File worldDirectory) {
         tableFile = new File(new File(worldDirectory, Postea.MODID), WorldIdTable.FILE_NAME);
         table = WorldIdTable.load(tableFile);
+        // A world without a level.dat has no saved id map: the live registries already are its mapping, and
+        // FML fires no remap event on its first session.
+        mappingApplied = !new File(worldDirectory, "level.dat").exists();
     }
 
     public static void endWorld() {
