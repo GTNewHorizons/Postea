@@ -29,13 +29,14 @@ public abstract class CustomDataReplacementManager {
 
     /**
      * Transforms {@code root} in place through every registered transformer whose stamp differs from its current
-     * version, then writes the updated stamps onto {@code root}. Does nothing on the client. Throws
+     * version, then writes the updated stamps onto {@code root}. Does nothing without a running server (a
+     * multiplayer client). Throws
      * {@link IllegalStateException} when called before the world's saved id mappings were applied.
      */
     public static void transform(String storageId, NBTTagCompound root) {
-        if (!FMLCommonHandler.instance()
-            .getEffectiveSide()
-            .isServer()) return;
+        // Not the effective side: mods save their storage from worker threads, which 1.7.10 reports as client.
+        if (FMLCommonHandler.instance()
+            .getMinecraftServerInstance() == null) return;
         if (!IDRegistry.isMappingApplied()) {
             throw new IllegalStateException(
                 "Custom data " + storageId
@@ -60,12 +61,11 @@ public abstract class CustomDataReplacementManager {
 
     /**
      * Stamps a freshly built root about to be written to disk with every registered transformer's current version.
-     * Does nothing on the client.
+     * Does nothing without a running server.
      */
     public static void stamp(NBTTagCompound root) {
-        if (!FMLCommonHandler.instance()
-            .getEffectiveSide()
-            .isServer()) return;
+        if (FMLCommonHandler.instance()
+            .getMinecraftServerInstance() == null) return;
         VersionStamps.write(root, VersionStamps.read(root), VersionedReplacementManager.transformers());
     }
 }
