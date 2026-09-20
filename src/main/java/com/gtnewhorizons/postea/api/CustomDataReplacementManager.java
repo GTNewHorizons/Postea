@@ -12,25 +12,18 @@ import com.gtnewhorizons.postea.utility.VersionedTransformerLog;
 import cpw.mods.fml.common.FMLCommonHandler;
 
 /**
- * Versioned transformation of a mod's own world storage -- files outside chunks and player data, such as a quest
- * database or an ender chest table. Postea never reads or writes such files itself; the owning mod offers their
- * content at the moments it controls:
+ * Manages applying an {@link IVersionedTransformer} to mods' custom storage files.
  * <ul>
  * <li>Call {@link #transform} once on the root read from disk, before consuming it, and persist that root (stamps
  * included) when writing the storage back.</li>
- * <li>A save path that rebuilds its NBT from scratch calls {@link #stamp} on the fresh root instead; once
- * {@link #transform} ran at load, the in-memory data is at the current version, so stamping current is correct.</li>
- * <li>A consumer that never writes the storage back (a read-only restore) calls only {@link #transform}: an
- * unstamped file re-transforms from the same baseline on every read, which is correct while its bytes never
- * change.</li>
+ * <li>A save path that rebuilds its NBT from scratch calls {@link #stamp} on the fresh root instead.</li>
  * </ul>
  */
 public abstract class CustomDataReplacementManager {
 
     /**
      * Transforms {@code root} in place through every registered transformer whose stamp differs from its current
-     * version, then writes the updated stamps onto {@code root}. Does nothing without a running server (a
-     * multiplayer client). Throws
+     * version, then writes the updated stamps onto {@code root}. Does nothing without a running server. Throws
      * {@link IllegalStateException} when called before the world's saved id mappings were applied.
      */
     public static void transform(String storageId, NBTTagCompound root) {

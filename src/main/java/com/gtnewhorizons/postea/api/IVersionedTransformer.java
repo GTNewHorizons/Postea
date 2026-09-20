@@ -42,7 +42,7 @@ public interface IVersionedTransformer {
     default void transformPlayer(PlayerDataTransformContext ctx) {}
 
     /**
-     * Brings a mod's own world storage stamped at {@link CustomDataTransformContext#storedVersion()} to
+     * Brings a mod's custom world storage stamped at {@link CustomDataTransformContext#storedVersion()} to
      * {@link #currentVersion()}. Stacks in such storage may carry a string {@code id} instead of a numeric one.
      */
     default void transformCustomData(CustomDataTransformContext ctx) {}

@@ -518,11 +518,14 @@ public abstract class FMLIgnoreMissingMappingExample {
 }
 ```
 
-### 9. Versioned Chunk and Player Transformers
+### 9. Versioned Transformers
 
 Postea provides some API endpoints to allow mods to have versioned changes. The mod declares that it
 expects some version, and if Postea detects that a chunk or player was saved on a previous version, runs a transformer
 to bring them up-to-date. Register an `IVersionedTransformer` through `VersionedReplacementManager.register`.
+
+Some mods keep item stacks stored outside chunks or player data. Postea provides an API, `CustomDataReplacementManager`,
+for those mods to allow that data to be transformed by an `IVersionedTransformer`.
 
 > [!IMPORTANT]
 >
@@ -600,31 +603,3 @@ When a name resolves only through retired ids, Postea logs it once per world loa
 ```
 Block ExtraUtilities:cobblestone_compressed is no longer registered; its transformers target retired id(s) [3402]
 ```
-
-### 11. Custom World Data
-
-Some mods keep item stacks outside chunks and player data: a quest database, an ender chest table, per-player
-sidecar files. Postea never reads or writes such files itself -- the owning mod offers their content through
-`CustomDataReplacementManager` and versioned transformers reach it via `IVersionedTransformer.transformCustomData`.
-
-The contract for the owning mod:
-
-- Call `CustomDataReplacementManager.transform(storageId, root)` once on the NBT root read from disk, before
-  consuming it. Postea runs every registered transformer whose stamp differs and writes updated `POSTEA_VERSIONS`
-  stamps onto the root. Persist that root, stamps included, when writing the storage back.
-- A save path that rebuilds its NBT from scratch calls `CustomDataReplacementManager.stamp(freshRoot)` instead:
-  once `transform` ran at load, the in-memory data is at the current version.
-- A consumer that never writes the storage back (a read-only restore of an archived file) calls only `transform`.
-  An unstamped file re-transforms from the same baseline on every read, which is correct while its bytes never
-  change.
-
-The `storageId` is a namespaced label used in logs and crash reports, e.g. `"betterquesting:questDatabase"`.
-`transform` must not run before FML has applied the world's saved id map (it throws otherwise); any call site at
-world load or later is safe. Stacks in custom storage may carry a string `id` (a registry name) instead of a
-numeric one; `CustomDataTransformContext.forEachItemStackTag` visits both forms.
-
-> [!NOTE]
->
-> Data derived from stacks rather than stored as stacks is out of reach of this API. Known cases that stay
-> untransformed: Thaumcraft's scanned-object hashes (players rescan after their items' metadata changes), fluid
-> names, MineTweaker script item literals, and the numeric item ids inside vanilla `stats/` files.

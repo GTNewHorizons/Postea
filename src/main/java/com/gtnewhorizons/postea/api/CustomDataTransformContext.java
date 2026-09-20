@@ -8,10 +8,8 @@ import com.gtnewhorizons.postea.utility.NbtItemStacks;
 import com.gtnewhorizons.postea.utility.VersionStamps;
 
 /**
- * A mod's own world storage as handed to {@link IVersionedTransformer#transformCustomData}: the NBT root the
- * owning mod read from disk, before it consumes the data. Unlike chunk and player data, stacks here may carry a
- * string {@code id} (a registry name, as quest databases store) instead of a numeric one;
- * {@link #forEachItemStackTag} visits both forms.
+ * Context for a mod's custom world storage, used by {@link IVersionedTransformer#transformCustomData}. Stacks here
+ * may have string {@code id}s instead of numeric ones; {@link #forEachItemStackTag} visits both.
  */
 public final class CustomDataTransformContext {
 

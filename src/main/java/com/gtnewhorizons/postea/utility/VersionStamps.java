@@ -8,7 +8,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import com.gtnewhorizons.postea.api.IVersionedTransformer;
 
 /**
- * The {@code POSTEA_VERSIONS} compound Postea keeps on a chunk's {@code Level} tag and on a player's root tag: one
+ * The {@code POSTEA_VERSIONS} compound Postea keeps on data handled by {@link IVersionedTransformer}s, one
  * int per registered transformer key. Keys of transformers that are not registered in the running session are
  * carried through unchanged so a mod that is temporarily absent does not lose its stamps.
  */
