@@ -14,22 +14,9 @@ import codechicken.nei.api.API;
 
 public class Compat {
 
-    private static Boolean chunkapi = null;
     private static Boolean endlessids = null;
     private static Boolean neid = null;
     private static Boolean nei = null;
-
-    public static boolean chunkapiPresent() {
-        if (chunkapi == null) {
-            boolean present = false;
-            try {
-                present = Launch.classLoader.getClassBytes("com.falsepattern.chunk.internal.core.CoreLoadingPlugin")
-                    != null;
-            } catch (Throwable ignored) {}
-            chunkapi = present;
-        }
-        return chunkapi;
-    }
 
     public static boolean endlessidsPresent() {
         if (endlessids == null) {
