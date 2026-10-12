@@ -14,9 +14,13 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import com.gtnewhorizons.postea.api.BlockAccessCompat;
 import com.gtnewhorizons.postea.api.BlockReplacementManager;
+import com.gtnewhorizons.postea.api.ChunkTransformContext;
 import com.gtnewhorizons.postea.api.IDExtenderCompat;
+import com.gtnewhorizons.postea.api.IVersionedTransformer;
 import com.gtnewhorizons.postea.api.ItemStackReplacementManager;
+import com.gtnewhorizons.postea.api.PlayerDataTransformContext;
 import com.gtnewhorizons.postea.api.TileEntityReplacementManager;
+import com.gtnewhorizons.postea.api.VersionedReplacementManager;
 import com.gtnewhorizons.postea.utility.BlockConversionInfo;
 import com.gtnewhorizons.postea.utility.BlockInfo;
 
@@ -32,6 +36,7 @@ abstract class ExampleMigrators {
         ComplexBlockTransformer.postLoad();
         ComplexItemTransformer.postLoad();
         FMLReMappingExample.postLoad();
+        VersionedExample.postLoad();
     }
 
     public static abstract class TEToBlockExample {
@@ -345,6 +350,49 @@ abstract class ExampleMigrators {
             // It doesn't really matter which one you use, they both do the same thing under the hood.
             ItemStackReplacementManager.ignoreMissingMapping("IC2:itemFertilizer");
             BlockReplacementManager.ignoreMissingMapping("IC2:blockCrop");
+        }
+    }
+
+    public static final class VersionedExample implements IVersionedTransformer {
+
+        public static void postLoad() {
+            VersionedReplacementManager.register(new VersionedExample());
+        }
+
+        @Override
+        public String key() {
+            return "examplemod:gemIndex";
+        }
+
+        // The version the running mod writes gems under; bump it whenever the index assignment changes.
+        @Override
+        public int currentVersion() {
+            return 2;
+        }
+
+        @Override
+        public void transformChunk(ChunkTransformContext ctx) {
+            // Data saved before this transformer existed carries no stamp.
+            if (ctx.storedVersion() == ChunkTransformContext.UNSTAMPED || ctx.storedVersion() == 1) {
+                int gemBlockId = Block.getIdFromBlock(Blocks.wool);
+                ctx.forEachBlock((x, y, z, id, meta) -> { if (id == gemBlockId) ctx.setBlock(x, y, z, id, meta + 1); });
+                ctx.forEachItemStackTag(stack -> {
+                    if (IDExtenderCompat.getItemStackID(stack) == Item.getIdFromItem(Items.dye)) {
+                        stack.setShort("Damage", (short) (stack.getShort("Damage") + 1));
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void transformPlayer(PlayerDataTransformContext ctx) {
+            if (ctx.storedVersion() == PlayerDataTransformContext.UNSTAMPED || ctx.storedVersion() == 1) {
+                ctx.forEachItemStackTag(stack -> {
+                    if (IDExtenderCompat.getItemStackID(stack) == Item.getIdFromItem(Items.dye)) {
+                        stack.setShort("Damage", (short) (stack.getShort("Damage") + 1));
+                    }
+                });
+            }
         }
     }
 }
