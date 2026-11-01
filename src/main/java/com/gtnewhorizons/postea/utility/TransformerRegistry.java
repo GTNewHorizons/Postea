@@ -6,6 +6,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -13,6 +14,7 @@ import net.minecraft.world.chunk.Chunk;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.collect.LinkedListMultimap;
+import com.gtnewhorizons.postea.api.BlockNameAndMeta;
 import com.gtnewhorizons.postea.api.IBlockTransformationHandler;
 import com.gtnewhorizons.postea.api.IDExtenderCompat;
 import com.gtnewhorizons.postea.api.IItemStackTransformationHandler;
@@ -20,6 +22,7 @@ import com.gtnewhorizons.postea.api.TriFunction;
 
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.LoaderState;
+import cpw.mods.fml.common.registry.GameData;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 /**
@@ -151,6 +154,32 @@ public class TransformerRegistry {
         for (IBlockTransformationHandler transformer : data.getValue()) {
             if (transformer.apply(blockConversionInfo)) {
                 return blockConversionInfo;
+            }
+        }
+        return null;
+    }
+
+    public static @Nullable BlockNameAndMeta transformBlock(@Nonnull String name, int metadata) {
+        List<IBlockTransformationHandler> handlers = BLOCK_REPLACEMENT_MAP.get(name);
+        if (handlers.isEmpty()) return null;
+        // there is no position nor world, the block isn't placed anywhere
+        BlockConversionInfo blockConversionInfo = new BlockConversionInfo(
+            name,
+            IDRegistry.getBlockId(name),
+            metadata,
+            0,
+            0,
+            0,
+            null);
+        for (IBlockTransformationHandler transformer : handlers) {
+            if (transformer.apply(blockConversionInfo)) {
+                Block block = GameData.getBlockRegistry()
+                    .getRaw(blockConversionInfo.blockID);
+                if (block == null) return null;
+                return new BlockNameAndMeta(
+                    GameData.getBlockRegistry()
+                        .getNameForObject(block),
+                    blockConversionInfo.metadata);
             }
         }
         return null;
