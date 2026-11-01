@@ -3,6 +3,7 @@ package com.gtnewhorizons.postea.api;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import net.minecraft.block.Block;
 import net.minecraftforge.oredict.OreDictionary;
@@ -53,6 +54,32 @@ public abstract class BlockReplacementManager {
     }
 
     // endregion custom transformer registration
+
+    // region lookup
+
+    /**
+     * Runs the block transformers registered for the given id on a block that isn't placed in the world, and returns
+     * what it would be transformed into.<br>
+     * <br>
+     * This is meant for mods that store blocks by their namespaced id inside their own NBT (e.g.: blocks that are
+     * made out of other blocks), which Postea can't reach while converting chunks. Calling this when such a block is
+     * loaded applies every migration registered to Postea to it.
+     *
+     * @apiNote Only call this while a world is loaded, transformers rely on the numeric ids resolved for that world.
+     *          The transformers are given a {@link com.gtnewhorizons.postea.utility.BlockConversionInfo} without a
+     *          world, and with all coordinates set to 0. Tile entity transformers are not run.
+     *
+     * @param name     The namespaced id of the block.
+     * @param metadata The meta value of the block.
+     * @return The namespaced id and meta value of the block to use instead, or null if no transformer applies.
+     */
+    @SuppressWarnings("unused")
+    public static @Nullable BlockNameAndMeta transformBlock(@Nonnull String name, int metadata) {
+        if (name == null) throw new NullPointerException("name cannot be null");
+        return TransformerRegistry.transformBlock(name, metadata);
+    }
+
+    // endregion lookup
 
     // region id resolving
 
