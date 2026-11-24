@@ -2,7 +2,6 @@ package com.gtnewhorizons.postea.utility;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ReportedException;
 
 import com.gtnewhorizons.postea.api.IVersionedTransformer;
 import com.gtnewhorizons.postea.api.PlayerDataTransformContext;
@@ -26,14 +25,13 @@ public final class PlayerDataFixerUtility {
             try {
                 transformer.transformPlayer(new PlayerDataTransformContext(player, tag, stored));
             } catch (Throwable t) {
-                throw new ReportedException(
-                    ChunkFixerUtility.describe(
-                        t,
-                        transformer,
-                        stored,
-                        current,
-                        "Player",
-                        player.getCommandSenderName() + " (" + player.getUniqueID() + ")"));
+                throw VersionedPass.failure(
+                    t,
+                    transformer,
+                    stored,
+                    current,
+                    "Player",
+                    player.getCommandSenderName() + " (" + player.getUniqueID() + ")");
             }
         }
         return stamps == null ? null : (NBTTagCompound) stamps.copy();

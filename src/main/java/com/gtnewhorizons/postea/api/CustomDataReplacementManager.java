@@ -1,13 +1,10 @@
 package com.gtnewhorizons.postea.api;
 
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ReportedException;
 
-import com.gtnewhorizons.postea.Postea;
-import com.gtnewhorizons.postea.utility.ChunkFixerUtility;
 import com.gtnewhorizons.postea.utility.IDRegistry;
 import com.gtnewhorizons.postea.utility.VersionStamps;
-import com.gtnewhorizons.postea.utility.VersionedTransformerLog;
+import com.gtnewhorizons.postea.utility.VersionedPass;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 
@@ -21,9 +18,11 @@ import cpw.mods.fml.common.FMLCommonHandler;
 /// Custom data belongs to a world, so [#transform] and [#stamp] do nothing unless a server runs in this JVM.
 public abstract class CustomDataReplacementManager {
 
-    /// Transforms `root` in place through every registered transformer whose stamp differs from its current
-    /// version, then writes the updated stamps onto `root`. Throws [IllegalStateException] when called before the
-    /// world's info and saved id map have loaded.
+    /// Transforms `root` in place through every registered transformer whose stamp differs from its current version,
+    /// then writes the updated stamps onto `root`.
+    ///
+    /// A failing transformer throws [net.minecraft.util.ReportedException] and leaves `root` as read, without stamps
+    /// added. A call before the world's info and saved id map have loaded throws [IllegalStateException].
     public static void transform(String storageId, NBTTagCompound root) {
         if (!serverRunning()) return;
         if (!IDRegistry.isMappingApplied()) {
@@ -36,20 +35,13 @@ public abstract class CustomDataReplacementManager {
 
     /// [#transform(String, NBTTagCompound)] through `transformers`, without the server and id mapping checks.
     static void transform(String storageId, NBTTagCompound root, Iterable<IVersionedTransformer> transformers) {
-        NBTTagCompound stamps = VersionStamps.read(root);
-        for (IVersionedTransformer transformer : transformers) {
-            int current = transformer.currentVersion();
-            int stored = VersionStamps.stored(stamps, transformer.key());
-            if (stored == current) continue;
-            VersionedTransformerLog.announce(transformer, stored, current);
-            Postea.LOG.debug("{}: custom data {} from version {} to {}", transformer.key(), storageId, stored, current);
-            try {
-                transformer.transformCustomData(new CustomDataTransformContext(storageId, root, stored));
-            } catch (Throwable t) {
-                throw new ReportedException(
-                    ChunkFixerUtility.describe(t, transformer, stored, current, "Custom data", storageId));
-            }
-        }
+        NBTTagCompound stamps = VersionedPass.runAtomically(
+            root,
+            transformers,
+            "Custom data",
+            storageId,
+            (transformer, data, stored) -> transformer
+                .transformCustomData(new CustomDataTransformContext(storageId, data, stored)));
         VersionStamps.write(root, stamps, transformers);
     }
 

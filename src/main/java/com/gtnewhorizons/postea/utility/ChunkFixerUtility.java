@@ -6,11 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import net.minecraft.crash.CrashReport;
-import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ReportedException;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
@@ -80,14 +77,13 @@ public class ChunkFixerUtility {
             try {
                 transformer.transformChunk(ctx);
             } catch (Throwable t) {
-                throw new ReportedException(
-                    describe(
-                        t,
-                        transformer,
-                        stored,
-                        current,
-                        "Chunk",
-                        chunk.xPosition + "," + chunk.zPosition + " in dimension " + world.provider.dimensionId));
+                throw VersionedPass.failure(
+                    t,
+                    transformer,
+                    stored,
+                    current,
+                    "Chunk",
+                    chunk.xPosition + "," + chunk.zPosition + " in dimension " + world.provider.dimensionId);
             }
             chunkMixin.Postea$setVersionedDirty(true);
             blockIdsChanged |= ctx.blockIdsChanged();
@@ -100,17 +96,6 @@ public class ChunkFixerUtility {
         }
         HeightMaps.regenerate(chunk);
         chunk.isLightPopulated = false;
-    }
-
-    public static CrashReport describe(Throwable cause, IVersionedTransformer transformer, int stored, int current,
-        String subjectName, String subject) {
-        CrashReport report = CrashReport.makeCrashReport(cause, "Running versioned transformer " + transformer.key());
-        CrashReportCategory category = report.makeCategory("Postea versioned transformer");
-        category.addCrashSection("Key", transformer.key());
-        category.addCrashSection("Stored version", stored);
-        category.addCrashSection("Current version", current);
-        category.addCrashSection(subjectName, subject);
-        return report;
     }
 
     public static void onChunkLoaded(Chunk chunk) {

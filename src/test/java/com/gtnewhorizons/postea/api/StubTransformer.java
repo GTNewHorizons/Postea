@@ -1,10 +1,13 @@
 package com.gtnewhorizons.postea.api;
 
-/// An [IVersionedTransformer] that changes nothing, at a version the test sets.
+import java.util.function.Consumer;
+
+/// An [IVersionedTransformer] at a version the test sets, running the test's custom data transform.
 public final class StubTransformer implements IVersionedTransformer {
 
     private final String key;
     public int version;
+    public Consumer<CustomDataTransformContext> customData = ctx -> {};
 
     public StubTransformer(String key, int version) {
         this.key = key;
@@ -19,5 +22,10 @@ public final class StubTransformer implements IVersionedTransformer {
     @Override
     public int currentVersion() {
         return version;
+    }
+
+    @Override
+    public void transformCustomData(CustomDataTransformContext ctx) {
+        customData.accept(ctx);
     }
 }

@@ -1,6 +1,7 @@
 package com.gtnewhorizons.postea.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,5 +30,23 @@ class CustomDataReplacementManagerTest {
         assertEquals(3, VersionStamps.stored(stamps, "mod:present"));
         assertEquals(5, VersionStamps.stored(stamps, "mod:absent"));
         assertEquals(2, VersionStamps.stored(saved, "mod:present"));
+    }
+
+    @Test
+    void aThrowingTransformerLeavesTheRootAsRead() {
+        StubTransformer rewrites = new StubTransformer("mod:rewrites", 2);
+        rewrites.customData = ctx -> ctx.root()
+            .setString("data", "new");
+        StubTransformer fails = new StubTransformer("mod:fails", 2);
+        fails.customData = ctx -> { throw new IllegalStateException("broken"); };
+        NBTTagCompound root = new NBTTagCompound();
+        root.setString("data", "old");
+        NBTTagCompound asRead = (NBTTagCompound) root.copy();
+
+        // The ReportedException's CrashReport initializes FML, which fails outside a launched game.
+        assertThrows(
+            Throwable.class,
+            () -> CustomDataReplacementManager.transform("mod:storage", root, Arrays.asList(rewrites, fails)));
+        assertEquals(asRead, root);
     }
 }
