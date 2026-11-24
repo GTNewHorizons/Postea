@@ -1,6 +1,7 @@
 package com.gtnewhorizons.postea.utility;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
@@ -50,11 +51,18 @@ public final class VersionedPass {
         return carried;
     }
 
-    /// The exception a failed transformer run throws, with a crash report naming the transformer, both versions and
-    /// the subject.
+    /// The exception a failed transformer run throws. Its crash report description names the transformer, the subject
+    /// and both versions.
     public static ReportedException failure(Throwable cause, IVersionedTransformer transformer, int stored, int current,
         String subjectName, String subject) {
-        CrashReport report = CrashReport.makeCrashReport(cause, "Running versioned transformer " + transformer.key());
+        String description = String.format(
+            "Running versioned transformer %s on %s %s from version %s to %d",
+            transformer.key(),
+            subjectName.toLowerCase(Locale.ROOT),
+            subject,
+            VersionedTransformerLog.versionName(stored),
+            current);
+        CrashReport report = CrashReport.makeCrashReport(cause, description);
         CrashReportCategory category = report.makeCategory("Postea versioned transformer");
         category.addCrashSection("Key", transformer.key());
         category.addCrashSection("Stored version", stored);
