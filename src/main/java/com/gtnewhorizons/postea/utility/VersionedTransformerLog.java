@@ -18,7 +18,7 @@ public final class VersionedTransformerLog {
             Postea.LOG.info(
                 "{} is bringing saved data from version {} to {}",
                 transformer.key(),
-                stored == VersionStamps.UNSTAMPED ? "unstamped" : String.valueOf(stored),
+                stored == IVersionedTransformer.UNSTAMPED ? "unstamped" : String.valueOf(stored),
                 current);
         }
     }

@@ -9,6 +9,7 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import org.junit.jupiter.api.Test;
 
+import com.gtnewhorizons.postea.api.IVersionedTransformer;
 import com.gtnewhorizons.postea.api.StubTransformer;
 
 class VersionStampsTest {
@@ -18,7 +19,7 @@ class VersionStampsTest {
         NBTTagCompound container = new NBTTagCompound();
 
         assertNull(VersionStamps.read(container));
-        assertEquals(VersionStamps.UNSTAMPED, VersionStamps.stored(null, "mod:key"));
+        assertEquals(IVersionedTransformer.UNSTAMPED, VersionStamps.stored(null, "mod:key"));
     }
 
     @Test
@@ -28,6 +29,6 @@ class VersionStampsTest {
         VersionStamps.write(container, null, Collections.singletonList(new StubTransformer("mod:key", 1)));
 
         assertEquals(1, VersionStamps.stored(VersionStamps.read(container), "mod:key"));
-        assertEquals(VersionStamps.UNSTAMPED, VersionStamps.stored(VersionStamps.read(container), "other:key"));
+        assertEquals(IVersionedTransformer.UNSTAMPED, VersionStamps.stored(VersionStamps.read(container), "other:key"));
     }
 }

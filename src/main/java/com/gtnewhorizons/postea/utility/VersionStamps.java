@@ -14,7 +14,6 @@ import com.gtnewhorizons.postea.api.IVersionedTransformer;
 public final class VersionStamps {
 
     public static final String KEY = "POSTEA_VERSIONS";
-    public static final int UNSTAMPED = -1;
 
     private VersionStamps() {}
 
@@ -23,9 +22,9 @@ public final class VersionStamps {
         return container.hasKey(KEY, TAG_COMPOUND) ? container.getCompoundTag(KEY) : null;
     }
 
-    /// The version stored for `key` in `stamps`, or [#UNSTAMPED]. `stamps` may be null.
+    /// The version stored for `key` in `stamps`, or [IVersionedTransformer#UNSTAMPED]. `stamps` may be null.
     public static int stored(NBTTagCompound stamps, String key) {
-        return stamps != null && stamps.hasKey(key, TAG_INT) ? stamps.getInteger(key) : UNSTAMPED;
+        return stamps != null && stamps.hasKey(key, TAG_INT) ? stamps.getInteger(key) : IVersionedTransformer.UNSTAMPED;
     }
 
     /// Writes the stamps onto `container`: `carried`, the stamps the data was read with or null, with every
