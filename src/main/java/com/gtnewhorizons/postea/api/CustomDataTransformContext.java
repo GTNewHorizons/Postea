@@ -10,7 +10,8 @@ import com.gtnewhorizons.postea.utility.NbtItemStacks;
 /// A mod's custom world storage, as handed to [IVersionedTransformer#transformCustomData]. Stacks here may have
 /// string `id`s instead of numeric ones, and [#forEachItemStackTag] visits both.
 ///
-/// @param storageId the storage's identity as its owner registered it, e.g. `"betterquesting:questDatabase"`
+/// @param storageId the id the owning mod passed to [CustomDataReplacementManager#transform], e.g.
+/// `"betterquesting:questDatabase"`
 /// @param storedVersion the version stamped under the transformer's key when the storage was written, or
 /// [IVersionedTransformer#UNSTAMPED]
 @Desugar

@@ -10,8 +10,10 @@ package com.gtnewhorizons.postea.api;
 /// registration order, before every other Postea pass. One whose output depends on another mod's versioned data
 /// must register after that mod.
 ///
-/// Chunk transformers may run on chunk I/O threads, several at once for different chunks. They must touch no world
-/// state beyond the context, and their own state must be safe to read concurrently.
+/// Transformers may run off the server thread, several at once for different data: chunks on chunk I/O threads, players
+/// on the network thread handling their login, and custom data on whichever thread the owning mod reads it. A
+/// transformer must touch no world state beyond the context, and its own state must be safe to read concurrently. Each
+/// call has the context's data to itself, and runs after the world's saved id map has been applied.
 ///
 /// Custom world storage offered through [CustomDataReplacementManager] is stamped the same way and reaches
 /// [#transformCustomData].

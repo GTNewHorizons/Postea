@@ -10,7 +10,9 @@ import net.minecraft.nbt.NBTTagCompound;
 /// Each pass calls [#stackTransform] once, before visiting any stack.
 public abstract class VersionedStackTransformer implements IVersionedTransformer {
 
-    /// The rewrite applied to each stack tag in data stamped at `storedVersion`, or null when that data needs none.
+    /// The rewrite applied to each stack tag in data stamped at `storedVersion`, or null when that data needs none. In
+    /// custom world storage the rewrite also receives stacks whose `id` is a string name. A rewrite that matches only
+    /// numeric ids leaves those stacks unchanged.
     protected abstract Consumer<NBTTagCompound> stackTransform(int storedVersion);
 
     @Override

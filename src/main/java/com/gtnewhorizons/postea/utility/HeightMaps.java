@@ -2,8 +2,11 @@ package com.gtnewhorizons.postea.utility;
 
 import net.minecraft.world.chunk.Chunk;
 
-/// Rebuilds a chunk's height map from the chunk's own storage, which is safe on the chunk I/O thread.
-/// `Chunk.generateHeightMap` is client-only and `generateSkylightMap` reaches into the world.
+/// Rebuilds a chunk's height map from the chunk's own storage. `Chunk.generateHeightMap` is client-only and
+/// `generateSkylightMap` reaches into the world.
+///
+/// Block opacity comes from the position-aware `Block.getLightOpacity`, so a block that overrides it can read the world
+/// from the chunk I/O thread.
 final class HeightMaps {
 
     private HeightMaps() {}

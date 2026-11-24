@@ -9,10 +9,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.gtnewhorizons.postea.mixins.interfaces.IPlayerStampsMixin;
 
+/// Carries a player's version stamps to the entity `clonePlayer` builds on respawn, which is not read from NBT.
 @Mixin(EntityPlayer.class)
 public abstract class MixinEntityPlayer {
 
-    /// Copies the version stamps from the old player, because a respawned player is not built through NBT.
     @Inject(method = "clonePlayer", at = @At("RETURN"), require = 1)
     private void postea$carryVersionStamps(EntityPlayer oldPlayer, boolean respawn, CallbackInfo ci) {
         if ((Object) this instanceof IPlayerStampsMixin player && oldPlayer instanceof IPlayerStampsMixin old) {
