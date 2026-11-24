@@ -57,9 +57,8 @@ public abstract class IDRegistry {
         ITEM_NAME_TO_ID.clear();
     }
 
-    /// Whether the loading world's id mappings are in place. [#onWorldInfoLoaded] sets it once the world's info, and
-    /// with it any saved id map, has loaded on the server thread. [#onMappingUpdated] sets it when FML's remap event
-    /// fires.
+    /// Whether the loading world's id mappings are in place. [#onWorldInfoLoaded] sets it once the world's info and any
+    /// saved id map have loaded on the server thread. [#onMappingUpdated] sets it when FML's remap event fires.
     public static boolean isMappingApplied() {
         return mappingApplied;
     }
