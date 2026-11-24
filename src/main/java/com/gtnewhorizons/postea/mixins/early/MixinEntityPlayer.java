@@ -15,6 +15,8 @@ public abstract class MixinEntityPlayer {
     /// Copies the version stamps from the old player, because a respawned player is not built through NBT.
     @Inject(method = "clonePlayer", at = @At("RETURN"), require = 1)
     private void postea$carryVersionStamps(EntityPlayer oldPlayer, boolean respawn, CallbackInfo ci) {
-        ((IPlayerStampsMixin) this).Postea$setVersionStamps(((IPlayerStampsMixin) oldPlayer).Postea$getVersionStamps());
+        if ((Object) this instanceof IPlayerStampsMixin player && oldPlayer instanceof IPlayerStampsMixin old) {
+            player.Postea$setVersionStamps(old.Postea$getVersionStamps());
+        }
     }
 }
