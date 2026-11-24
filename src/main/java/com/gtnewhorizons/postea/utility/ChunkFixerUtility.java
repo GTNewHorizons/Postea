@@ -98,28 +98,8 @@ public class ChunkFixerUtility {
         for (ExtendedBlockStorage section : chunk.getBlockStorageArray()) {
             if (section != null) section.removeInvalidBlocks();
         }
-        regenerateHeightMap(chunk);
+        HeightMaps.regenerate(chunk);
         chunk.isLightPopulated = false;
-    }
-
-    /// Rebuilds the height map from the chunk's own storage, which is safe on the chunk I/O thread.
-    /// `Chunk.generateHeightMap` is client-only and `generateSkylightMap` reaches into the world.
-    private static void regenerateHeightMap(Chunk chunk) {
-        int top = chunk.getTopFilledSegment() + 16 - 1;
-        chunk.heightMapMinimum = Integer.MAX_VALUE;
-        for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
-                chunk.precipitationHeightMap[x + (z << 4)] = -999;
-                int y = top;
-                while (y > 0 && chunk.func_150808_b(x, y - 1, z) == 0) {
-                    y--;
-                }
-                if (y > 0) {
-                    chunk.heightMap[z << 4 | x] = y;
-                    chunk.heightMapMinimum = Math.min(chunk.heightMapMinimum, y);
-                }
-            }
-        }
     }
 
     public static CrashReport describe(Throwable cause, IVersionedTransformer transformer, int stored, int current,
