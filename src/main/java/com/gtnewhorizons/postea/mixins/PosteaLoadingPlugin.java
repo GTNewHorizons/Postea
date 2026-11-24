@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.gtnewhorizon.gtnhmixins.IEarlyMixinLoader;
 
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 
 @IFMLLoadingPlugin.MCVersion("1.7.10")
@@ -50,6 +51,8 @@ public final class PosteaLoadingPlugin implements IEarlyMixinLoader, IFMLLoading
         mixins.add("MixinAnvilChunkLoader");
         mixins.add("MixinNBTTagList");
         mixins.add("MixinSaveHandler");
+        if (FMLLaunchHandler.side()
+            .isClient()) mixins.add("MixinIntegratedPlayerList");
         return mixins;
     }
 }

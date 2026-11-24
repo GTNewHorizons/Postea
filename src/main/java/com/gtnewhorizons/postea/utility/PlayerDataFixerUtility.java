@@ -3,7 +3,6 @@ package com.gtnewhorizons.postea.utility;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 
-import com.gtnewhorizons.postea.api.IVersionedTransformer;
 import com.gtnewhorizons.postea.api.PlayerDataTransformContext;
 import com.gtnewhorizons.postea.api.VersionedReplacementManager;
 
@@ -14,27 +13,16 @@ public final class PlayerDataFixerUtility {
 
     private PlayerDataFixerUtility() {}
 
-    /// Transforms `tag` in place and returns a copy of the stamps it carried, or null if unstamped.
+    /// Transforms `tag` in place and returns a copy of the stamps it carried, or null if unstamped. A failing
+    /// transformer throws and leaves `tag` as read.
     public static NBTTagCompound onPlayerRead(EntityPlayerMP player, NBTTagCompound tag) {
-        NBTTagCompound stamps = VersionStamps.read(tag);
-        for (IVersionedTransformer transformer : VersionedReplacementManager.transformers()) {
-            int current = transformer.currentVersion();
-            int stored = VersionStamps.stored(stamps, transformer.key());
-            if (stored == current) continue;
-            VersionedTransformerLog.announce(transformer, stored, current);
-            try {
-                transformer.transformPlayer(new PlayerDataTransformContext(player, tag, stored));
-            } catch (Throwable t) {
-                throw VersionedPass.failure(
-                    t,
-                    transformer,
-                    stored,
-                    current,
-                    "Player",
-                    player.getCommandSenderName() + " (" + player.getUniqueID() + ")");
-            }
-        }
-        return stamps == null ? null : (NBTTagCompound) stamps.copy();
+        return VersionedPass.runAtomically(
+            tag,
+            VersionedReplacementManager.transformers(),
+            "Player",
+            player.getCommandSenderName() + " (" + player.getUniqueID() + ")",
+            (transformer, data, stored) -> transformer
+                .transformPlayer(new PlayerDataTransformContext(player, data, stored)));
     }
 
     public static void onPlayerWrite(NBTTagCompound tag, NBTTagCompound carried) {
