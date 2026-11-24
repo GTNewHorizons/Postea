@@ -1,5 +1,9 @@
 package com.gtnewhorizons.postea;
 
+import static net.minecraftforge.common.util.Constants.NBT.TAG_STRING;
+
+import java.util.function.Consumer;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
@@ -16,11 +20,10 @@ import com.gtnewhorizons.postea.api.BlockAccessCompat;
 import com.gtnewhorizons.postea.api.BlockReplacementManager;
 import com.gtnewhorizons.postea.api.ChunkTransformContext;
 import com.gtnewhorizons.postea.api.IDExtenderCompat;
-import com.gtnewhorizons.postea.api.IVersionedTransformer;
 import com.gtnewhorizons.postea.api.ItemStackReplacementManager;
-import com.gtnewhorizons.postea.api.PlayerDataTransformContext;
 import com.gtnewhorizons.postea.api.TileEntityReplacementManager;
 import com.gtnewhorizons.postea.api.VersionedReplacementManager;
+import com.gtnewhorizons.postea.api.VersionedStackTransformer;
 import com.gtnewhorizons.postea.utility.BlockConversionInfo;
 import com.gtnewhorizons.postea.utility.BlockInfo;
 
@@ -353,7 +356,7 @@ abstract class ExampleMigrators {
         }
     }
 
-    public static final class VersionedExample implements IVersionedTransformer {
+    public static final class VersionedExample extends VersionedStackTransformer {
 
         public static void postLoad() {
             VersionedReplacementManager.register(new VersionedExample());
@@ -371,26 +374,26 @@ abstract class ExampleMigrators {
 
         @Override
         public void transformChunk(ChunkTransformContext ctx) {
-            if (ctx.storedVersion() == UNSTAMPED || ctx.storedVersion() == 1) {
+            if (shiftsGems(ctx.storedVersion())) {
                 int gemBlockId = Block.getIdFromBlock(Blocks.wool);
                 ctx.forEachBlock((x, y, z, id, meta) -> { if (id == gemBlockId) ctx.setBlock(x, y, z, id, meta + 1); });
-                ctx.forEachItemStackTag(stack -> {
-                    if (IDExtenderCompat.getItemStackID(stack) == Item.getIdFromItem(Items.dye)) {
-                        stack.setShort("Damage", (short) (stack.getShort("Damage") + 1));
-                    }
-                });
             }
+            super.transformChunk(ctx);
         }
 
         @Override
-        public void transformPlayer(PlayerDataTransformContext ctx) {
-            if (ctx.storedVersion() == UNSTAMPED || ctx.storedVersion() == 1) {
-                ctx.forEachItemStackTag(stack -> {
-                    if (IDExtenderCompat.getItemStackID(stack) == Item.getIdFromItem(Items.dye)) {
-                        stack.setShort("Damage", (short) (stack.getShort("Damage") + 1));
-                    }
-                });
-            }
+        protected Consumer<NBTTagCompound> stackTransform(int storedVersion) {
+            if (!shiftsGems(storedVersion)) return null;
+            int dyeId = Item.getIdFromItem(Items.dye);
+            return stack -> {
+                boolean dye = stack.hasKey("id", TAG_STRING) ? "minecraft:dye".equals(stack.getString("id"))
+                    : IDExtenderCompat.getItemStackID(stack) == dyeId;
+                if (dye) stack.setShort("Damage", (short) (stack.getShort("Damage") + 1));
+            };
+        }
+
+        private static boolean shiftsGems(int storedVersion) {
+            return storedVersion == UNSTAMPED || storedVersion == 1;
         }
     }
 }
