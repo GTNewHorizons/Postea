@@ -24,8 +24,8 @@ public final class VersionedPass {
     }
 
     /// Runs `step` for every transformer whose stamp on `root` differs from its current version. The steps work on a
-    /// copy of `root`, which replaces the contents of `root` once every step has succeeded. A failing step throws the
-    /// [#failure] for `subjectName` and `subject`, and leaves `root` as read.
+    /// copy of `root`, which is stamped with the current versions and replaces the contents of `root` once every step
+    /// has succeeded. A failing step throws the [#failure] for `subjectName` and `subject`, and leaves `root` as read.
     ///
     /// @return a copy of the stamps `root` was read with, or null if unstamped
     public static NBTTagCompound runAtomically(NBTTagCompound root, Iterable<IVersionedTransformer> transformers,
@@ -47,7 +47,10 @@ public final class VersionedPass {
                 throw failure(t, transformer, stored, current, subjectName, subject);
             }
         }
-        if (working != null) replaceContents(root, working);
+        if (working != null) {
+            VersionStamps.write(working, carried, transformers);
+            replaceContents(root, working);
+        }
         return carried;
     }
 
