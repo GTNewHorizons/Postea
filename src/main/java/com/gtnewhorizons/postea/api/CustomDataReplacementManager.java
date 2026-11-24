@@ -15,8 +15,8 @@ import cpw.mods.fml.common.FMLCommonHandler;
 ///
 /// Call [#transform] once on the root read from disk, before consuming it, and persist that root, stamps included,
 /// when writing the storage back. A save path that rebuilds its NBT from scratch keeps [#savedStamps] from the read and
-/// passes them to [#stamp(NBTTagCompound, NBTTagCompound)] on the fresh root, so the stamps of transformers missing at
-/// save time survive.
+/// passes them to [#stamp(NBTTagCompound, NBTTagCompound)] on the fresh root. The stamps of transformers missing at
+/// save time then survive.
 ///
 /// Custom data belongs to a world, so [#transform] and [#stamp] do nothing unless a server runs in this JVM.
 public abstract class CustomDataReplacementManager {
@@ -59,7 +59,8 @@ public abstract class CustomDataReplacementManager {
     }
 
     /// Stamps `root` with every registered transformer's current version, keeping the stamps in `carried` for
-    /// transformers not registered now. A null `carried` keeps the stamps already on `root` instead.
+    /// transformers not registered now. A non-null `carried` replaces any stamps already on `root`. A null `carried`
+    /// keeps them.
     public static void stamp(NBTTagCompound root, NBTTagCompound carried) {
         if (!serverRunning()) return;
         stamp(root, carried, VersionedReplacementManager.transformers());
