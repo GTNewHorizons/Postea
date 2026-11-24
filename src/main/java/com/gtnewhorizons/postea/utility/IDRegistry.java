@@ -41,7 +41,7 @@ public abstract class IDRegistry {
     private static volatile boolean mappingApplied;
 
     /// Loads the retired id table of the world about to load. [#registerWorldSpecificIDs] records into it until
-    /// [#endWorld()]. [#isMappingApplied] stays false until [#onWorldInfoLoaded].
+    /// [#endWorld()]. Resets [#isMappingApplied] to false.
     public static void beginWorld(File worldDirectory) {
         tableFile = new File(new File(worldDirectory, Postea.MODID), WorldIdTable.FILE_NAME);
         table = WorldIdTable.load(tableFile);
@@ -57,8 +57,9 @@ public abstract class IDRegistry {
         ITEM_NAME_TO_ID.clear();
     }
 
-    /// Whether the loading world's info has loaded on the server thread. FML applies the world's saved id map, if
-    /// it has one, during that load.
+    /// Whether the loading world's id mappings are in place. [#onWorldInfoLoaded] sets it once the world's info, and
+    /// with it any saved id map, has loaded on the server thread. [#onMappingUpdated] sets it when FML's remap event
+    /// fires.
     public static boolean isMappingApplied() {
         return mappingApplied;
     }

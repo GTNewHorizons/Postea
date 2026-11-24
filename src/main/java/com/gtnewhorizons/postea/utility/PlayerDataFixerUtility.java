@@ -10,8 +10,7 @@ import com.gtnewhorizons.postea.api.VersionedReplacementManager;
 
 /// Runs versioned transformers over a server player's NBT as it is read, and stamps it as it is written.
 ///
-/// Hooks `Entity.readFromNBT` and `writeToNBT`, which covers `playerdata/<uuid>.dat` and the single-player host's
-/// copy inside `level.dat`.
+/// Runs on every server player NBT read and write, which covers `playerdata` and the host player in `level.dat`.
 public final class PlayerDataFixerUtility {
 
     private PlayerDataFixerUtility() {}

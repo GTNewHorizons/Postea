@@ -23,7 +23,7 @@ public abstract class CustomDataReplacementManager {
 
     /// Transforms `root` in place through every registered transformer whose stamp differs from its current
     /// version, then writes the updated stamps onto `root`. Throws [IllegalStateException] when called before the
-    /// world's info, and with it any saved id map, has loaded.
+    /// world's info and saved id map have loaded.
     public static void transform(String storageId, NBTTagCompound root) {
         if (!serverRunning()) return;
         if (!IDRegistry.isMappingApplied()) {
