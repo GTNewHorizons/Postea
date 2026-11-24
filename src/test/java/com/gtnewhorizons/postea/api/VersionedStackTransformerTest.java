@@ -41,9 +41,9 @@ class VersionedStackTransformerTest {
         }
     }
 
-    private static NBTTagCompound holding(String listKey, NBTTagCompound stack) {
+    private static NBTTagCompound holding(String listKey, NBTTagCompound... stacks) {
         NBTTagList list = new NBTTagList();
-        list.appendTag(stack);
+        for (NBTTagCompound stack : stacks) list.appendTag(stack);
         NBTTagCompound holder = new NBTTagCompound();
         holder.setTag(listKey, list);
         return holder;
@@ -56,11 +56,12 @@ class VersionedStackTransformerTest {
         return stack;
     }
 
-    /// Runs `transformer` over a chunk, player and custom-data context holding one stack each, and returns the
-    /// stacks' damage values in that order.
+    /// Runs `transformer` over a chunk holding two stacks and a player and custom-data context holding one each, and
+    /// returns the stacks' damage values in that order.
     private static List<Integer> damageAfter(DamageBump transformer) {
         NBTTagCompound chunkStack = stack();
-        NBTTagCompound tileEntity = holding("Items", chunkStack);
+        NBTTagCompound otherChunkStack = stack();
+        NBTTagCompound tileEntity = holding("Items", chunkStack, otherChunkStack);
         tileEntity.setString("id", "Chest");
         NBTTagCompound levelTag = new NBTTagCompound();
         levelTag.setTag("TileEntities", holding("list", tileEntity).getTagList("list", 10));
@@ -75,6 +76,7 @@ class VersionedStackTransformerTest {
 
         return Arrays.asList(
             (int) chunkStack.getShort("Damage"),
+            (int) otherChunkStack.getShort("Damage"),
             (int) playerStack.getShort("Damage"),
             (int) customStack.getShort("Damage"));
     }
@@ -83,12 +85,12 @@ class VersionedStackTransformerTest {
     void aStackTransformRewritesStacksInChunksPlayersAndCustomData() {
         DamageBump transformer = new DamageBump(true);
 
-        assertEquals(Arrays.asList(1, 1, 1), damageAfter(transformer));
+        assertEquals(Arrays.asList(1, 1, 1, 1), damageAfter(transformer));
         assertEquals(Arrays.asList(1, 2, 3), transformer.requestedVersions);
     }
 
     @Test
     void aNullStackTransformLeavesEveryContextUntouched() {
-        assertEquals(Arrays.asList(0, 0, 0), damageAfter(new DamageBump(false)));
+        assertEquals(Arrays.asList(0, 0, 0, 0), damageAfter(new DamageBump(false)));
     }
 }
