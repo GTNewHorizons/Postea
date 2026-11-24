@@ -93,8 +93,8 @@ public class ChunkFixerUtility {
             blockIdsChanged |= ctx.blockIdsChanged();
         }
         if (!blockIdsChanged) return;
-        // A section's block count is what decides whether it is saved at all, and writing through SubChunkAccess
-        // bypasses the bookkeeping ExtendedBlockStorage does in its own setters.
+        // SubChunkAccess writes bypass the block counts that ExtendedBlockStorage's setters maintain and that decide
+        // whether a section is saved.
         for (ExtendedBlockStorage section : chunk.getBlockStorageArray()) {
             if (section != null) section.removeInvalidBlocks();
         }
@@ -102,8 +102,8 @@ public class ChunkFixerUtility {
         chunk.isLightPopulated = false;
     }
 
-    // Chunk.generateHeightMap is client-only and generateSkylightMap reaches into the world, so the height map is
-    // rebuilt here from the chunk's own storage, which is safe on the chunk I/O thread.
+    /// Rebuilds the height map from the chunk's own storage, which is safe on the chunk I/O thread.
+    /// `Chunk.generateHeightMap` is client-only and `generateSkylightMap` reaches into the world.
     private static void regenerateHeightMap(Chunk chunk) {
         int top = chunk.getTopFilledSegment() + 16 - 1;
         chunk.heightMapMinimum = Integer.MAX_VALUE;

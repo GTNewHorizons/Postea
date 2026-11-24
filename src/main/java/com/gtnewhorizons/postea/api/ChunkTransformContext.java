@@ -14,13 +14,12 @@ import com.gtnewhorizons.postea.utility.NbtItemStacks;
 import com.gtnewhorizons.postea.utility.NbtLists;
 import com.gtnewhorizons.postea.utility.VersionStamps;
 
-/**
- * A chunk as handed to {@link IVersionedTransformer#transformChunk}: its block storage and the raw {@code Level}
- * tag as read from disk, before tile entities and entities are parsed. Coordinates are chunk-local
- * ({@code 0..15}, {@code y 0..255}); block ids and metadata are the world's numeric values at full EndlessIDs
- * width. The world is not loaded yet: block access through {@link #world()} is not possible. When a transformer
- * changed a block id, Postea recomputes the height map and flags the chunk for a relight once all transformers ran.
- */
+/// A chunk's block storage and raw `Level` tag, as handed to [IVersionedTransformer#transformChunk].
+///
+/// The tag is as read from disk, before tile entities and entities are parsed. Coordinates are chunk-local (`0..15`,
+/// `y 0..255`), and block ids and metadata are the world's numeric values at full EndlessIDs width. The world is not
+/// loaded, so block access through [#world()] is not possible. When a transformer changes a block id, Postea
+/// recomputes the height map and flags the chunk for a relight after all transformers ran.
 public final class ChunkTransformContext {
 
     public static final int UNSTAMPED = VersionStamps.UNSTAMPED;
@@ -58,10 +57,7 @@ public final class ChunkTransformContext {
         return chunk.zPosition;
     }
 
-    /**
-     * The chunk's {@code Level} tag. Changes to its {@code TileEntities} and {@code Entities} lists are loaded by
-     * the game.
-     */
+    /// The chunk's `Level` tag. Changes to its `TileEntities` and `Entities` lists are loaded by the game.
     public NBTTagCompound levelTag() {
         return levelTag;
     }
@@ -74,9 +70,7 @@ public final class ChunkTransformContext {
         return NbtLists.compoundList(levelTag, "Entities");
     }
 
-    /**
-     * The version this transformer's key was stamped with when the chunk was saved, or {@link #UNSTAMPED}.
-     */
+    /// The version stamped under the transformer's key when the chunk was saved, or [#UNSTAMPED].
     public int storedVersion() {
         return storedVersion;
     }
@@ -85,9 +79,7 @@ public final class ChunkTransformContext {
         return currentVersion;
     }
 
-    /**
-     * The block id at a chunk-local position; 0 for a missing section.
-     */
+    /// The block id at a chunk-local position, or 0 for a missing section.
     public int getBlockId(int x, int y, int z) {
         SubChunkAccess access = section(y >> 4, false);
         return access == null ? 0 : access.getBlockId(x, y & 15, z);
@@ -98,9 +90,7 @@ public final class ChunkTransformContext {
         return access == null ? 0 : access.getMeta(x, y & 15, z);
     }
 
-    /**
-     * Sets the block at a chunk-local position, creating the section when a non-air block goes into a missing one.
-     */
+    /// Sets the block at a chunk-local position, creating the section when a non-air block goes into a missing one.
     public void setBlock(int x, int y, int z, int blockId, int metadata) {
         SubChunkAccess access = section(y >> 4, blockId != 0);
         if (access == null) return;
@@ -109,9 +99,7 @@ public final class ChunkTransformContext {
         access.setMeta(x, y & 15, z, metadata);
     }
 
-    /**
-     * Visits every non-air block of every present section.
-     */
+    /// Visits every non-air block of every present section.
     public void forEachBlock(BlockVisitor visitor) {
         ExtendedBlockStorage[] storage = chunk.getBlockStorageArray();
         for (int index = 0; index < storage.length; index++) {
@@ -129,18 +117,14 @@ public final class ChunkTransformContext {
         }
     }
 
-    /**
-     * Visits every serialized item stack held by the chunk's tile entities and entities; see
-     * {@link NbtItemStacks#forEach}.
-     */
+    /// Visits every serialized item stack held by the chunk's tile entities and entities. See
+    /// [NbtItemStacks#forEach].
     public void forEachItemStackTag(Consumer<NBTTagCompound> visitor) {
         NbtItemStacks.forEach(tileEntityTags(), visitor);
         NbtItemStacks.forEach(entityTags(), visitor);
     }
 
-    /**
-     * Whether a block id (not only metadata) was rewritten.
-     */
+    /// Whether a block id, not only metadata, was rewritten.
     public boolean blockIdsChanged() {
         return blockIdsChanged;
     }

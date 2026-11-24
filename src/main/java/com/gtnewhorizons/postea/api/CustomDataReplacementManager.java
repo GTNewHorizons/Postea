@@ -11,23 +11,21 @@ import com.gtnewhorizons.postea.utility.VersionedTransformerLog;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 
-/**
- * Manages applying an {@link IVersionedTransformer} to mods' custom storage files.
- * <ul>
- * <li>Call {@link #transform} once on the root read from disk, before consuming it, and persist that root (stamps
- * included) when writing the storage back.</li>
- * <li>A save path that rebuilds its NBT from scratch calls {@link #stamp} on the fresh root instead.</li>
- * </ul>
- */
+/// Applies [IVersionedTransformer]s to a mod's custom storage files.
+///
+/// Call [#transform] once on the root read from disk, before consuming it, and persist that root, stamps included,
+/// when writing the storage back. A save path that rebuilds its NBT from scratch calls [#stamp] on the fresh root
+/// instead.
+///
+/// Custom data belongs to a world, so both methods do nothing unless a server runs in this JVM.
 public abstract class CustomDataReplacementManager {
 
-    /**
-     * Transforms {@code root} in place through every registered transformer whose stamp differs from its current
-     * version, then writes the updated stamps onto {@code root}. Does nothing without a running server. Throws
-     * {@link IllegalStateException} when called before the world's saved id mappings were applied.
-     */
+    /// Transforms `root` in place through every registered transformer whose stamp differs from its current
+    /// version, then writes the updated stamps onto `root`. Throws [IllegalStateException] when called before the
+    /// world's saved id mappings were applied.
     public static void transform(String storageId, NBTTagCompound root) {
-        // Not the effective side: mods save their storage from worker threads, which 1.7.10 reports as client.
+        // Custom data is only transformed while a server runs. Not getEffectiveSide(): mods save from worker
+        // threads, which 1.7.10 reports as client.
         if (FMLCommonHandler.instance()
             .getMinecraftServerInstance() == null) return;
         if (!IDRegistry.isMappingApplied()) {
@@ -52,10 +50,7 @@ public abstract class CustomDataReplacementManager {
         VersionStamps.write(root, stamps, VersionedReplacementManager.transformers());
     }
 
-    /**
-     * Stamps a freshly built root about to be written to disk with every registered transformer's current version.
-     * Does nothing without a running server.
-     */
+    /// Stamps a freshly built root with every registered transformer's current version.
     public static void stamp(NBTTagCompound root) {
         if (FMLCommonHandler.instance()
             .getMinecraftServerInstance() == null) return;

@@ -19,30 +19,27 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntLists;
 
-/**
- * Every namespaced block and item name whose content was missing when a world loaded, with every id it held,
- * oldest first. FML drops a missing name from {@code level.dat} on the first save after its content disappears;
- * this table keeps the name so transformers keyed on it keep resolving in later sessions. Persisted as
- * {@code <world>/postea/known-ids.json}, format version 1:
- *
- * <pre>
- * { "version": 1, "blocks": { "mod:block": [300, 301] }, "items": { "mod:item": [4200] } }
- * </pre>
- */
+/// Every namespaced block and item name whose content was missing when a world loaded, with every id it held,
+/// oldest first.
+///
+/// FML drops a missing name from `level.dat` on the first save after its content disappears, so this table keeps
+/// the name for transformers keyed on it. Persisted as `<world>/postea/known-ids.json`:
+///
+/// ```json
+/// { "version": 1, "blocks": { "mod:block": [300, 301] }, "items": { "mod:item": [4200] } }
+/// ```
 public final class WorldIdTable {
 
     static final String FILE_NAME = "known-ids.json";
-    /** FML prefixes block names with this character in a saved id map; items get U+0002. */
+    /// FML prefixes block names with this character in a saved id map, and item names with U+0002.
     static final char BLOCK_PREFIX = 1;
     private static final int FORMAT_VERSION = 1;
 
     private final Map<String, IntList> blocks = new TreeMap<>();
     private final Map<String, IntList> items = new TreeMap<>();
 
-    /**
-     * Loads {@code file}; an absent file yields an empty table. Throws {@link IllegalStateException} on a file that
-     * cannot be read or parsed.
-     */
+    /// Loads `file`, or an empty table if it is absent. Throws [IllegalStateException] on a file that cannot be read
+    /// or parsed.
     public static WorldIdTable load(File file) {
         WorldIdTable table = new WorldIdTable();
         if (!file.exists()) return table;
@@ -73,9 +70,7 @@ public final class WorldIdTable {
         }
     }
 
-    /**
-     * Writes the table through a temporary file so a crash mid-write never truncates it.
-     */
+    /// Writes the table through a temporary file so a crash mid-write never truncates it.
     public void save(File file) {
         JsonObject root = new JsonObject();
         root.addProperty("version", FORMAT_VERSION);
@@ -109,10 +104,8 @@ public final class WorldIdTable {
         return object;
     }
 
-    /**
-     * Records entries of a world's saved name-to-id map, whose names FML prefixes with U+0001 for a block and
-     * U+0002 for an item. Returns whether any pair was new.
-     */
+    /// Records entries of a world's saved name-to-id map, whose names carry FML's block and item prefixes
+    /// (see [#BLOCK_PREFIX]). Returns whether any pair was new.
     public boolean merge(Map<String, Integer> dataList) {
         boolean changed = false;
         for (Map.Entry<String, Integer> entry : dataList.entrySet()) {

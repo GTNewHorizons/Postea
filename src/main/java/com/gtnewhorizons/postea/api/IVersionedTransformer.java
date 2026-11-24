@@ -1,49 +1,38 @@
 package com.gtnewhorizons.postea.api;
 
-/**
- * A transformer that brings saved data written under an older version of its owner's content up to the current
- * version. Postea stamps every chunk and every player it saves with {@link #currentVersion()} under {@link #key()}
- * and, when reading, invokes the transformer only for data whose stamp differs, so each chunk and player is seen
- * exactly once per version change no matter how many sessions passed in between. Data saved before the transformer
- * existed reads as {@link ChunkTransformContext#UNSTAMPED}; the transformer decides what that means.
- * <p>
- * Register through {@link VersionedReplacementManager#register(IVersionedTransformer)} during mod loading, postInit
- * at the latest. Transformers run in registration order and before every other Postea pass, so a transformer whose
- * output depends on another mod's versioned data (for example one that writes that mod's indices) must register
- * after that mod; FML's dependency ordering guarantees this when both register in the same lifecycle phase.
- * <p>
- * Chunk transformers may run on a chunk I/O thread, several concurrently for different chunks. They must not touch
- * world state beyond the context and their own state must be safe to read concurrently.
- * <p>
- * Mods that keep item stacks in their own world storage offer it through {@link CustomDataReplacementManager};
- * such storage is stamped the same way and reaches the transformer through {@link #transformCustomData}.
- */
+/// Upgrades saved chunks, players and custom world storage written under another version of a mod's content.
+///
+/// Postea stamps everything it saves with [#currentVersion()] under [#key()]. On read, the transformer runs for
+/// every stored stamp that differs from [#currentVersion()], older or newer. The transformer decides what a newer
+/// version means and throws if it cannot handle it. Data saved before the transformer existed reads as
+/// [ChunkTransformContext#UNSTAMPED].
+///
+/// Register with [VersionedReplacementManager#register(IVersionedTransformer)] by postInit. Transformers run in
+/// registration order, before every other Postea pass. One whose output depends on another mod's versioned data
+/// must register after that mod.
+///
+/// Chunk transformers may run on chunk I/O threads, several at once for different chunks. They must touch no world
+/// state beyond the context, and their own state must be safe to read concurrently.
+///
+/// Custom world storage offered through [CustomDataReplacementManager] is stamped the same way and reaches
+/// [#transformCustomData].
 public interface IVersionedTransformer {
 
-    /**
-     * The stamp key, unique across all registered transformers, e.g. {@code "examplemod:idList"}.
-     */
+    /// The stamp key, unique across all registered transformers, e.g. `"examplemod:idList"`. Must return the same
+    /// value for the transformer's lifetime.
     String key();
 
-    /**
-     * The version the transformer's output is written under. Sampled at every read and every save.
-     */
+    /// The version the transformer's output is written under. Read on every load and save, and may differ between
+    /// reads.
     int currentVersion();
 
-    /**
-     * Brings a chunk stamped at {@link ChunkTransformContext#storedVersion()} to {@link #currentVersion()}.
-     */
+    /// Brings a chunk stamped at [ChunkTransformContext#storedVersion()] to [#currentVersion()].
     default void transformChunk(ChunkTransformContext ctx) {}
 
-    /**
-     * Brings a player's saved data stamped at {@link PlayerDataTransformContext#storedVersion()} to
-     * {@link #currentVersion()}.
-     */
+    /// Brings a player's saved data stamped at [PlayerDataTransformContext#storedVersion()] to [#currentVersion()].
     default void transformPlayer(PlayerDataTransformContext ctx) {}
 
-    /**
-     * Brings a mod's custom world storage stamped at {@link CustomDataTransformContext#storedVersion()} to
-     * {@link #currentVersion()}. Stacks in such storage may carry a string {@code id} instead of a numeric one.
-     */
+    /// Brings custom world storage stamped at [CustomDataTransformContext#storedVersion()] to [#currentVersion()].
+    /// Stacks in such storage may carry a string `id` instead of a numeric one.
     default void transformCustomData(CustomDataTransformContext ctx) {}
 }

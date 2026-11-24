@@ -5,16 +5,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-/**
- * Registration of {@link IVersionedTransformer}s. See that interface for the execution contract.
- */
+/// Registry of [IVersionedTransformer]s. See that interface for the execution contract.
 public abstract class VersionedReplacementManager {
 
     private static final List<IVersionedTransformer> TRANSFORMERS = new CopyOnWriteArrayList<>();
 
-    /**
-     * Registers a transformer. Throws {@link IllegalArgumentException} when its key is empty or already registered.
-     */
+    /// Registers a transformer. Throws [IllegalArgumentException] when its key is empty or already registered.
     public static void register(IVersionedTransformer transformer) {
         String key = Objects.requireNonNull(transformer.key(), "key must not be null");
         if (key.isEmpty()) throw new IllegalArgumentException("Versioned transformer key must not be empty");
@@ -27,9 +23,7 @@ public abstract class VersionedReplacementManager {
         TRANSFORMERS.add(transformer);
     }
 
-    /**
-     * The registered transformers in registration order.
-     */
+    /// The registered transformers in registration order, as an unmodifiable view.
     public static List<IVersionedTransformer> transformers() {
         return Collections.unmodifiableList(TRANSFORMERS);
     }

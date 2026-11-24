@@ -364,7 +364,6 @@ abstract class ExampleMigrators {
             return "examplemod:gemIndex";
         }
 
-        // The version the running mod writes gems under; bump it whenever the index assignment changes.
         @Override
         public int currentVersion() {
             return 2;
@@ -372,7 +371,6 @@ abstract class ExampleMigrators {
 
         @Override
         public void transformChunk(ChunkTransformContext ctx) {
-            // Data saved before this transformer existed carries no stamp.
             if (ctx.storedVersion() == ChunkTransformContext.UNSTAMPED || ctx.storedVersion() == 1) {
                 int gemBlockId = Block.getIdFromBlock(Blocks.wool);
                 ctx.forEachBlock((x, y, z, id, meta) -> { if (id == gemBlockId) ctx.setBlock(x, y, z, id, meta + 1); });

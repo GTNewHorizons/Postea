@@ -39,19 +39,11 @@ public class TransformerRegistry {
         .create();
     private static final LinkedListMultimap<String, TriFunction<NBTTagCompound, World, Chunk, BlockInfo>> TILE_ENTITY_REPLACEMENT_MAP = LinkedListMultimap
         .create();
-    /**
-     * Map of itemID -> originalName+transformationHandler.
-     * Pivoting on the id is faster than pivoting on the strings so this should help with perf a bit.
-     * Generated during the mapping update event whilst entering/loading a world. An id carries several names when
-     * content that once held it has been removed.
-     */
+    /// Maps an item id to the names that hold it and their handlers. Generated during the mapping update event when a
+    /// world loads. An id carries several names when content that once held it was removed.
     private static final Int2ObjectOpenHashMap<List<Pair<String, List<IItemStackTransformationHandler>>>> RUNTIME_ITEM_REPLACEMENT_MAP = new Int2ObjectOpenHashMap<>();
-    /**
-     * Map of blockID -> originalName+transformationHandler.
-     * Pivoting on the id is faster than pivoting on the strings so this should help with perf a bit.
-     * Generated during the mapping update event whilst entering/loading a world. An id carries several names when
-     * content that once held it has been removed.
-     */
+    /// Maps a block id to the names that hold it and their handlers. Generated during the mapping update event when a
+    /// world loads. An id carries several names when content that once held it was removed.
     private static final Int2ObjectOpenHashMap<List<Pair<String, List<IBlockTransformationHandler>>>> RUNTIME_BLOCK_REPLACEMENT_MAP = new Int2ObjectOpenHashMap<>();
 
     // region FML Life Cycle handlers
@@ -83,7 +75,6 @@ public class TransformerRegistry {
                     .add(Pair.of(key, BLOCK_REPLACEMENT_MAP.get(key)));
             }
         }
-        // create a lookup for source item ids.
         for (String key : ITEM_REPLACEMENT_MAP.keySet()) {
             IntList ids = IDRegistry.getItemIds(key);
             if (ids.isEmpty()) {
@@ -98,43 +89,35 @@ public class TransformerRegistry {
     }
     // endregion FML Life Cycle handlers
 
-    /**
-     * Registers a block transformation handler function for the given id.
-     *
-     * @implNote The id may name content that no longer exists: Postea resolves it through the world's saved id map
-     *           and its retired-id table, so the handler runs on every numeric id the content held in this world.
-     *
-     * @param originalId  The namespaced id of the block to transform.
-     * @param transformer The transformation handler that will execute a transformation on the block.
-     */
+    /// Registers a block transformation handler for the given namespaced id.
+    ///
+    /// The id may name content that no longer exists. The handler runs on every numeric id the content held in this
+    /// world, as resolved through the world's saved id map and retired id table.
+    ///
+    /// @param originalId the namespaced id of the block to transform
+    /// @param transformer the handler that transforms the block
     public static void addBlockTransformer(@Nonnull String originalId,
         @Nonnull IBlockTransformationHandler transformer) {
         BLOCK_REPLACEMENT_MAP.put(originalId, transformer);
     }
 
-    /**
-     * Registers an item transformation handler function for the given id.
-     *
-     * @implNote The id may name content that no longer exists: Postea resolves it through the world's saved id map
-     *           and its retired-id table, so the handler runs on every numeric id the content held in this world.
-     *
-     * @param originalId  The namespaced id of the item to transform.
-     * @param transformer The transformation handler that will execute a transformation on the stack.
-     */
+    /// Registers an item transformation handler for the given namespaced id.
+    ///
+    /// The id may name content that no longer exists. The handler runs on every numeric id the content held in this
+    /// world, as resolved through the world's saved id map and retired id table.
+    ///
+    /// @param originalId the namespaced id of the item to transform
+    /// @param transformer the handler that transforms the stack
     public static void addStackTransformer(@Nonnull String originalId,
         @Nonnull IItemStackTransformationHandler transformer) {
         ITEM_REPLACEMENT_MAP.put(originalId, transformer);
     }
 
-    /**
-     * Registers a tile entity transformation handler function for the given id.
-     *
-     * @implNote Keyed by the tile entity's saved {@code id}; handlers run in registration order until one returns a
-     *           non-null {@link BlockInfo}.
-     *
-     * @param originalId  The saved id of the tile entity to transform.
-     * @param transformer The transformation handler that will execute a transformation on the tile entity.
-     */
+    /// Registers a tile entity transformation handler for the given saved tile entity id. Handlers run in
+    /// registration order until one returns a non-null [BlockInfo].
+    ///
+    /// @param originalId the saved id of the tile entity to transform
+    /// @param transformer the handler that transforms the tile entity
     public static void addTileEntityTransformer(@Nonnull String originalId,
         @Nonnull TriFunction<NBTTagCompound, World, Chunk, BlockInfo> transformer) {
         TILE_ENTITY_REPLACEMENT_MAP.put(originalId, transformer);
@@ -157,7 +140,6 @@ public class TransformerRegistry {
     public static @Nullable BlockNameAndMeta transformBlock(@Nonnull String name, int metadata) {
         List<IBlockTransformationHandler> handlers = BLOCK_REPLACEMENT_MAP.get(name);
         if (handlers.isEmpty()) return null;
-        // there is no position nor world, the block isn't placed anywhere
         BlockConversionInfo blockConversionInfo = new BlockConversionInfo(
             name,
             IDRegistry.getBlockId(name),

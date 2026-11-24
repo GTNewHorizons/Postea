@@ -7,10 +7,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import com.gtnewhorizons.postea.utility.NbtItemStacks;
 import com.gtnewhorizons.postea.utility.VersionStamps;
 
-/**
- * Context for a mod's custom world storage, used by {@link IVersionedTransformer#transformCustomData}. Stacks here
- * may have string {@code id}s instead of numeric ones; {@link #forEachItemStackTag} visits both.
- */
+/// A mod's custom world storage, as handed to [IVersionedTransformer#transformCustomData]. Stacks here may have
+/// string `id`s instead of numeric ones, and [#forEachItemStackTag] visits both.
 public final class CustomDataTransformContext {
 
     public static final int UNSTAMPED = VersionStamps.UNSTAMPED;
@@ -27,9 +25,7 @@ public final class CustomDataTransformContext {
         this.currentVersion = currentVersion;
     }
 
-    /**
-     * The storage's identity as its owner registered it, e.g. {@code "betterquesting:questDatabase"}.
-     */
+    /// The storage's identity as its owner registered it, e.g. `"betterquesting:questDatabase"`.
     public String storageId() {
         return storageId;
     }
@@ -38,9 +34,7 @@ public final class CustomDataTransformContext {
         return root;
     }
 
-    /**
-     * The version this transformer's key was stamped with when the storage was written, or {@link #UNSTAMPED}.
-     */
+    /// The version stamped under the transformer's key when the storage was written, or [#UNSTAMPED].
     public int storedVersion() {
         return storedVersion;
     }
@@ -49,10 +43,8 @@ public final class CustomDataTransformContext {
         return currentVersion;
     }
 
-    /**
-     * Visits every serialized item stack in the storage, including stacks whose {@code id} is a string name; see
-     * {@link NbtItemStacks#forEach}.
-     */
+    /// Visits every serialized item stack in the storage, including stacks whose `id` is a string name. See
+    /// [NbtItemStacks#forEach].
     public void forEachItemStackTag(Consumer<NBTTagCompound> visitor) {
         NbtItemStacks.forEach(root, visitor, true);
     }

@@ -16,7 +16,7 @@ import com.gtnewhorizons.postea.utility.PlayerDataFixerUtility;
 @Mixin(Entity.class)
 public abstract class MixinEntity implements IPlayerStampsMixin {
 
-    // The stamps a server player's data was read with; carried across respawns by MixinEntityPlayer.
+    /// The stamps a server player's data was read with. [MixinEntityPlayer] carries them across respawns.
     @Unique
     private NBTTagCompound postea$versionStamps;
 

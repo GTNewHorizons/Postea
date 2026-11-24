@@ -6,9 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.gtnewhorizons.postea.Postea;
 import com.gtnewhorizons.postea.api.IVersionedTransformer;
 
-/**
- * Announces each version span a transformer is bringing data across once per world, instead of once per chunk.
- */
+/// Logs each version span a transformer brings data across once per world, not once per chunk.
 public final class VersionedTransformerLog {
 
     private static final Set<String> ANNOUNCED = ConcurrentHashMap.newKeySet();

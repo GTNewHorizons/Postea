@@ -12,7 +12,7 @@ import com.gtnewhorizons.postea.mixins.interfaces.IPlayerStampsMixin;
 @Mixin(EntityPlayer.class)
 public abstract class MixinEntityPlayer {
 
-    // A respawned player is a fresh entity built from the old one without going through NBT.
+    /// Copies the version stamps from the old player, because a respawned player is not built through NBT.
     @Inject(method = "clonePlayer", at = @At("RETURN"), require = 1)
     private void postea$carryVersionStamps(EntityPlayer oldPlayer, boolean respawn, CallbackInfo ci) {
         ((IPlayerStampsMixin) this).Postea$setVersionStamps(((IPlayerStampsMixin) oldPlayer).Postea$getVersionStamps());

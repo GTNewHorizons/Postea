@@ -16,7 +16,7 @@ public class MixinChunk implements IChunkMixin {
     @Unique
     private long postea_GTNH$posteaID;
 
-    // The stamps the chunk was read with; null for a chunk generated this session.
+    /// The stamps the chunk was read with, or null for a chunk generated this session.
     @Unique
     private NBTTagCompound postea$versionStamps;
 

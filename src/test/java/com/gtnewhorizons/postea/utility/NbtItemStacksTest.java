@@ -77,8 +77,8 @@ class NbtItemStacksTest {
         assertEquals(Collections.singletonList(extended), visited(root));
     }
 
-    // Pins the split that keeps chunk and player walks safe: a string id with a Count is a stack only in
-    // string-id mode, which custom data uses and tile entity trees never do.
+    /// A string id with a `Count` is a stack only in string-id mode, which keeps chunk and player walks off tile
+    /// entity compounds.
     @Test
     void stringIdStacksAreVisitedOnlyInStringIdMode() {
         NBTTagCompound quest = new NBTTagCompound();

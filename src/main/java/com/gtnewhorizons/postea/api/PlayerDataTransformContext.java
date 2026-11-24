@@ -8,11 +8,10 @@ import net.minecraft.nbt.NBTTagCompound;
 import com.gtnewhorizons.postea.utility.NbtItemStacks;
 import com.gtnewhorizons.postea.utility.VersionStamps;
 
-/**
- * A player's saved data as handed to {@link IVersionedTransformer#transformPlayer}: the root tag about to be
- * loaded into the player, which holds the inventory, ender chest, {@code ForgeData}, and every extended-properties
- * compound. The player object is constructed but not yet loaded from the tag.
- */
+/// A player's saved data, as handed to [IVersionedTransformer#transformPlayer].
+///
+/// The root tag holds the inventory, ender chest, `ForgeData` and every extended-properties compound. The player
+/// object is constructed but not yet loaded from the tag.
 public final class PlayerDataTransformContext {
 
     public static final int UNSTAMPED = VersionStamps.UNSTAMPED;
@@ -46,9 +45,7 @@ public final class PlayerDataTransformContext {
         return currentVersion;
     }
 
-    /**
-     * Visits every serialized item stack anywhere in the player's data; see {@link NbtItemStacks#forEach}.
-     */
+    /// Visits every serialized item stack anywhere in the player's data. See [NbtItemStacks#forEach].
     public void forEachItemStackTag(Consumer<NBTTagCompound> visitor) {
         NbtItemStacks.forEach(playerTag, visitor);
     }

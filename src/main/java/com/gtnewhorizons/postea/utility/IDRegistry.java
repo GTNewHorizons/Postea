@@ -20,11 +20,10 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
-/**
- * Resolves a namespaced id to the numeric ids it holds or held in the active world: the live registry id, the id
- * the world's own saved map assigns it, and the ids recorded in the world's {@link WorldIdTable} for content that
- * has since been removed. A retired id counts only while FML still blocks it and no live content occupies it.
- */
+/// Resolves a namespaced id to the numeric ids it holds in the active world, or held before its content was removed.
+///
+/// Ids come from the live registry, the world's saved id map and the world's [WorldIdTable]. A retired id counts
+/// only while FML still blocks it and no live content occupies it.
 public abstract class IDRegistry {
 
     // Part of a bi-map for lookups between block namespaced ids and numeric ids
@@ -41,15 +40,12 @@ public abstract class IDRegistry {
     private static IntSet blockedIds;
     private static volatile boolean mappingApplied;
 
-    /**
-     * Opens the retired id table of the world about to load. Until {@link #endWorld()} the saved id map is captured
-     * and its missing names merged into it.
-     */
+    /// Loads the retired id table of the world about to load. [#registerWorldSpecificIDs] records into it until
+    /// [#endWorld()].
     public static void beginWorld(File worldDirectory) {
         tableFile = new File(new File(worldDirectory, Postea.MODID), WorldIdTable.FILE_NAME);
         table = WorldIdTable.load(tableFile);
-        // A world without a level.dat has no saved id map: the live registries already are its mapping, and
-        // FML fires no remap event on its first session.
+        // No level.dat means no saved id map, and FML fires no remap event.
         mappingApplied = !new File(worldDirectory, "level.dat").exists();
     }
 
@@ -62,9 +58,7 @@ public abstract class IDRegistry {
         ITEM_NAME_TO_ID.clear();
     }
 
-    /**
-     * Whether FML has applied the loading world's saved id map in this session.
-     */
+    /// Whether FML has applied the loading world's saved id map.
     public static boolean isMappingApplied() {
         return mappingApplied;
     }
@@ -95,12 +89,9 @@ public abstract class IDRegistry {
         }
     }
 
-    /**
-     * Called by {@link com.gtnewhorizons.postea.mixins.preinit.MixinGameData}, this function captures the world's
-     * saved name-to-id map before FML remaps the live registries onto it, and records the names no registered
-     * content answers to in the world's retired id table. Ignored outside a server world and off the server thread,
-     * since the client side of the FML handshake also injects a map.
-     */
+    /// Captures the world's saved name-to-id map before FML remaps the live registries onto it, and records the names
+    /// no registered content answers to in the world's retired id table. Ignored outside a server world and off the
+    /// server thread.
     public static void registerWorldSpecificIDs(Map<String, Integer> map) {
         if (tableFile == null || !FMLCommonHandler.instance()
             .getEffectiveSide()
@@ -126,10 +117,8 @@ public abstract class IDRegistry {
         if (table.merge(missing)) table.save(tableFile);
     }
 
-    /**
-     * The block id {@code name} currently holds in this world: the live registry id, or the id it held before its
-     * content was removed, or -1 when the world never mapped it.
-     */
+    /// The block id `name` holds in this world: the live registry id, else the id it held before its content was
+    /// removed, or -1 if the world never mapped it.
     public static int getBlockId(String name) {
         int id = liveBlockId(name);
         if (id >= 0) return id;
@@ -137,10 +126,8 @@ public abstract class IDRegistry {
         return retired.isEmpty() ? -1 : retired.getInt(retired.size() - 1);
     }
 
-    /**
-     * The item id {@code name} currently holds in this world: the live registry id, or the id it held before its
-     * content was removed, or -1 when the world never mapped it.
-     */
+    /// The item id `name` holds in this world: the live registry id, else the id it held before its content was
+    /// removed, or -1 if the world never mapped it.
     public static int getItemId(String name) {
         int id = liveItemId(name);
         if (id >= 0) return id;
@@ -148,10 +135,7 @@ public abstract class IDRegistry {
         return retired.isEmpty() ? -1 : retired.getInt(retired.size() - 1);
     }
 
-    /**
-     * Every block id {@code name} holds or held in this world, live id first. Empty when the world never mapped
-     * the name.
-     */
+    /// Every block id `name` holds or held in this world, live id first. Empty if the world never mapped the name.
     public static IntList getBlockIds(String name) {
         int live = liveBlockId(name);
         IntList ids = retiredBlockIds(name, live);
@@ -163,10 +147,7 @@ public abstract class IDRegistry {
         return ids;
     }
 
-    /**
-     * Every item id {@code name} holds or held in this world, live id first. Empty when the world never mapped
-     * the name.
-     */
+    /// Every item id `name` holds or held in this world, live id first. Empty if the world never mapped the name.
     public static IntList getItemIds(String name) {
         int live = liveItemId(name);
         IntList ids = retiredItemIds(name, live);
