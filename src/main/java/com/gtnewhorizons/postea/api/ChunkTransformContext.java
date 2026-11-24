@@ -12,7 +12,6 @@ import com.gtnewhorizons.postea.compat.Compat;
 import com.gtnewhorizons.postea.compat.SubChunkAccess;
 import com.gtnewhorizons.postea.utility.NbtItemStacks;
 import com.gtnewhorizons.postea.utility.NbtLists;
-import com.gtnewhorizons.postea.utility.VersionStamps;
 
 /// A chunk's block storage and raw `Level` tag, as handed to [IVersionedTransformer#transformChunk].
 ///
@@ -22,23 +21,18 @@ import com.gtnewhorizons.postea.utility.VersionStamps;
 /// recomputes the height map and flags the chunk for a relight after all transformers ran.
 public final class ChunkTransformContext {
 
-    public static final int UNSTAMPED = VersionStamps.UNSTAMPED;
-
     private final Chunk chunk;
     private final World world;
     private final NBTTagCompound levelTag;
     private final int storedVersion;
-    private final int currentVersion;
     private final SubChunkAccess[] sections = new SubChunkAccess[16];
     private boolean blockIdsChanged;
 
-    public ChunkTransformContext(Chunk chunk, World world, NBTTagCompound levelTag, int storedVersion,
-        int currentVersion) {
+    public ChunkTransformContext(Chunk chunk, World world, NBTTagCompound levelTag, int storedVersion) {
         this.chunk = chunk;
         this.world = world;
         this.levelTag = levelTag;
         this.storedVersion = storedVersion;
-        this.currentVersion = currentVersion;
     }
 
     public Chunk chunk() {
@@ -70,13 +64,9 @@ public final class ChunkTransformContext {
         return NbtLists.compoundList(levelTag, "Entities");
     }
 
-    /// The version stamped under the transformer's key when the chunk was saved, or [#UNSTAMPED].
+    /// The version stamped under the transformer's key when the chunk was saved, or [IVersionedTransformer#UNSTAMPED].
     public int storedVersion() {
         return storedVersion;
-    }
-
-    public int currentVersion() {
-        return currentVersion;
     }
 
     /// The block id at a chunk-local position, or 0 for a missing section.

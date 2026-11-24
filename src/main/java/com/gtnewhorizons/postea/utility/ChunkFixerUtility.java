@@ -75,7 +75,7 @@ public class ChunkFixerUtility {
             int current = transformer.currentVersion();
             int stored = VersionStamps.stored(stamps, transformer.key());
             if (stored == current) continue;
-            ChunkTransformContext ctx = new ChunkTransformContext(chunk, world, tag, stored, current);
+            ChunkTransformContext ctx = new ChunkTransformContext(chunk, world, tag, stored);
             VersionedTransformerLog.announce(transformer, stored, current);
             try {
                 transformer.transformChunk(ctx);

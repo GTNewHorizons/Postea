@@ -371,7 +371,7 @@ abstract class ExampleMigrators {
 
         @Override
         public void transformChunk(ChunkTransformContext ctx) {
-            if (ctx.storedVersion() == ChunkTransformContext.UNSTAMPED || ctx.storedVersion() == 1) {
+            if (ctx.storedVersion() == UNSTAMPED || ctx.storedVersion() == 1) {
                 int gemBlockId = Block.getIdFromBlock(Blocks.wool);
                 ctx.forEachBlock((x, y, z, id, meta) -> { if (id == gemBlockId) ctx.setBlock(x, y, z, id, meta + 1); });
                 ctx.forEachItemStackTag(stack -> {
@@ -384,7 +384,7 @@ abstract class ExampleMigrators {
 
         @Override
         public void transformPlayer(PlayerDataTransformContext ctx) {
-            if (ctx.storedVersion() == PlayerDataTransformContext.UNSTAMPED || ctx.storedVersion() == 1) {
+            if (ctx.storedVersion() == UNSTAMPED || ctx.storedVersion() == 1) {
                 ctx.forEachItemStackTag(stack -> {
                     if (IDExtenderCompat.getItemStackID(stack) == Item.getIdFromItem(Items.dye)) {
                         stack.setShort("Damage", (short) (stack.getShort("Damage") + 1));

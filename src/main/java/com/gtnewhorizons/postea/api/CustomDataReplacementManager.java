@@ -44,7 +44,7 @@ public abstract class CustomDataReplacementManager {
             VersionedTransformerLog.announce(transformer, stored, current);
             Postea.LOG.debug("{}: custom data {} from version {} to {}", transformer.key(), storageId, stored, current);
             try {
-                transformer.transformCustomData(new CustomDataTransformContext(storageId, root, stored, current));
+                transformer.transformCustomData(new CustomDataTransformContext(storageId, root, stored));
             } catch (Throwable t) {
                 throw new ReportedException(
                     ChunkFixerUtility.describe(t, transformer, stored, current, "Custom data", storageId));

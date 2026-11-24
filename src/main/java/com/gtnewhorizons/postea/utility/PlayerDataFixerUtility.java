@@ -25,7 +25,7 @@ public final class PlayerDataFixerUtility {
             if (stored == current) continue;
             VersionedTransformerLog.announce(transformer, stored, current);
             try {
-                transformer.transformPlayer(new PlayerDataTransformContext(player, tag, stored, current));
+                transformer.transformPlayer(new PlayerDataTransformContext(player, tag, stored));
             } catch (Throwable t) {
                 throw new ReportedException(
                     ChunkFixerUtility.describe(

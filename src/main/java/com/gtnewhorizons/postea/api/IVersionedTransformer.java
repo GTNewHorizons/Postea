@@ -1,11 +1,12 @@
 package com.gtnewhorizons.postea.api;
 
+import com.gtnewhorizons.postea.utility.VersionStamps;
+
 /// Upgrades saved chunks, players and custom world storage written under another version of a mod's content.
 ///
-/// Postea stamps everything it saves with [#currentVersion()] under [#key()]. On read, the transformer runs for
-/// every stored stamp that differs from [#currentVersion()], older or newer. The transformer decides what a newer
-/// version means and throws if it cannot handle it. Data saved before the transformer existed reads as
-/// [ChunkTransformContext#UNSTAMPED].
+/// Postea stamps everything it saves with [#currentVersion()] under [#key()]. On read, the transformer runs for every
+/// stored stamp that differs from [#currentVersion()], older or newer. The transformer decides what a newer version
+/// means and throws if it cannot handle it. Data saved before the transformer existed reads as [#UNSTAMPED].
 ///
 /// Register with [VersionedReplacementManager#register(IVersionedTransformer)] by postInit. Transformers run in
 /// registration order, before every other Postea pass. One whose output depends on another mod's versioned data
@@ -17,6 +18,8 @@ package com.gtnewhorizons.postea.api;
 /// Custom world storage offered through [CustomDataReplacementManager] is stamped the same way and reaches
 /// [#transformCustomData].
 public interface IVersionedTransformer {
+
+    int UNSTAMPED = VersionStamps.UNSTAMPED;
 
     /// The stamp key, unique across all registered transformers, e.g. `"examplemod:idList"`. Must return the same
     /// value for the transformer's lifetime.
