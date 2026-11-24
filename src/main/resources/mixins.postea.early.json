@@ -11,7 +11,8 @@
     "MixinEntity",
     "MixinEntityPlayer",
     "MixinItemStack",
-    "MixinNBTTagList"
+    "MixinNBTTagList",
+    "MixinSaveHandler"
   ],
   "client": [],
   "server": []
