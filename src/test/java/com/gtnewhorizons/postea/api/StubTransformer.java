@@ -25,6 +25,12 @@ public final class StubTransformer implements IVersionedTransformer {
     }
 
     @Override
+    public void transformChunk(ChunkTransformContext ctx) {}
+
+    @Override
+    public void transformPlayer(PlayerDataTransformContext ctx) {}
+
+    @Override
     public void transformCustomData(CustomDataTransformContext ctx) {
         customData.accept(ctx);
     }

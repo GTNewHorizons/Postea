@@ -17,6 +17,8 @@ package com.gtnewhorizons.postea.api;
 ///
 /// Custom world storage offered through [CustomDataReplacementManager] is stamped the same way and reaches
 /// [#transformCustomData].
+///
+/// A transformer that rewrites item stacks extends [VersionedStackTransformer], which covers every pass.
 public interface IVersionedTransformer {
 
     int UNSTAMPED = -1;
@@ -30,12 +32,12 @@ public interface IVersionedTransformer {
     int currentVersion();
 
     /// Brings a chunk stamped at [ChunkTransformContext#storedVersion()] to [#currentVersion()].
-    default void transformChunk(ChunkTransformContext ctx) {}
+    void transformChunk(ChunkTransformContext ctx);
 
     /// Brings a player's saved data stamped at [PlayerDataTransformContext#storedVersion()] to [#currentVersion()].
-    default void transformPlayer(PlayerDataTransformContext ctx) {}
+    void transformPlayer(PlayerDataTransformContext ctx);
 
     /// Brings custom world storage stamped at [CustomDataTransformContext#storedVersion()] to [#currentVersion()].
     /// Stacks in such storage may carry a string `id` instead of a numeric one.
-    default void transformCustomData(CustomDataTransformContext ctx) {}
+    void transformCustomData(CustomDataTransformContext ctx);
 }
