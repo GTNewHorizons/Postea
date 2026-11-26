@@ -8,8 +8,11 @@
   "mixins": [
     "MixinAnvilChunkLoader",
     "MixinChunk",
+    "MixinEntityPlayer",
+    "MixinEntityPlayerMP",
     "MixinItemStack",
-    "MixinNBTTagList"
+    "MixinNBTTagList",
+    "MixinSaveHandler"
   ],
   "client": [],
   "server": []

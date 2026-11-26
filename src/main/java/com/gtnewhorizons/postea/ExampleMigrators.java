@@ -1,5 +1,9 @@
 package com.gtnewhorizons.postea;
 
+import static net.minecraftforge.common.util.Constants.NBT.TAG_STRING;
+
+import java.util.function.Consumer;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
@@ -14,9 +18,12 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import com.gtnewhorizons.postea.api.BlockAccessCompat;
 import com.gtnewhorizons.postea.api.BlockReplacementManager;
+import com.gtnewhorizons.postea.api.ChunkTransformContext;
 import com.gtnewhorizons.postea.api.IDExtenderCompat;
 import com.gtnewhorizons.postea.api.ItemStackReplacementManager;
 import com.gtnewhorizons.postea.api.TileEntityReplacementManager;
+import com.gtnewhorizons.postea.api.VersionedReplacementManager;
+import com.gtnewhorizons.postea.api.VersionedStackTransformer;
 import com.gtnewhorizons.postea.utility.BlockConversionInfo;
 import com.gtnewhorizons.postea.utility.BlockInfo;
 
@@ -32,6 +39,7 @@ abstract class ExampleMigrators {
         ComplexBlockTransformer.postLoad();
         ComplexItemTransformer.postLoad();
         FMLReMappingExample.postLoad();
+        VersionedExample.postLoad();
     }
 
     public static abstract class TEToBlockExample {
@@ -345,6 +353,47 @@ abstract class ExampleMigrators {
             // It doesn't really matter which one you use, they both do the same thing under the hood.
             ItemStackReplacementManager.ignoreMissingMapping("IC2:itemFertilizer");
             BlockReplacementManager.ignoreMissingMapping("IC2:blockCrop");
+        }
+    }
+
+    public static final class VersionedExample extends VersionedStackTransformer {
+
+        public static void postLoad() {
+            VersionedReplacementManager.register(new VersionedExample());
+        }
+
+        @Override
+        public String key() {
+            return "examplemod:gemIndex";
+        }
+
+        @Override
+        public int currentVersion() {
+            return 2;
+        }
+
+        @Override
+        public void transformChunk(ChunkTransformContext ctx) {
+            if (shiftsGems(ctx.storedVersion())) {
+                int gemBlockId = Block.getIdFromBlock(Blocks.wool);
+                ctx.forEachBlock((x, y, z, id, meta) -> { if (id == gemBlockId) ctx.setBlock(x, y, z, id, meta + 1); });
+            }
+            super.transformChunk(ctx);
+        }
+
+        @Override
+        protected Consumer<NBTTagCompound> stackTransform(int storedVersion) {
+            if (!shiftsGems(storedVersion)) return null;
+            int dyeId = Item.getIdFromItem(Items.dye);
+            return stack -> {
+                boolean dye = stack.hasKey("id", TAG_STRING) ? "minecraft:dye".equals(stack.getString("id"))
+                    : IDExtenderCompat.getItemStackID(stack) == dyeId;
+                if (dye) stack.setShort("Damage", (short) (stack.getShort("Damage") + 1));
+            };
+        }
+
+        private static boolean shiftsGems(int storedVersion) {
+            return storedVersion == UNSTAMPED || storedVersion == 1;
         }
     }
 }

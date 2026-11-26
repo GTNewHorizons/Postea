@@ -16,10 +16,13 @@ import com.gtnewhorizons.postea.utility.ChunkFixerUtility;
 @Mixin(value = AnvilChunkLoader.class, priority = 1100)
 public abstract class MixinAnvilChunkLoader {
 
-    // This hook is compatible with Vanilla/NEID/EIDs
-    @Inject(method = "readChunkFromNBT", at = @At("RETURN"), require = 1)
-    private void postea$chunkHook(World world, NBTTagCompound tag, CallbackInfoReturnable<Chunk> cir) {
-        ChunkFixerUtility.onChunkRead(cir.getReturnValue(), world, tag);
+    /// Hooks the funnel shared by sync and async loads, which runs after ChunkAPI's `readChunkFromNBT` replacement.
+    @Inject(method = "checkedReadChunkFromNBT__Async", at = @At("RETURN"), remap = false, require = 1)
+    private void postea$chunkHook(CallbackInfoReturnable<Object[]> cir) {
+        Object[] data = cir.getReturnValue();
+        if (data == null) return;
+        Chunk chunk = (Chunk) data[0];
+        ChunkFixerUtility.onChunkRead(chunk, chunk.worldObj, ((NBTTagCompound) data[1]).getCompoundTag("Level"));
     }
 
     @Inject(method = "loadChunk", at = @At("RETURN"))
